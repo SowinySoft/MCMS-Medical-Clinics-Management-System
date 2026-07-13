@@ -6,6 +6,7 @@ import { Sidebar } from "./components/Sidebar";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { TableBrowser } from "./components/TableBrowser";
+import { SchemaBrowser } from "./components/SchemaBrowser";
 import { Reports } from "./components/Reports";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { toggleLanguage } from "./i18n";
@@ -37,7 +38,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Dashboard onOpen={open} />} />
           <Route path="/reports" element={<Reports />} />
-          <Route path="/browse/:schema" element={<Dashboard onOpen={open} />} />
+          <Route path="/browse/:schema" element={<SchemaBrowser />} />
           <Route path="/browse/:schema/:model" element={<TableBrowser schema={view.schema} model={view.model} />} />
         </Routes>
       </main>
