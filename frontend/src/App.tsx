@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
+import { ToastProvider } from "./toast";
 import { Sidebar } from "./components/Sidebar";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { TableBrowser } from "./components/TableBrowser";
 import { Reports } from "./components/Reports";
+import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { toggleLanguage } from "./i18n";
 import { useTranslation } from "react-i18next";
 
@@ -24,12 +26,13 @@ function Shell() {
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", height: "100vh" }}>
       <Sidebar onNavigate={open} />
-      <main style={{ flex: 1, minHeight: "100vh", background: "#010409", color: "#e6edf3" }}>
-        <div style={topbar}>
-          <button style={langBtn} onClick={toggleLanguage}>{t("language")}: EN / ع</button>
-          <button style={reportsBtn} onClick={() => navigate("/reports")}>{t("Reports")}</button>
+      <main style={{ flex: 1, minHeight: "100vh", overflow: "auto" }}>
+        <div className="mcms-no-print" style={topbar}>
+          <button style={btn} onClick={toggleLanguage}>{t("language")}: EN / ع</button>
+          <ThemeSwitcher />
+          <button style={btnAccent} onClick={() => navigate("/reports")}>{t("Reports")}</button>
         </div>
         <Routes>
           <Route path="/" element={<Dashboard onOpen={open} />} />
@@ -42,9 +45,9 @@ function Shell() {
   );
 }
 
-const topbar: any = { height: 44, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "0 16px", borderBottom: "1px solid #30363d", background: "#0d1117" };
-const langBtn: any = { background: "#21262d", color: "#e6edf3", border: "1px solid #30363d", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 };
-const reportsBtn: any = { background: "#1f6feb", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 12 };
+const topbar: any = { height: 44, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "0 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elev)" };
+const btn: any = { background: "var(--panel-2)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 };
+const btnAccent: any = { background: "var(--accent)", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 12 };
 
 function Root() {
   const { access } = useAuth();
@@ -61,7 +64,9 @@ function Root() {
 export default function App() {
   return (
     <AuthProvider>
-      <Root />
+      <ToastProvider>
+        <Root />
+      </ToastProvider>
     </AuthProvider>
   );
 }

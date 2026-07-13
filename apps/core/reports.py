@@ -1,21 +1,17 @@
 """
-MCMS reporting module.
+MCMS reporting module (expanded).
 
-Read-only analytical endpoints over the live schema. Each report is a plain
-SQL query (parameterised) returning aggregated rows — no ORM models, because
-reports span multiple schemas/joins. All endpoints are RBAC-gated by
-`required_perms` (inherited from BaseModelViewSet isn't used here; we apply
-HasRolePermission directly). Reports are safe SELECTs.
-
-Sections: financial summary, patient census / encounters, pharmacy dispense
-log, emergency triage acuity, lab/rad volume, and event-store activity.
+Read-only analytical endpoints over the live schema. Every endpoint accepts an
+optional `since` / `until` (ISO date) range on the relevant timestamp column.
+Reports span multiple schemas via plain parameterised SQL (no ORM). All are
+RBAC-gated by HasRolePermission via `required_perms`.
 """
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import connection
-from apps.core.permissions import HasRolePermission
+from apps.core.permissions import HasRolePermission, effective_perms
 from datetime import date
 
 
@@ -26,19 +22,34 @@ def _rows(sql, params=None):
         return [dict(zip(cols, row)) for row in cur.fetchall()]
 
 
+def _range(request, column):
+    """Build a date-range WHERE fragment for `column` (qualified name)."""
+    since = request.query_params.get("since")
+    until = request.query_params.get("until")
+    clauses, params = [], []
+    if since:
+        clauses.append(f"AND {column} >= %s"); params.append(since)
+    if until:
+        clauses.append(f"AND {column} <= %s"); params.append(until)
+    return " ".join(clauses), params
+
+
 class ReportViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
     required_perms = {
         "financial_summary": "billing.read",
+        "revenue_by_department": "billing.read",
         "patient_census": "emr.read",
         "pharmacy_dispense": "pharmacy.dispense",
         "emergency_acuity": "emr.read",
+        "er_wait_times": "emr.read",
         "diagnosis_volume": "lab_rad.result",
+        "top_diagnoses": "emr.read",
+        "inventory_valuation": "inventory.manage",
         "event_activity": "patient.read",
     }
 
     def _guard(self, request, key):
-        from apps.core.permissions import effective_perms
         perms = effective_perms(request)
         if "admin.all" in perms or key in perms:
             return None
@@ -46,41 +57,49 @@ class ReportViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"])
     def financial_summary(self, request):
-        denied = self._guard(request, "billing.read")
-        if denied: return denied
-        since = request.query_params.get("since")
-        since_clause = "AND issued_at >= %s" if since else ""
-        params = [since] if since else []
+        if (d := self._guard(request, "billing.read")): return d
+        rcl, rp = _range(request, "i.issued_at")
         sql = f"""
-            SELECT
-                COUNT(*)                                            AS invoices,
-                COALESCE(SUM(total),0)::numeric(12,2)               AS total_billed,
-                COALESCE(SUM(insurance_covers),0)::numeric(12,2)    AS insurance_covers,
-                COALESCE(SUM(patient_pays),0)::numeric(12,2)        AS patient_pays,
-                COALESCE(SUM(CASE WHEN status='paid' THEN total ELSE 0 END),0)::numeric(12,2) AS collected
-            FROM mcms_billing.invoice
-            WHERE 1=1 {since_clause}
+            SELECT COUNT(*) AS invoices,
+                   COALESCE(SUM(total),0)::numeric(12,2) AS total_billed,
+                   COALESCE(SUM(insurance_covers),0)::numeric(12,2) AS insurance_covers,
+                   COALESCE(SUM(patient_pays),0)::numeric(12,2) AS patient_pays,
+                   COALESCE(SUM(CASE WHEN status='paid' THEN total ELSE 0 END),0)::numeric(12,2) AS collected
+            FROM mcms_billing.invoice WHERE 1=1 {rcl}
         """
-        return Response(_rows(sql, params)[0])
+        return Response(_rows(sql, rp)[0])
+
+    @action(detail=False, methods=["get"])
+    def revenue_by_department(self, request):
+        if (d := self._guard(request, "billing.read")): return d
+        rcl, rp = _range(request, "i.issued_at")
+        sql = f"""
+            SELECT hd.name AS department,
+                   COUNT(i.invoice_id) AS invoices,
+                   COALESCE(SUM(i.total),0)::numeric(12,2) AS revenue
+            FROM mcms_billing.invoice i
+            LEFT JOIN mcms_emr.encounter e ON e.encounter_id = i.encounter_id
+            LEFT JOIN mcms_hr.department hd ON hd.department_id = e.department_id
+            WHERE 1=1 {rcl}
+            GROUP BY hd.name ORDER BY revenue DESC
+        """
+        return Response(_rows(sql, rp))
 
     @action(detail=False, methods=["get"])
     def patient_census(self, request):
-        denied = self._guard(request, "emr.read")
-        if denied: return denied
+        if (d := self._guard(request, "emr.read")): return d
         sql = """
-            SELECT
-                (SELECT COUNT(*) FROM mcms_emr.patient)                              AS total_patients,
-                (SELECT COUNT(*) FROM mcms_emr.encounter WHERE status='in_progress') AS active_encounters,
-                (SELECT COUNT(*) FROM mcms_emr.encounter WHERE status='finished')    AS closed_encounters,
-                (SELECT COUNT(*) FROM mcms_icu.admission WHERE status='active')      AS icu_active,
-                (SELECT COUNT(*) FROM mcms_emergency.triage WHERE status='in_treatment') AS er_active
+            SELECT (SELECT COUNT(*) FROM mcms_emr.patient) AS total_patients,
+                   (SELECT COUNT(*) FROM mcms_emr.encounter WHERE status='in_progress') AS active_encounters,
+                   (SELECT COUNT(*) FROM mcms_emr.encounter WHERE status='finished') AS closed_encounters,
+                   (SELECT COUNT(*) FROM mcms_icu.admission WHERE status='active') AS icu_active,
+                   (SELECT COUNT(*) FROM mcms_emergency.triage WHERE status='in_treatment') AS er_active
         """
         return Response(_rows(sql)[0])
 
     @action(detail=False, methods=["get"])
     def pharmacy_dispense(self, request):
-        denied = self._guard(request, "pharmacy.dispense")
-        if denied: return denied
+        if (d := self._guard(request, "pharmacy.dispense")): return d
         limit = int(request.query_params.get("limit", 50))
         sql = """
             SELECT d.dispensation_id, d.mrn, di.generic_name AS drug, d.quantity,
@@ -88,40 +107,64 @@ class ReportViewSet(viewsets.ViewSet):
             FROM mcms_rx.dispensation d
             LEFT JOIN mcms_rx.drug_item di ON di.drug_item_id = d.drug_item_id
             LEFT JOIN mcms_core.app_user u ON u.user_id = d.dispensed_by
-            ORDER BY d.dispensed_at DESC NULLS LAST
-            LIMIT %s
+            ORDER BY d.dispensed_at DESC NULLS LAST LIMIT %s
         """
         return Response(_rows(sql, [limit]))
 
     @action(detail=False, methods=["get"])
     def emergency_acuity(self, request):
-        denied = self._guard(request, "emr.read")
-        if denied: return denied
+        if (d := self._guard(request, "emr.read")): return d
+        sql = "SELECT esi_level, COUNT(*) AS triages FROM mcms_emergency.triage GROUP BY esi_level ORDER BY esi_level"
+        return Response(_rows(sql))
+
+    @action(detail=False, methods=["get"])
+    def er_wait_times(self, request):
+        if (d := self._guard(request, "emr.read")): return d
         sql = """
-            SELECT esi_level, COUNT(*) AS tramses
+            SELECT triage_nurse_user_id IS NOT NULL AS triaged,
+                   COUNT(*) AS visits,
+                   ROUND(AVG(EXTRACT(EPOCH FROM (triaged_at - presentation_time))/60)::numeric,1) AS avg_wait_min
             FROM mcms_emergency.triage
-            GROUP BY esi_level ORDER BY esi_level
+            WHERE triaged_at IS NOT NULL
+            GROUP BY 1
         """
         return Response(_rows(sql))
 
     @action(detail=False, methods=["get"])
     def diagnosis_volume(self, request):
-        denied = self._guard(request, "lab_rad.result")
-        if denied: return denied
+        if (d := self._guard(request, "lab_rad.result")): return d
         sql = """
             SELECT 'lab' AS domain, COUNT(*) AS orders FROM mcms_lab.lab_order
-            UNION ALL
-            SELECT 'radiology', COUNT(*) FROM mcms_rad.study_request
+            UNION ALL SELECT 'radiology', COUNT(*) FROM mcms_rad.study_request
+        """
+        return Response(_rows(sql))
+
+    @action(detail=False, methods=["get"])
+    def top_diagnoses(self, request):
+        if (d := self._guard(request, "emr.read")): return d
+        limit = int(request.query_params.get("limit", 10))
+        sql = """
+            SELECT dx.condition_code, dx.condition_desc, COUNT(*) AS count
+            FROM mcms_emr.diagnosis dx
+            GROUP BY dx.condition_code, dx.condition_desc
+            ORDER BY count DESC LIMIT %s
+        """
+        return Response(_rows(sql, [limit]))
+
+    @action(detail=False, methods=["get"])
+    def inventory_valuation(self, request):
+        if (d := self._guard(request, "inventory.manage")): return d
+        sql = """
+            SELECT ii.code, ii.name, s.qty_on_hand,
+                   COALESCE(s.qty_on_hand,0)*ii.cost_per_unit::numeric AS stock_value
+            FROM mcms_erp.inventory_stock s
+            JOIN mcms_erp.inventory_item ii ON ii.item_id = s.item_id
+            ORDER BY stock_value DESC LIMIT 50
         """
         return Response(_rows(sql))
 
     @action(detail=False, methods=["get"])
     def event_activity(self, request):
-        denied = self._guard(request, "patient.read")
-        if denied: return denied
-        sql = """
-            SELECT kind, COUNT(*) AS events
-            FROM mcms_core.event_log
-            GROUP BY kind ORDER BY events DESC
-        """
+        if (d := self._guard(request, "patient.read")): return d
+        sql = "SELECT kind, COUNT(*) AS events FROM mcms_core.event_log GROUP BY kind ORDER BY events DESC"
         return Response(_rows(sql))

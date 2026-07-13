@@ -50,6 +50,7 @@ export const mcmsApi = {
   get: (url: string, params?: any) => api.get(url, { params }),
   post: (url: string, body: any) => api.post(url, body),
   patch: (url: string, body: any) => api.patch(url, body),
+  del: (url: string) => api.delete(url),
   options: (url: string) => api.options(url),
   list: (schema: string, model: string, params?: any) =>
     api.get(`/${schema}/${model}/`, { params }),
