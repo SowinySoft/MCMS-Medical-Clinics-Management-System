@@ -6,9 +6,14 @@ Authentication uses Django's auth_user (secure password hashing, admin, etc.).
 Authorization uses the mcms_core RBAC matrix, bridged by username. The access
 token carries the effective permission set + roles so the frontend can render
 menus without an extra round-trip (the server still re-checks on every call).
+
+Brute-force protection: the token endpoint is wrapped with django-axes so
+failed logins are rate-limited/locked (see config/settings.py AXES_*).
 """
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from axes.decorators import axes_dispatch
+from django.utils.decorators import method_decorator
 from apps.core.permissions import _perms_for_username
 from django.db import connection
 
@@ -44,5 +49,12 @@ class MCMSTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
+@method_decorator(axes_dispatch, name="post")
 class MCMSTokenObtainPairView(TokenObtainPairView):
+    """JWT token endpoint, axes-protected against brute force.
+
+    django-axes resolves the attempted username via AXES_USERNAME_CALLABLE
+    (configured in settings) which reads the already-parsed JSON body — no
+    raw request.body access, so it composes cleanly with DRF.
+    """
     serializer_class = MCMSTokenObtainPairSerializer

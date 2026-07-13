@@ -32,6 +32,7 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "drf_spectacular",
     "corsheaders",
+    "axes",
 ]
 # domain apps — one per DB schema
 DOMAIN_APPS = [
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -79,12 +81,15 @@ TEMPLATES = [{
 WSGI_APPLICATION = "config.wsgi.application"
 
 # ---------------------------------------------------------------- database
-# One connection; search_path spans every domain schema + public.
+# One connection; search_path puts `public` FIRST (Django framework tables:
+# auth_*, django_*) then every domain schema. Framework infra no longer lives
+# in mcms_core (see sql/94_move_django_to_public.sql).
 _SCHEMAS = ",".join([
+    "public",
     "mcms_core", "mcms_emr", "mcms_clinic", "mcms_hr", "mcms_surgical",
     "mcms_emergency", "mcms_rx", "mcms_lab", "mcms_rad", "mcms_icu",
     "mcms_physio", "mcms_dialysis", "mcms_nursery", "mcms_billing",
-    "mcms_erp", "public",
+    "mcms_erp",
 ])
 import os as _os
 _SP_OVERRIDE = _os.environ.get("MCMS_SEARCH_PATH")
@@ -99,7 +104,11 @@ DATABASES = {
         "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
     }
 }
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# ---------------------------------------------------------------- auth
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",  # brute-force aware; records + resets on success
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # ---------------------------------------------------------------- DRF / JWT
 REST_FRAMEWORK = {
@@ -161,3 +170,24 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
+
+# ---------------------------------------------------------------- Brute-force protection (django-axes)
+# Locks an IP+username after N failed logins within COOLOFF. Tunable via env.
+AXES_ENABLED = _os.environ.get("MCMS_AXES_ENABLED", "true").lower() in ("1", "true", "yes")
+AXES_FAILURE_LIMIT = int(_os.environ.get("MCMS_AXES_FAILURE_LIMIT", "5"))
+AXES_COOLOFF_TIME = int(_os.environ.get("MCMS_AXES_COOLOFF_TIME", "10"))  # minutes
+AXES_LOCKOUT_TIME = int(_os.environ.get("MCMS_AXES_LOCKOUT_TIME", "30"))   # minutes
+AXES_COORDINATOR = "axes.handlers.database.AxesDatabaseHandler"
+AXES_USERNAME_FIELD = "username"
+AXES_RESET_ON_SUCCESS = True
+
+
+def _axes_username(request, credentials=None):
+    """Pull the attempted username from the JSON login body (DRF-parsed)."""
+    try:
+        return (request.data or {}).get("username") or ""
+    except Exception:
+        return ""
+
+
+AXES_USERNAME_CALLABLE = _axes_username
