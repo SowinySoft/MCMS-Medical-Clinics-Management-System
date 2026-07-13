@@ -25,9 +25,10 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, any>>({});
   const [confirmDel, setConfirmDel] = useState<any | null>(null);
+  const [fkOptions, setFkOptions] = useState<Record<string, { id: any; label: string }[]>>({});
 
   const label = MODEL_LABELS[`${schema}/${model}`]?.en || `${schema}/${model}`;
-  const pkField = `${model.replace(/s$/, "")}_id`;
+  const [pkField, setPkField] = useState<string>("");
 
   const load = async (pg = 1) => {
     setLoading(true); setError("");
@@ -40,9 +41,38 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
     } finally { setLoading(false); }
   };
 
+  // Load related-record options for *_id fields so create/edit forms show
+  // dropdowns instead of requiring raw IDs. Tries likely schemas in order.
+  const loadFkOptions = async (post: Record<string, any>) => {
+    const opts: Record<string, { id: any; label: string }[]> = {};
+    await Promise.all(Object.keys(post).filter((k) => /_id$/.test(k) && k !== pkField).map(async (k) => {
+      const base = k.replace(/_id$/, "");
+      const schemasToTry = [schema, "core", "emr", "hr", "clinic", "billing", "rx"];
+      for (const sc of schemasToTry) {
+        try {
+          const { data } = await mcmsApi.list(sc, base, { page: 1 });
+          if (data.results && data.results.length) {
+            opts[k] = data.results.slice(0, 50).map((r: any) => ({
+              id: r[`${base}_id`] ?? r.id,
+              label: r.name || r.display_name || r.code || r.mrn || String(r[`${base}_id`] ?? r.id),
+            }));
+            break;
+          }
+        } catch { /* try next schema */ }
+      }
+    }));
+    setFkOptions(opts);
+  };
+
   const loadMeta = async () => {
-    try { const res = await mcmsApi.options(`/${schema}/${model}/`); setMeta(res.data.actions?.POST || {}); }
-    catch {}
+    try {
+      const res = await mcmsApi.options(`/${schema}/${model}/`);
+      const post = res.data.actions?.POST || {};
+      setMeta(post);
+      const idField = Object.keys(post).find((k) => post[k].type === "integer" && /_id$|^id$/.test(k));
+      setPkField(idField || `${model.replace(/s$/, "")}_id`);
+      loadFkOptions(post);
+    } catch {}
   };
 
   useEffect(() => { setMeta(null); setEditing(null); setConfirmDel(null); load(); loadMeta(); /* eslint-disable-next-line */ }, [schema, model]);
@@ -113,13 +143,20 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
           {Object.entries(meta).filter(([, f]: any) => !f.read_only).map(([k, f]: any) => (
             <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontSize: 12, color: "var(--text-dim)" }}>{k}{(f as any).required ? " *" : ""}</span>
-              <input
-                className="mcms-input"
-                type={fieldType(f)}
-                checked={fieldType(f) === "checkbox" ? !!form[k] : undefined}
-                value={fieldType(f) === "checkbox" ? undefined : form[k]}
-                onChange={(e) => setForm({ ...form, [k]: coerce(f, fieldType(f) === "checkbox" ? e.target.checked : e.target.value) })}
-              />
+              {fkOptions[k] ? (
+                <select className="mcms-input" value={form[k] ?? ""} onChange={(e) => setForm({ ...form, [k]: coerce(f, e.target.value) })}>
+                  <option value="">—</option>
+                  {fkOptions[k].map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select>
+              ) : (
+                <input
+                  className="mcms-input"
+                  type={fieldType(f)}
+                  checked={fieldType(f) === "checkbox" ? !!form[k] : undefined}
+                  value={fieldType(f) === "checkbox" ? undefined : form[k]}
+                  onChange={(e) => setForm({ ...form, [k]: coerce(f, fieldType(f) === "checkbox" ? e.target.checked : e.target.value) })}
+                />
+              )}
             </label>
           ))}
           <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8 }}>

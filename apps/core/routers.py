@@ -14,22 +14,25 @@ from rest_framework.routers import DefaultRouter
 from apps.core.base import build_viewset
 
 # schema (app label) -> (read_perm, write_perm)
+# Read perms follow least-privilege: each domain exposes its own read code so
+# clinical staff don't accidentally see HR/salary or core/audit data. Write
+# perms match the provisioned role matrix (see sql/91_merge_seed.sql).
 DOMAIN_PERMS = {
-    "core":      ("patient.read", "admin.all"),
+    "core":      ("admin.all", "admin.all"),       # RBAC/audit/event infra — admin only
     "emr":       ("emr.read", "emr.write"),
-    "clinic":    ("patient.read", "appointment.manage"),
-    "hr":        ("patient.read", "admin.all"),
+    "clinic":    ("appointment.manage", "appointment.manage"),
+    "hr":        ("hr.read", "hr.read"),           # HR is its own silo (salaries/staff)
     "surgical":  ("emr.read", "emr.write"),
     "emergency": ("emr.read", "emr.write"),
-    "rx":        ("emr.read", "pharmacy.dispense"),
-    "lab":       ("emr.read", "lab_rad.result"),
-    "rad":       ("emr.read", "lab_rad.result"),
+    "rx":        ("pharmacy.dispense", "pharmacy.dispense"),
+    "lab":       ("lab_rad.result", "lab_rad.result"),
+    "rad":       ("lab_rad.result", "lab_rad.result"),
     "icu":       ("emr.read", "emr.write"),
     "physio":    ("emr.read", "emr.write"),
     "dialysis":  ("emr.read", "emr.write"),
     "nursery":   ("emr.read", "emr.write"),
     "billing":   ("billing.read", "billing.manage"),
-    "erp":       ("patient.read", "inventory.manage"),
+    "erp":       ("inventory.manage", "inventory.manage"),  # warehouse manager reads+writes
 }
 
 # heuristic search fields by column name presence

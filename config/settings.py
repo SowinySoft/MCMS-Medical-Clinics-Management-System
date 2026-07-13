@@ -11,9 +11,11 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "mcms-dev-secret-key-change-in-prod-2f8a9c1d4e6b7f0a3c5d8e"
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+import os as _os
+
+SECRET_KEY = _os.environ.get("MCMS_SECRET_KEY", "mcms-dev-insecure-change-me")
+DEBUG = _os.environ.get("MCMS_DEBUG", "false").lower() in ("1", "true", "yes")
+ALLOWED_HOSTS = _os.environ.get("MCMS_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 # ---------------------------------------------------------------- apps
 DJANGO_APPS = [
@@ -89,11 +91,11 @@ _SP_OVERRIDE = _os.environ.get("MCMS_SEARCH_PATH")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mcms",
-        "USER": "postgres",
-        "PASSWORD": "postgres",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": _os.environ.get("MCMS_DB_NAME", "mcms"),
+        "USER": _os.environ.get("MCMS_DB_USER", "postgres"),
+        "PASSWORD": _os.environ.get("MCMS_DB_PASSWORD", "postgres"),
+        "HOST": _os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
+        "PORT": _os.environ.get("MCMS_DB_PORT", "5432"),
         "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
     }
 }
@@ -132,12 +134,26 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS: restrict to configured origins in production. Set MCMS_CORS_ORIGINS
+# (comma-separated) to your frontend host; defaults to open for local dev only.
+_CORS = _os.environ.get("MCMS_CORS_ORIGINS", "")
+if _CORS:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _CORS.split(",")]
+    CORS_ALLOW_ALL_ORIGINS = False
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 # ---------------------------------------------------------------- ASGI / Channels
 ASGI_APPLICATION = "config.asgi.application"
+# Use Redis in production (MCMS_REDIS_URL); fall back to InMemory for local dev.
+# InMemory does NOT persist events across workers/restarts — not for prod.
+_REDIS = _os.environ.get("MCMS_REDIS_URL")
 CHANNEL_LAYERS = {
-    "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    "default": (
+        {"BACKEND": "channels.layers.InMemoryChannelLayer"}
+        if not _REDIS else
+        {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [_REDIS]}}
+    )
 }
 
 LANGUAGE_CODE = "en-us"

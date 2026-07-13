@@ -20,19 +20,9 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
   { key: "mgmt", label: { en: "Management & Support", ar: "الإدارة والدعم" }, icon: "⚙️",
     schemas: ["billing", "erp", "hr"], perm: "billing.read" },
   { key: "reporting", label: { en: "Reporting & Localization", ar: "التقارير والتعريب" }, icon: "📊",
-    schemas: ["core"], perm: "patient.read" },
+    schemas: ["core"], perm: "admin.all" },
 ];
 
-// model slug -> friendly label per schema (used by the table browser)
-export const MODEL_LABELS: Record<string, { en: string; ar: string }> = {
-  "hr/department": { en: "Departments", ar: "الأقسام" },
-  "emr/patient": { en: "Patients", ar: "المرضى" },
-  "clinic/appointment": { en: "Appointments", ar: "المواعيد" },
-  "billing/invoice": { en: "Invoices", ar: "الفواتير" },
-  "rx/drug-item": { en: "Drug Items", ar: "الأدوية" },
-  "erp/goods-receipt": { en: "Goods Receipts", ar: "إيصالات الاستلام" },
-  "lab/lab-order": { en: "Lab Orders", ar: "طلبات المختبر" },
-  "rad/exam-catalog": { en: "Radiology Exams", ar: "فحوص الأشعة" },
-  "icu/admission": { en: "ICU Admissions", ar: "إدخالات العناية" },
-  "surgical/surgery": { en: "Surgeries", ar: "العمليات الجراحية" },
-};
+// Friendly labels for every domain table (used by the table browser title).
+// Generated from the live schema — see model_labels.ts.
+export { MODEL_LABELS } from "./model_labels";
