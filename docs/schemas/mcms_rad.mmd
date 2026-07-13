@@ -1,0 +1,65 @@
+erDiagram
+  rad__exam_catalog {
+    bigint exam_id PK
+    text snomed_code
+    text name
+    text body_part
+    modality_type default_modality
+    boolean contrast_used
+    int duration_minutes
+    timestamptz created_at
+  }
+  rad__image_instance {
+    bigint image_id PK
+    bigint study_id
+    int series_number
+    int instance_number
+    text sop_instance_uid
+    image_type image_type
+    text storage_uri
+    int rows
+    int columns
+    int bits_allocated
+    timestamptz created_at
+  }
+  rad__modality_suite {
+    bigint suite_id PK
+    bigint department_id
+    text code
+    text name
+    modality_type modality
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  rad__study_request {
+    bigint study_id PK
+    text accession_no
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint exam_id
+    bigint suite_id
+    bigint requested_by
+    order_priority priority
+    text clinical_indication
+    study_status status
+    timestamptz scheduled_at
+    timestamptz started_at
+    timestamptz completed_at
+    int image_count
+    numeric radiation_dose_msv
+    jsonb contrast_data
+    text findings
+    text impression
+    bigint reported_by
+    timestamptz reported_at
+    bigint verified_by
+    timestamptz verified_at
+    text cancelled_reason
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  rad__study_request ||--o{ rad__image_instance : "study_id"
+  rad__exam_catalog ||--o{ rad__study_request : "exam_id"
+  rad__modality_suite ||--o{ rad__study_request : "suite_id"

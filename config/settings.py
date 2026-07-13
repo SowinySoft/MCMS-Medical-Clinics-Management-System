@@ -1,0 +1,147 @@
+"""
+MCMS · Django settings
+Multi-schema PostgreSQL (15 mcms_* schemas) exposed through DRF + JWT + RBAC.
+Design patterns applied:
+  * search_path spanning every mcms_* schema (schema-per-domain, one connection)
+  * thin settings, fat app packages under apps/
+  * declarative RBAC driven by DB tables (mcms_core.role/permission)
+"""
+from pathlib import Path
+from datetime import timedelta
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = "mcms-dev-secret-key-change-in-prod-2f8a9c1d4e6b7f0a3c5d8e"
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
+
+# ---------------------------------------------------------------- apps
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "django_filters",
+    "drf_spectacular",
+    "corsheaders",
+]
+# domain apps — one per DB schema
+DOMAIN_APPS = [
+    "apps.core",
+    "apps.emr",
+    "apps.clinic",
+    "apps.hr",
+    "apps.surgical",
+    "apps.emergency",
+    "apps.rx",
+    "apps.lab",
+    "apps.rad",
+    "apps.icu",
+    "apps.physio",
+    "apps.dialysis",
+    "apps.nursery",
+    "apps.billing",
+    "apps.erp",
+]
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS + ["channels"]
+
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+TEMPLATES = [{
+    "BACKEND": "django.template.backends.django.DjangoTemplates",
+    "DIRS": [],
+    "APP_DIRS": True,
+    "OPTIONS": {"context_processors": [
+        "django.template.context_processors.debug",
+        "django.template.context_processors.request",
+        "django.contrib.auth.context_processors.auth",
+        "django.contrib.messages.context_processors.messages",
+    ]},
+}]
+WSGI_APPLICATION = "config.wsgi.application"
+
+# ---------------------------------------------------------------- database
+# One connection; search_path spans every domain schema + public.
+_SCHEMAS = ",".join([
+    "mcms_core", "mcms_emr", "mcms_clinic", "mcms_hr", "mcms_surgical",
+    "mcms_emergency", "mcms_rx", "mcms_lab", "mcms_rad", "mcms_icu",
+    "mcms_physio", "mcms_dialysis", "mcms_nursery", "mcms_billing",
+    "mcms_erp", "public",
+])
+import os as _os
+_SP_OVERRIDE = _os.environ.get("MCMS_SEARCH_PATH")
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "mcms",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+        "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
+    }
+}
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---------------------------------------------------------------- DRF / JWT
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+        "apps.core.permissions.HasRolePermission",
+    ),
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MCMS API",
+    "DESCRIPTION": "Medical Clinics Management System — DRF over 15-schema PostgreSQL",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# ---------------------------------------------------------------- ASGI / Channels
+ASGI_APPLICATION = "config.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+}
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+STATIC_URL = "static/"

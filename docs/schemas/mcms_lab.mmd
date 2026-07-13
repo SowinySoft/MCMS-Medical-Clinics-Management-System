@@ -1,0 +1,76 @@
+erDiagram
+  lab__lab_order {
+    bigint order_id PK
+    text order_no
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint requested_by
+    order_priority order_priority
+    bigint panel_id
+    text clinical_indication
+    timestamptz requested_at
+  }
+  lab__result {
+    bigint result_id PK
+    bigint sample_id
+    bigint test_id
+    text value_text
+    numeric value_numeric
+    text unit
+    text ref_range
+    result_flag flag
+    bigint analysed_by
+    timestamptz analysed_at
+    bigint verified_by
+    timestamptz verified_at
+    timestamptz rejected_at
+    text rejected_reason
+    timestamptz created_at
+  }
+  lab__sample {
+    bigint sample_id PK
+    text sample_no
+    bigint lab_order_id
+    _int8 test_ids
+    specimen_type specimen_type
+    numeric volume_collected
+    timestamptz collected_at
+    bigint collected_by
+    timestamptz received_at
+    bigint received_by
+    sample_status status
+    text rejected_reason
+  }
+  lab__test_catalog {
+    bigint test_id PK
+    text loinc_code
+    text name
+    text category
+    specimen_type specimen_type
+    numeric volume_required
+    text unit
+    numeric ref_low
+    numeric ref_high
+    int turnaround_minutes
+    boolean is_active
+    timestamptz created_at
+  }
+  lab__test_panel {
+    bigint panel_id PK
+    text code
+    text name
+    timestamptz created_at
+  }
+  lab__test_panel_item {
+    bigint ppi_id PK
+    bigint panel_id
+    bigint test_id
+    int sort_order
+  }
+  lab__test_panel ||--o{ lab__lab_order : "panel_id"
+  lab__sample ||--o{ lab__result : "sample_id"
+  lab__test_catalog ||--o{ lab__result : "test_id"
+  lab__lab_order ||--o{ lab__sample : "lab_order_id"
+  lab__test_catalog ||--o{ lab__test_panel_item : "test_id"
+  lab__test_panel ||--o{ lab__test_panel_item : "panel_id"

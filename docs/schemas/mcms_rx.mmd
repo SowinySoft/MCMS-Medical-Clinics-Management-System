@@ -1,0 +1,104 @@
+erDiagram
+  rx__administration {
+    bigint administer_id PK
+    bigint patient_id
+    bigint med_order_id
+    bigint drug_item_id
+    text dose_given
+    timestamptz dose_at
+    bigint administered_by
+    bigint witnessed_by
+    text site
+    text notes
+  }
+  rx__dispensation {
+    bigint dispensation_id PK
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    bigint med_order_id
+    bigint drug_item_id
+    bigint lot_id
+    int quantity
+    timestamptz dispensed_at
+    bigint dispensed_by
+    text instructions
+    text notes
+  }
+  rx__drug_alternative {
+    bigint alternative_id PK
+    bigint drug_item_id
+    bigint alt_drug_item_id
+    text reason
+    boolean is_generic_equiv
+    timestamptz created_at
+  }
+  rx__drug_interaction {
+    bigint interaction_id PK
+    bigint drug_item_id_a
+    bigint drug_item_id_b
+    interaction_severity severity
+    text mechanism
+    text clinical_effect
+    text management
+    text source_ref
+    timestamptz created_at
+  }
+  rx__drug_item {
+    bigint drug_item_id PK
+    text generic_name
+    text brand_name
+    drug_class drug_class
+    text form
+    text strength
+    text unit
+    text atc_code
+    boolean controlled_substance
+    boolean requires_cold_chain
+    text manufacturer
+    int reorder_level
+    int reorder_qty
+    boolean is_active
+    numeric cost_per_unit
+    numeric sale_price_per_unit
+    timestamptz created_at
+    timestamptz updated_at
+    text rxnorm_code
+  }
+  rx__drug_lot {
+    bigint lot_id PK
+    bigint drug_item_id
+    text lot_number
+    int received_qty
+    int on_hand_qty
+    date manufactured_on
+    date expires_on
+    timestamptz received_at
+    bigint supplier_party_id
+    bigint purchase_order_id
+    numeric unit_cost
+    lot_status status
+  }
+  rx__stock_movement {
+    bigint movement_id PK
+    bigint drug_item_id
+    bigint lot_id
+    move_type movement_type
+    int qty_delta
+    int balance_after
+    bigint related_movement_id
+    text reason
+    bigint performed_by
+    timestamptz performed_at
+  }
+  rx__drug_item ||--o{ rx__administration : "drug_item_id"
+  rx__drug_item ||--o{ rx__dispensation : "drug_item_id"
+  rx__drug_lot ||--o{ rx__dispensation : "lot_id"
+  rx__drug_item ||--o{ rx__drug_alternative : "alt_drug_item_id"
+  rx__drug_item ||--o{ rx__drug_alternative : "drug_item_id"
+  rx__drug_item ||--o{ rx__drug_interaction : "drug_item_id_a"
+  rx__drug_item ||--o{ rx__drug_interaction : "drug_item_id_b"
+  rx__drug_item ||--o{ rx__drug_lot : "drug_item_id"
+  rx__drug_item ||--o{ rx__stock_movement : "drug_item_id"
+  rx__drug_lot ||--o{ rx__stock_movement : "lot_id"
+  rx__stock_movement ||--o{ rx__stock_movement : "self"

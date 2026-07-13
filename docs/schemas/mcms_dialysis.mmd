@@ -1,0 +1,40 @@
+erDiagram
+  dialysis__session {
+    bigint session_id PK
+    bigint patient_id
+    bigint encounter_id
+    bigint station_id
+    bigint nurse_user_id
+    bigint nephrologist_user_id
+    modality modality
+    timestamptz scheduled_at
+    timestamptz started_at
+    timestamptz ended_at
+    int duration_minutes
+    numeric pre_weight_kg
+    text pre_bp
+    numeric dry_weight_kg
+    numeric post_weight_kg
+    text post_bp
+    int fluid_removed_ml
+    int blood_flow_rate
+    int dialysate_flow
+    int heparin_units
+    numeric kt_v
+    text complications
+    dialysis_status status
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  dialysis__station {
+    bigint station_id PK
+    text code
+    text name
+    bigint department_id
+    boolean has_ro_water
+    bed_status status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  dialysis__station ||--o{ dialysis__session : "station_id"

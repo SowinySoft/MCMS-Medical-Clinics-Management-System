@@ -1,0 +1,84 @@
+erDiagram
+  billing__insurance_claim {
+    bigint claim_id PK
+    bigint invoice_id
+    text policy_no
+    text insurance_provider
+    bigint patient_id
+    numeric billed_amount
+    numeric approved_amount
+    numeric rejected_amount
+    claim_status status
+    timestamptz submitted_at
+    timestamptz adjudicated_at
+    timestamptz paid_at
+    text claim_no_external
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  billing__invoice {
+    bigint invoice_id PK
+    text invoice_no
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    bigint issued_by
+    inv_status status
+    numeric subtotal
+    numeric tax_amount
+    numeric discount_amount
+    numeric insurance_covers
+    numeric patient_pays
+    numeric total
+    text currency
+    timestamptz issued_at
+    date due_date
+    timestamptz paid_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  billing__invoice_line {
+    bigint line_id PK
+    bigint invoice_id
+    bigint service_id
+    text source_schema
+    text source_table
+    bigint source_id
+    text description
+    numeric qty
+    numeric unit_price
+    numeric line_total
+    timestamptz created_at
+  }
+  billing__payment {
+    bigint payment_id PK
+    bigint invoice_id
+    pay_method method
+    numeric amount
+    text currency
+    timestamptz paid_at
+    bigint received_by
+    text txn_ref
+    text notes
+  }
+  billing__service_price {
+    bigint service_id PK
+    text code
+    text name
+    service_type service_type
+    bigint department_id
+    numeric unit_price
+    text currency
+    boolean is_taxable
+    boolean is_active
+    date effective_from
+    date effective_to
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  billing__invoice ||--o{ billing__insurance_claim : "invoice_id"
+  billing__invoice ||--o{ billing__invoice_line : "invoice_id"
+  billing__service_price ||--o{ billing__invoice_line : "service_id"
+  billing__invoice ||--o{ billing__payment : "invoice_id"

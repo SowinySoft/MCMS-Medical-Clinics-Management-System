@@ -1,0 +1,267 @@
+# tables
+mcms_billing	insurance_claim	16
+mcms_billing	invoice	20
+mcms_billing	invoice_line	11
+mcms_billing	payment	9
+mcms_billing	service_price	13
+mcms_clinic	appointment	14
+mcms_clinic	consultation	17
+mcms_clinic	patient_queue	13
+mcms_clinic	room	9
+mcms_core	address	13
+mcms_core	app_user	12
+mcms_core	audit_trail	10
+mcms_core	contact	7
+mcms_core	event_log	12
+mcms_core	lookup	7
+mcms_core	party	13
+mcms_emergency	ed_bed	7
+mcms_emergency	resuscitation	17
+mcms_emergency	triage	28
+mcms_emr	allergy	9
+mcms_emr	clinical_note	13
+mcms_emr	diagnosis	12
+mcms_emr	encounter	16
+mcms_emr	family_history	9
+mcms_emr	immunization	10
+mcms_emr	medication_order	17
+mcms_emr	patient	16
+mcms_emr	social_history	11
+mcms_emr	vitals	16
+mcms_erp	gl_account	7
+mcms_erp	goods_receipt	8
+mcms_erp	goods_receipt_line	9
+mcms_erp	inventory_item	11
+mcms_erp	inventory_stock	7
+mcms_erp	purchase_order	13
+mcms_erp	purchase_order_line	9
+mcms_erp	stock_movement	11
+mcms_erp	supplier	7
+mcms_hr	attendance	8
+mcms_hr	department	11
+mcms_hr	employee	18
+mcms_hr	employee_department	7
+mcms_hr	leave_request	12
+mcms_hr	payroll_item	11
+mcms_hr	payroll_period	7
+mcms_hr	shift	7
+mcms_icu	admission	15
+mcms_icu	bed	11
+mcms_icu	bed_stay	5
+mcms_icu	score	8
+mcms_icu	support_session	7
+mcms_icu	vitals_stream	18
+mcms_lab	lab_order	10
+mcms_lab	result	15
+mcms_lab	sample	12
+mcms_lab	test_catalog	12
+mcms_lab	test_panel	4
+mcms_lab	test_panel_item	4
+mcms_physio	session	21
+mcms_physio	therapy_catalog	9
+mcms_physio	treatment_plan	15
+mcms_rad	exam_catalog	8
+mcms_rad	image_instance	11
+mcms_rad	modality_suite	8
+mcms_rad	study_request	26
+mcms_rx	administration	10
+mcms_rx	dispensation	12
+mcms_rx	drug_item	18
+mcms_rx	drug_lot	12
+mcms_rx	stock_movement	10
+mcms_surgical	intra_op_vitals	13
+mcms_surgical	operating_room	9
+mcms_surgical	post_op_note	11
+mcms_surgical	pre_op_checklist	13
+mcms_surgical	procedure_catalog	7
+mcms_surgical	surgery	23
+mcms_surgical	surgical_team	6
+
+# foreign_keys
+mcms_core.address|party_id|mcms_core.party|party_id
+mcms_core.contact|party_id|mcms_core.party|party_id
+mcms_core.app_user|party_id|mcms_core.party|party_id
+mcms_core.event_log|actor_user_id|mcms_core.app_user|user_id
+mcms_core.event_log|subject_party_id|mcms_core.party|party_id
+mcms_core.audit_trail|changed_by|mcms_core.app_user|user_id
+mcms_core.audit_trail|event_id|mcms_core.event_log|event_id
+mcms_hr.department|head_user_id|mcms_core.app_user|user_id
+mcms_hr.department|parent_department_id|mcms_hr.department|department_id
+mcms_hr.employee|party_id|mcms_core.party|party_id
+mcms_hr.employee|primary_department_id|mcms_hr.department|department_id
+mcms_hr.employee|user_id|mcms_core.app_user|user_id
+mcms_hr.employee_department|department_id|mcms_hr.department|department_id
+mcms_hr.employee_department|employee_id|mcms_hr.employee|employee_id
+mcms_hr.shift|department_id|mcms_hr.department|department_id
+mcms_hr.shift|employee_id|mcms_hr.employee|employee_id
+mcms_hr.attendance|employee_id|mcms_hr.employee|employee_id
+mcms_hr.attendance|shift_id|mcms_hr.shift|shift_id
+mcms_hr.leave_request|approved_by|mcms_core.app_user|user_id
+mcms_hr.leave_request|employee_id|mcms_hr.employee|employee_id
+mcms_hr.payroll_item|employee_id|mcms_hr.employee|employee_id
+mcms_hr.payroll_item|period_id|mcms_hr.payroll_period|period_id
+mcms_emr.patient|next_of_kin_party_id|mcms_core.party|party_id
+mcms_emr.patient|party_id|mcms_core.party|party_id
+mcms_emr.encounter|attending_user_id|mcms_core.app_user|user_id
+mcms_emr.encounter|department_id|mcms_hr.department|department_id
+mcms_emr.encounter|mrn|mcms_emr.patient|mrn
+mcms_emr.encounter|originating_encounter_id|mcms_emr.encounter|encounter_id
+mcms_emr.encounter|patient_id|mcms_emr.patient|patient_id
+mcms_emr.encounter|referring_user_id|mcms_core.app_user|user_id
+mcms_emr.diagnosis|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emr.diagnosis|patient_id|mcms_emr.patient|patient_id
+mcms_emr.diagnosis|recorded_by|mcms_core.app_user|user_id
+mcms_emr.vitals|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emr.vitals|patient_id|mcms_emr.patient|patient_id
+mcms_emr.vitals|taken_by|mcms_core.app_user|user_id
+mcms_emr.allergy|noted_by|mcms_core.app_user|user_id
+mcms_emr.allergy|patient_id|mcms_emr.patient|patient_id
+mcms_emr.immunization|given_by|mcms_core.app_user|user_id
+mcms_emr.immunization|patient_id|mcms_emr.patient|patient_id
+mcms_emr.clinical_note|author_user_id|mcms_core.app_user|user_id
+mcms_emr.clinical_note|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emr.clinical_note|patient_id|mcms_emr.patient|patient_id
+mcms_emr.medication_order|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emr.medication_order|patient_id|mcms_emr.patient|patient_id
+mcms_emr.medication_order|prescriber_user_id|mcms_core.app_user|user_id
+mcms_emr.family_history|patient_id|mcms_emr.patient|patient_id
+mcms_emr.social_history|patient_id|mcms_emr.patient|patient_id
+mcms_clinic.room|department_id|mcms_hr.department|department_id
+mcms_clinic.appointment|booked_by|mcms_core.app_user|user_id
+mcms_clinic.appointment|clinician_user_id|mcms_core.app_user|user_id
+mcms_clinic.appointment|department_id|mcms_hr.department|department_id
+mcms_clinic.appointment|encounter_id|mcms_emr.encounter|encounter_id
+mcms_clinic.appointment|mrn|mcms_emr.patient|mrn
+mcms_clinic.appointment|patient_id|mcms_emr.patient|patient_id
+mcms_clinic.appointment|room_id|mcms_clinic.room|room_id
+mcms_clinic.patient_queue|assigned_clinician|mcms_core.app_user|user_id
+mcms_clinic.patient_queue|department_id|mcms_hr.department|department_id
+mcms_clinic.patient_queue|encounter_id|mcms_emr.encounter|encounter_id
+mcms_clinic.patient_queue|patient_id|mcms_emr.patient|patient_id
+mcms_clinic.patient_queue|room_id|mcms_clinic.room|room_id
+mcms_clinic.patient_queue|mrn|mcms_emr.patient|mrn
+mcms_clinic.consultation|appointment_id|mcms_clinic.appointment|appointment_id
+mcms_clinic.consultation|clinician_user_id|mcms_core.app_user|user_id
+mcms_clinic.consultation|encounter_id|mcms_emr.encounter|encounter_id
+mcms_clinic.consultation|queue_id|mcms_clinic.patient_queue|queue_id
+mcms_clinic.consultation|room_id|mcms_clinic.room|room_id
+mcms_surgical.operating_room|department_id|mcms_hr.department|department_id
+mcms_surgical.surgery|anaesthetist_user_id|mcms_core.app_user|user_id
+mcms_surgical.surgery|encounter_id|mcms_emr.encounter|encounter_id
+mcms_surgical.surgery|or_id|mcms_surgical.operating_room|or_id
+mcms_surgical.surgery|patient_id|mcms_emr.patient|patient_id
+mcms_surgical.surgery|primary_dept_id|mcms_hr.department|department_id
+mcms_surgical.surgery|procedure_id|mcms_surgical.procedure_catalog|proc_cat_id
+mcms_surgical.surgery|surgeon_user_id|mcms_core.app_user|user_id
+mcms_surgical.surgical_team|surgery_id|mcms_surgical.surgery|surgery_id
+mcms_surgical.surgical_team|user_id|mcms_core.app_user|user_id
+mcms_surgical.pre_op_checklist|checklist_by|mcms_core.app_user|user_id
+mcms_surgical.pre_op_checklist|surgery_id|mcms_surgical.surgery|surgery_id
+mcms_surgical.intra_op_vitals|recorded_by|mcms_core.app_user|user_id
+mcms_surgical.intra_op_vitals|surgery_id|mcms_surgical.surgery|surgery_id
+mcms_surgical.post_op_note|surgery_id|mcms_surgical.surgery|surgery_id
+mcms_surgical.post_op_note|written_by|mcms_core.app_user|user_id
+mcms_emergency.triage|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emergency.triage|mrn|mcms_emr.patient|mrn
+mcms_emergency.triage|patient_id|mcms_emr.patient|patient_id
+mcms_emergency.triage|triage_nurse_user_id|mcms_core.app_user|user_id
+mcms_emergency.resuscitation|encounter_id|mcms_emr.encounter|encounter_id
+mcms_emergency.resuscitation|patient_id|mcms_emr.patient|patient_id
+mcms_emergency.resuscitation|team_leader_id|mcms_core.app_user|user_id
+mcms_emergency.resuscitation|triage_id|mcms_emergency.triage|triage_id
+mcms_emergency.ed_bed|triage_id|mcms_emergency.triage|triage_id
+mcms_rx.drug_lot|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_rx.drug_lot|purchase_order_id|mcms_erp.purchase_order|po_id
+mcms_rx.drug_lot|supplier_party_id|mcms_core.party|party_id
+mcms_rx.dispensation|mrn|mcms_emr.patient|mrn
+mcms_rx.dispensation|dispensed_by|mcms_core.app_user|user_id
+mcms_rx.dispensation|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_rx.dispensation|encounter_id|mcms_emr.encounter|encounter_id
+mcms_rx.dispensation|lot_id|mcms_rx.drug_lot|lot_id
+mcms_rx.dispensation|med_order_id|mcms_emr.medication_order|order_id
+mcms_rx.dispensation|patient_id|mcms_emr.patient|patient_id
+mcms_rx.administration|administered_by|mcms_core.app_user|user_id
+mcms_rx.administration|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_rx.administration|med_order_id|mcms_emr.medication_order|order_id
+mcms_rx.administration|patient_id|mcms_emr.patient|patient_id
+mcms_rx.administration|witnessed_by|mcms_core.app_user|user_id
+mcms_rx.stock_movement|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_rx.stock_movement|lot_id|mcms_rx.drug_lot|lot_id
+mcms_rx.stock_movement|performed_by|mcms_core.app_user|user_id
+mcms_rx.stock_movement|related_movement_id|mcms_rx.stock_movement|movement_id
+mcms_lab.test_panel_item|panel_id|mcms_lab.test_panel|panel_id
+mcms_lab.test_panel_item|test_id|mcms_lab.test_catalog|test_id
+mcms_lab.lab_order|encounter_id|mcms_emr.encounter|encounter_id
+mcms_lab.lab_order|panel_id|mcms_lab.test_panel|panel_id
+mcms_lab.lab_order|patient_id|mcms_emr.patient|patient_id
+mcms_lab.lab_order|requested_by|mcms_core.app_user|user_id
+mcms_lab.sample|collected_by|mcms_core.app_user|user_id
+mcms_lab.sample|lab_order_id|mcms_lab.lab_order|order_id
+mcms_lab.sample|received_by|mcms_core.app_user|user_id
+mcms_lab.result|analysed_by|mcms_core.app_user|user_id
+mcms_lab.result|sample_id|mcms_lab.sample|sample_id
+mcms_lab.result|test_id|mcms_lab.test_catalog|test_id
+mcms_lab.result|verified_by|mcms_core.app_user|user_id
+mcms_rad.modality_suite|department_id|mcms_hr.department|department_id
+mcms_rad.study_request|encounter_id|mcms_emr.encounter|encounter_id
+mcms_rad.study_request|exam_id|mcms_rad.exam_catalog|exam_id
+mcms_rad.study_request|patient_id|mcms_emr.patient|patient_id
+mcms_rad.study_request|reported_by|mcms_core.app_user|user_id
+mcms_rad.study_request|requested_by|mcms_core.app_user|user_id
+mcms_rad.study_request|suite_id|mcms_rad.modality_suite|suite_id
+mcms_rad.study_request|verified_by|mcms_core.app_user|user_id
+mcms_rad.image_instance|study_id|mcms_rad.study_request|study_id
+mcms_icu.bed|department_id|mcms_hr.department|department_id
+mcms_icu.admission|attending_nurse_id|mcms_core.app_user|user_id
+mcms_icu.admission|bed_id|mcms_icu.bed|bed_id
+mcms_icu.admission|encounter_id|mcms_emr.encounter|encounter_id
+mcms_icu.admission|patient_id|mcms_emr.patient|patient_id
+mcms_icu.admission|primary_physician_id|mcms_core.app_user|user_id
+mcms_icu.bed_stay|admission_id|mcms_icu.admission|admission_id
+mcms_icu.bed_stay|bed_id|mcms_icu.bed|bed_id
+mcms_physio.treatment_plan|encounter_id|mcms_emr.encounter|encounter_id
+mcms_physio.treatment_plan|patient_id|mcms_emr.patient|patient_id
+mcms_physio.treatment_plan|therapist_user_id|mcms_core.app_user|user_id
+mcms_icu.vitals_stream|admission_id|mcms_icu.admission|admission_id
+mcms_icu.vitals_stream|charted_by|mcms_core.app_user|user_id
+mcms_icu.vitals_stream|patient_id|mcms_emr.patient|patient_id
+mcms_icu.support_session|admission_id|mcms_icu.admission|admission_id
+mcms_icu.score|admission_id|mcms_icu.admission|admission_id
+mcms_icu.score|assessed_by|mcms_core.app_user|user_id
+mcms_physio.session|patient_id|mcms_emr.patient|patient_id
+mcms_physio.session|plan_id|mcms_physio.treatment_plan|plan_id
+mcms_physio.session|room_id|mcms_clinic.room|room_id
+mcms_physio.session|therapist_user_id|mcms_core.app_user|user_id
+mcms_physio.session|therapy_id|mcms_physio.therapy_catalog|therapy_id
+mcms_billing.service_price|department_id|mcms_hr.department|department_id
+mcms_billing.invoice|encounter_id|mcms_emr.encounter|encounter_id
+mcms_billing.invoice|issued_by|mcms_core.app_user|user_id
+mcms_billing.invoice|patient_id|mcms_emr.patient|patient_id
+mcms_billing.invoice_line|invoice_id|mcms_billing.invoice|invoice_id
+mcms_billing.invoice_line|service_id|mcms_billing.service_price|service_id
+mcms_billing.payment|invoice_id|mcms_billing.invoice|invoice_id
+mcms_billing.payment|received_by|mcms_core.app_user|user_id
+mcms_billing.insurance_claim|invoice_id|mcms_billing.invoice|invoice_id
+mcms_billing.insurance_claim|patient_id|mcms_emr.patient|patient_id
+mcms_erp.gl_account|parent_account_id|mcms_erp.gl_account|account_id
+mcms_erp.inventory_stock|department_id|mcms_hr.department|department_id
+mcms_erp.inventory_stock|item_id|mcms_erp.inventory_item|item_id
+mcms_erp.supplier|contact_user_id|mcms_core.app_user|user_id
+mcms_erp.supplier|party_id|mcms_core.party|party_id
+mcms_erp.purchase_order|approved_by|mcms_core.app_user|user_id
+mcms_erp.purchase_order|requested_by|mcms_core.app_user|user_id
+mcms_erp.purchase_order|supplier_id|mcms_erp.supplier|supplier_id
+mcms_erp.purchase_order_line|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_erp.purchase_order_line|item_id|mcms_erp.inventory_item|item_id
+mcms_erp.purchase_order_line|po_id|mcms_erp.purchase_order|po_id
+mcms_erp.goods_receipt|po_id|mcms_erp.purchase_order|po_id
+mcms_erp.goods_receipt|received_by|mcms_core.app_user|user_id
+mcms_erp.goods_receipt|supplier_id|mcms_erp.supplier|supplier_id
+mcms_erp.goods_receipt_line|drug_item_id|mcms_rx.drug_item|drug_item_id
+mcms_erp.goods_receipt_line|grn_id|mcms_erp.goods_receipt|grn_id
+mcms_erp.goods_receipt_line|item_id|mcms_erp.inventory_item|item_id
+mcms_erp.goods_receipt_line|po_line_id|mcms_erp.purchase_order_line|line_id
+mcms_erp.stock_movement|from_department_id|mcms_hr.department|department_id
+mcms_erp.stock_movement|item_id|mcms_erp.inventory_item|item_id
+mcms_erp.stock_movement|performed_by|mcms_core.app_user|user_id
+mcms_erp.stock_movement|to_department_id|mcms_hr.department|department_id

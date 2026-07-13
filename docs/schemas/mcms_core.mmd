@@ -1,0 +1,144 @@
+erDiagram
+  core__address {
+    bigint address_id PK
+    bigint party_id
+    text label
+    text line1
+    text line2
+    text city
+    text region
+    text postal_code
+    text country
+    float8 latitude
+    float8 longitude
+    boolean is_primary
+    timestamptz created_at
+  }
+  core__app_user {
+    bigint user_id PK
+    bigint party_id
+    text username
+    text password_hash
+    user_role role
+    text specialization
+    boolean is_active
+    timestamptz last_login_at
+    int failed_logins
+    timestamptz locked_until
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  core__audit_trail {
+    bigint audit_id PK
+    text table_schema
+    text table_name
+    bigint row_id
+    text action
+    bigint changed_by
+    timestamptz changed_at
+    jsonb before
+    jsonb after
+    bigint event_id
+  }
+  core__contact {
+    bigint contact_id PK
+    bigint party_id
+    text kind
+    text value
+    boolean is_primary
+    timestamptz verified_at
+    timestamptz created_at
+  }
+  core__event_log {
+    bigint event_id PK
+    bigint seq
+    timestamptz occurred_at
+    event_kind kind
+    event_severity severity
+    bigint actor_user_id
+    bigint subject_party_id
+    text source_schema
+    text source_table
+    bigint source_id
+    jsonb payload
+    text channel
+  }
+  core__lookup {
+    bigint lookup_id PK
+    text namespace
+    text code
+    text label
+    text parent_code
+    int sort_order
+    boolean is_active
+    text label_en
+    text label_ar
+  }
+  core__notification {
+    bigint notification_id PK
+    bigint recipient_user_id
+    bigint recipient_party_id
+    text category
+    notification_channel channel
+    text subject
+    text body
+    notification_status status
+    text source_schema
+    text source_table
+    bigint source_id
+    timestamptz sent_at
+    timestamptz read_at
+    timestamptz created_at
+  }
+  core__party {
+    bigint party_id PK
+    party_type party_type
+    text code
+    text display_name
+    text legal_name
+    gender_type gender
+    date date_of_birth
+    blood_type blood_type
+    text tax_id
+    text national_id
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+    text preferred_language
+  }
+  core__permission {
+    bigint permission_id PK
+    text code
+    text description
+  }
+  core__role {
+    bigint role_id PK
+    text code
+    text name_en
+    text name_ar
+    text description
+    boolean is_active
+    timestamptz created_at
+  }
+  core__role_permission {
+    bigint role_id PK
+    bigint permission_id PK
+  }
+  core__user_role_map {
+    bigint user_id PK
+    bigint role_id PK
+    bigint department_id
+  }
+  core__party ||--o{ core__address : "party_id"
+  core__party ||--o{ core__app_user : "party_id"
+  core__app_user ||--o{ core__audit_trail : "changed_by"
+  core__event_log ||--o{ core__audit_trail : "event_id"
+  core__party ||--o{ core__contact : "party_id"
+  core__app_user ||--o{ core__event_log : "actor_user_id"
+  core__party ||--o{ core__event_log : "subject_party_id"
+  core__app_user ||--o{ core__notification : "recipient_user_id"
+  core__party ||--o{ core__notification : "recipient_party_id"
+  core__permission ||--o{ core__role_permission : "permission_id"
+  core__role ||--o{ core__role_permission : "role_id"
+  core__app_user ||--o{ core__user_role_map : "user_id"
+  core__role ||--o{ core__user_role_map : "role_id"

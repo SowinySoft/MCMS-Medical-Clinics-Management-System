@@ -1,0 +1,103 @@
+erDiagram
+  surgical__intra_op_vitals {
+    bigint iov_id PK
+    bigint surgery_id
+    timestamptz recorded_at
+    bigint recorded_by
+    int hr_bpm
+    int sbp_mmhg
+    int dbp_mmhg
+    numeric spo2_pct
+    int etco2_mmhg
+    int anaesthesia_depth
+    numeric temp_c
+    int urine_ml
+    text notes
+  }
+  surgical__operating_room {
+    bigint or_id PK
+    bigint department_id
+    text code
+    text name
+    text room_type
+    or_status status
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  surgical__post_op_note {
+    bigint pon_id PK
+    bigint surgery_id
+    timestamptz written_at
+    bigint written_by
+    text recovery_room
+    int pain_score
+    text findings
+    text instructions
+    int follow_up_days
+    boolean is_signed
+    timestamptz signed_at
+  }
+  surgical__pre_op_checklist {
+    bigint poc_id PK
+    bigint surgery_id
+    boolean fasting_confirmed
+    boolean consent_signed
+    boolean site_marked
+    boolean antibiotics_given
+    boolean iv_secured
+    boolean labs_checked
+    boolean imaging_checked
+    text risk_score
+    bigint checklist_by
+    timestamptz completed_at
+    timestamptz created_at
+  }
+  surgical__procedure_catalog {
+    bigint proc_cat_id PK
+    text cpt_code
+    text name
+    text body_site
+    int default_duration_min
+    text notes
+    timestamptz created_at
+  }
+  surgical__surgery {
+    bigint surgery_id PK
+    text operation_no
+    bigint encounter_id
+    bigint patient_id
+    bigint or_id
+    bigint surgeon_user_id
+    bigint anaesthetist_user_id
+    bigint primary_dept_id
+    bigint procedure_id
+    text laterality
+    surg_status status
+    timestamptz scheduled_at
+    timestamptz incision_at
+    timestamptz closure_at
+    timestamptz patient_in_or_at
+    timestamptz patient_out_or_at
+    text anaesthesia_type
+    int blood_loss_ml
+    int tourniquet_time_minutes
+    text complications
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  surgical__surgical_team {
+    bigint surg_team_id PK
+    bigint surgery_id
+    bigint user_id
+    team_role role
+    timestamptz joined_at
+    timestamptz left_at
+  }
+  surgical__surgery ||--o{ surgical__intra_op_vitals : "surgery_id"
+  surgical__surgery ||--o{ surgical__post_op_note : "surgery_id"
+  surgical__surgery ||--o{ surgical__pre_op_checklist : "surgery_id"
+  surgical__operating_room ||--o{ surgical__surgery : "or_id"
+  surgical__procedure_catalog ||--o{ surgical__surgery : "procedure_id"
+  surgical__surgery ||--o{ surgical__surgical_team : "surgery_id"

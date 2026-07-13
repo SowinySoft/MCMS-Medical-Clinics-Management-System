@@ -1,0 +1,83 @@
+erDiagram
+  icu__admission {
+    bigint admission_id PK
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint bed_id
+    bigint primary_physician_id
+    bigint attending_nurse_id
+    icu_status status
+    text admit_diagnosis
+    text admit_reason
+    timestamptz admitted_at
+    timestamptz discharged_at
+    text discharge_destination
+    timestamptz expired_at
+    text notes
+  }
+  icu__bed {
+    bigint bed_id PK
+    text room_code
+    text bed_label
+    bigint department_id
+    int level
+    bed_status status
+    boolean has_ventilator
+    boolean has_dialysis
+    boolean is_isolation
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  icu__bed_stay {
+    bigint stay_id PK
+    bigint admission_id
+    bigint bed_id
+    timestamptz assigned_at
+    timestamptz released_at
+  }
+  icu__score {
+    bigint score_id PK
+    bigint admission_id
+    text type
+    int raw
+    numeric computed_value
+    text interpretation
+    timestamptz assessed_at
+    bigint assessed_by
+  }
+  icu__support_session {
+    bigint session_id PK
+    bigint admission_id
+    support_kind support_kind
+    timestamptz started_at
+    timestamptz stopped_at
+    jsonb parameters
+    text stopped_reason
+  }
+  icu__vitals_stream {
+    bigint stream_id PK
+    bigint admission_id
+    bigint patient_id
+    timestamptz recorded_at
+    bigint charted_by
+    numeric temp_c
+    int hr_bpm
+    int rr_pm
+    int sbp_mmhg
+    int dbp_mmhg
+    int mbp_mmhg
+    numeric spo2_pct
+    int etco2_mmhg
+    int cvp_cmh2o
+    int urine_ml_hour
+    int gcs
+    text pupils
+    text notes
+  }
+  icu__bed ||--o{ icu__admission : "bed_id"
+  icu__admission ||--o{ icu__bed_stay : "admission_id"
+  icu__bed ||--o{ icu__bed_stay : "bed_id"
+  icu__admission ||--o{ icu__score : "admission_id"
+  icu__admission ||--o{ icu__support_session : "admission_id"
+  icu__admission ||--o{ icu__vitals_stream : "admission_id"

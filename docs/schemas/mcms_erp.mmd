@@ -1,0 +1,112 @@
+erDiagram
+  erp__gl_account {
+    bigint account_id PK
+    text code
+    text name
+    account_type account_type
+    bigint parent_account_id
+    boolean is_postable
+    boolean is_active
+  }
+  erp__goods_receipt {
+    bigint grn_id PK
+    text grn_no
+    bigint po_id
+    bigint supplier_id
+    bigint received_by
+    timestamptz received_at
+    grn_status status
+    text notes
+  }
+  erp__goods_receipt_line {
+    bigint line_id PK
+    bigint grn_id
+    bigint po_line_id
+    bigint item_id
+    bigint drug_item_id
+    int qty_received
+    text lot_number
+    date expiration_date
+    numeric unit_cost
+  }
+  erp__inventory_item {
+    bigint item_id PK
+    text code
+    text name
+    item_type type
+    text unit
+    int reorder_level
+    int reorder_qty
+    numeric cost_per_unit
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  erp__inventory_stock {
+    bigint stock_id PK
+    bigint item_id
+    bigint department_id
+    int qty_on_hand
+    int qty_reserved
+    timestamptz last_count_at
+    timestamptz updated_at
+  }
+  erp__purchase_order {
+    bigint po_id PK
+    text po_no
+    bigint supplier_id
+    bigint requested_by
+    bigint approved_by
+    po_status status
+    date expected_at
+    timestamptz ordered_at
+    timestamptz received_at
+    timestamptz closed_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  erp__purchase_order_line {
+    bigint line_id PK
+    bigint po_id
+    bigint item_id
+    bigint drug_item_id
+    text item_description
+    int qty
+    numeric unit_price
+    int qty_received
+    numeric line_total
+  }
+  erp__stock_movement {
+    bigint movement_id PK
+    bigint item_id
+    bigint from_department_id
+    bigint to_department_id
+    int qty_delta
+    move_type movement_type
+    text reference_table
+    bigint reference_id
+    bigint performed_by
+    timestamptz performed_at
+    text reason
+  }
+  erp__supplier {
+    bigint supplier_id PK
+    bigint party_id
+    text supplier_code
+    bigint contact_user_id
+    int payment_terms_days
+    boolean is_active
+    timestamptz created_at
+  }
+  erp__gl_account ||--o{ erp__gl_account : "self"
+  erp__purchase_order ||--o{ erp__goods_receipt : "po_id"
+  erp__supplier ||--o{ erp__goods_receipt : "supplier_id"
+  erp__goods_receipt ||--o{ erp__goods_receipt_line : "grn_id"
+  erp__inventory_item ||--o{ erp__goods_receipt_line : "item_id"
+  erp__purchase_order_line ||--o{ erp__goods_receipt_line : "po_line_id"
+  erp__inventory_item ||--o{ erp__inventory_stock : "item_id"
+  erp__supplier ||--o{ erp__purchase_order : "supplier_id"
+  erp__inventory_item ||--o{ erp__purchase_order_line : "item_id"
+  erp__purchase_order ||--o{ erp__purchase_order_line : "po_id"
+  erp__inventory_item ||--o{ erp__stock_movement : "item_id"

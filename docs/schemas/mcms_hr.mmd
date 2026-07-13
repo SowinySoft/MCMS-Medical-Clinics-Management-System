@@ -1,0 +1,109 @@
+erDiagram
+  hr__attendance {
+    bigint attendance_id PK
+    bigint employee_id
+    bigint shift_id
+    timestamptz clock_in_at
+    timestamptz clock_out_at
+    attendance_status status
+    text note
+    timestamptz created_at
+  }
+  hr__department {
+    bigint department_id PK
+    text code
+    text name
+    bigint parent_department_id
+    text kind
+    bigint head_user_id
+    text location_building
+    int location_floor
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__employee {
+    bigint employee_id PK
+    bigint party_id
+    bigint user_id
+    text employee_no
+    bigint primary_department_id
+    text role
+    text job_title
+    text specialisation
+    text license_number
+    contract_type contract_type
+    employment_status status
+    date hired_at
+    date terminated_at
+    numeric base_salary_monthly
+    text bank_account
+    text tax_number
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__employee_department {
+    bigint emp_dept_id PK
+    bigint employee_id
+    bigint department_id
+    text role
+    date start_date
+    date end_date
+    boolean is_primary
+  }
+  hr__leave_request {
+    bigint leave_id PK
+    bigint employee_id
+    leave_type leave_type
+    date start_date
+    date end_date
+    int days_off
+    text reason
+    leave_status status
+    bigint approved_by
+    timestamptz approved_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__payroll_item {
+    bigint item_id PK
+    bigint period_id
+    bigint employee_id
+    numeric base_amount
+    numeric overtime_amount
+    numeric deduction_amount
+    numeric bonus_amount
+    numeric net_amount
+    boolean is_paid
+    timestamptz paid_at
+    timestamptz created_at
+  }
+  hr__payroll_period {
+    bigint period_id PK
+    text code
+    date start_date
+    date end_date
+    pay_status status
+    timestamptz closed_at
+    timestamptz created_at
+  }
+  hr__shift {
+    bigint shift_id PK
+    bigint department_id
+    bigint employee_id
+    shift_type shift_type
+    timestamptz start_at
+    timestamptz end_at
+    timestamptz created_at
+  }
+  hr__employee ||--o{ hr__attendance : "employee_id"
+  hr__shift ||--o{ hr__attendance : "shift_id"
+  hr__department ||--o{ hr__department : "self"
+  hr__department ||--o{ hr__employee : "primary_department_id"
+  hr__department ||--o{ hr__employee_department : "department_id"
+  hr__employee ||--o{ hr__employee_department : "employee_id"
+  hr__employee ||--o{ hr__leave_request : "employee_id"
+  hr__employee ||--o{ hr__payroll_item : "employee_id"
+  hr__payroll_period ||--o{ hr__payroll_item : "period_id"
+  hr__department ||--o{ hr__shift : "department_id"
+  hr__employee ||--o{ hr__shift : "employee_id"

@@ -1,0 +1,42 @@
+erDiagram
+  nursery__cot {
+    bigint cot_id PK
+    text code
+    text name
+    bigint department_id
+    boolean is_incubator
+    boolean has_phototherapy
+    cot_status status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  nursery__growth_entry {
+    bigint entry_id PK
+    bigint neonate_id
+    timestamptz recorded_at
+    int weight_g
+    numeric length_cm
+    numeric head_circ_cm
+    numeric temperature_c
+    text feeding_type
+    int feed_volume_ml
+    bigint nurse_user_id
+    text notes
+  }
+  nursery__neonate_record {
+    bigint neonate_id PK
+    bigint patient_id
+    bigint mother_party_id
+    bigint cot_id
+    numeric gestational_age_weeks
+    int birth_weight_g
+    int apgar_1min
+    int apgar_5min
+    timestamptz admitted_at
+    timestamptz discharged_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  nursery__neonate_record ||--o{ nursery__growth_entry : "neonate_id"
+  nursery__cot ||--o{ nursery__neonate_record : "cot_id"

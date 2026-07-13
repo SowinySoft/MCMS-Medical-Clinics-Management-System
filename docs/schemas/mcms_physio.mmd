@@ -1,0 +1,54 @@
+erDiagram
+  physio__session {
+    bigint session_id PK
+    bigint plan_id
+    bigint patient_id
+    bigint therapist_user_id
+    bigint therapy_id
+    bigint room_id
+    int sessions_in_seq
+    timestamptz scheduled_at
+    int duration_minutes
+    int pain_before_score
+    int pain_after_score
+    text rom_before
+    text rom_after
+    text subjective
+    text interventions
+    session_status status
+    timestamptz started_at
+    timestamptz completed_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  physio__therapy_catalog {
+    bigint therapy_id PK
+    text code
+    text name
+    therapy_type type
+    text body_region
+    int duration_minutes
+    _text equipment
+    boolean is_active
+    timestamptz created_at
+  }
+  physio__treatment_plan {
+    bigint plan_id PK
+    bigint patient_id
+    bigint encounter_id
+    bigint therapist_user_id
+    text diagnosis
+    text treatment_goals
+    int sessions_planned
+    int sessions_completed
+    text frequency
+    date starts_on
+    date ends_on
+    plan_status status
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  physio__therapy_catalog ||--o{ physio__session : "therapy_id"
+  physio__treatment_plan ||--o{ physio__session : "plan_id"

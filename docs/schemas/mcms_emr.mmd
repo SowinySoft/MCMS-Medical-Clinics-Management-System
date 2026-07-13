@@ -1,0 +1,168 @@
+erDiagram
+  emr__allergy {
+    bigint allergy_id PK
+    bigint patient_id
+    text substance
+    text reaction
+    allergy_severity severity
+    text onset_age
+    timestamptz noted_on
+    bigint noted_by
+    boolean is_active
+  }
+  emr__clinical_note {
+    bigint note_id PK
+    bigint encounter_id
+    bigint patient_id
+    note_type note_type
+    text title
+    text body
+    bigint author_user_id
+    _int8 coauthor_ids
+    boolean signed
+    timestamptz signed_at
+    timestamptz amended_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  emr__diagnosis {
+    bigint diagnosis_id PK
+    bigint encounter_id
+    bigint patient_id
+    text condition_code
+    text condition_desc
+    diagnosis_role role
+    diagnosis_status status
+    date onset_date
+    timestamptz resolved_at
+    bigint recorded_by
+    boolean is_chronic
+    timestamptz created_at
+  }
+  emr__encounter {
+    bigint encounter_id PK
+    text mrn
+    bigint patient_id
+    encounter_status status
+    encounter_class class
+    bigint attending_user_id
+    bigint referring_user_id
+    bigint department_id
+    text reason_for_visit
+    text chief_complaint
+    timestamptz started_at
+    timestamptz ended_at
+    bigint bed_assign_id
+    bigint originating_encounter_id
+    timestamptz created_at
+    timestamptz updated_at
+    text fhir_id
+  }
+  emr__family_history {
+    bigint fh_id PK
+    bigint patient_id
+    text relative
+    text relationship
+    text condition_code
+    text condition_desc
+    int age_at_onset
+    boolean is_deceased
+    timestamptz recorded_at
+  }
+  emr__immunization {
+    bigint immunization_id PK
+    bigint patient_id
+    text vaccine_code
+    text vaccine_name
+    int dose_number
+    timestamptz given_at
+    bigint given_by
+    text lot_number
+    text site
+    text reaction
+  }
+  emr__medication_order {
+    bigint order_id PK
+    bigint encounter_id
+    bigint patient_id
+    bigint prescriber_user_id
+    bigint drug_item_id
+    text drug_name
+    text dose
+    med_route route
+    text frequency
+    int duration_days
+    boolean prn
+    int refill_count
+    text instructions
+    med_order_status status
+    timestamptz ordered_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  emr__patient {
+    bigint patient_id PK
+    bigint party_id
+    text mrn
+    text emergency_contact_name
+    text emergency_contact_phone
+    bigint next_of_kin_party_id
+    text insurance_provider
+    text insurance_policy_no
+    text insurance_group_no
+    boolean coverage_verified
+    timestamptz coverage_verified_at
+    text preferred_language
+    boolean organ_donor
+    boolean living_will
+    timestamptz created_at
+    timestamptz updated_at
+    text fhir_id
+    text hl7_mpi
+  }
+  emr__social_history {
+    bigint sh_id PK
+    bigint patient_id
+    text tobacco_status
+    numeric packs_per_day
+    int years_smoked
+    text alcohol_status
+    int drinks_per_week
+    _text illicit_drugs
+    text occupation
+    text relationship_status
+    timestamptz recorded_at
+  }
+  emr__vitals {
+    bigint vital_id PK
+    bigint encounter_id
+    bigint patient_id
+    timestamptz taken_at
+    bigint taken_by
+    numeric temp_c
+    int hr_bpm
+    int rr_pm
+    int sbp_mmhg
+    int dbp_mmhg
+    numeric spo2_pct
+    numeric weight_kg
+    numeric height_cm
+    numeric bmi
+    int pain_score
+    int glucose_mgdl
+  }
+  emr__patient ||--o{ emr__allergy : "patient_id"
+  emr__encounter ||--o{ emr__clinical_note : "encounter_id"
+  emr__patient ||--o{ emr__clinical_note : "patient_id"
+  emr__encounter ||--o{ emr__diagnosis : "encounter_id"
+  emr__patient ||--o{ emr__diagnosis : "patient_id"
+  emr__encounter ||--o{ emr__encounter : "self"
+  emr__patient ||--o{ emr__encounter : "mrn"
+  emr__patient ||--o{ emr__encounter : "patient_id"
+  emr__patient ||--o{ emr__family_history : "patient_id"
+  emr__patient ||--o{ emr__immunization : "patient_id"
+  emr__encounter ||--o{ emr__medication_order : "encounter_id"
+  emr__patient ||--o{ emr__medication_order : "patient_id"
+  emr__patient ||--o{ emr__social_history : "patient_id"
+  emr__encounter ||--o{ emr__vitals : "encounter_id"
+  emr__patient ||--o{ emr__vitals : "patient_id"

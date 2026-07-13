@@ -1,0 +1,1336 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>MCMS Schema Diagram</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#0d1117;color:#e6edf3}
+header{padding:16px 24px;background:#161b22;border-bottom:1px solid #30363d}
+h1{margin:0;font-size:20px} .sub{color:#8b949e;font-size:13px;margin-top:4px}
+.wrap{padding:24px} table{border-collapse:collapse;margin:12px 0}
+td,th{border:1px solid #30363d;padding:6px 12px;font-size:13px} th{background:#161b22}
+.mermaid{background:#fff;border-radius:8px;padding:16px;overflow:auto}
+</style></head><body>
+<header><h1>MCMS — Medical Clinics Management System · Schema Diagram</h1>
+<div class="sub">15 schemas · 89 base tables · 95 foreign-key relationships · generated from live PostgreSQL</div></header>
+<div class="wrap">
+<h3>Schema groups</h3>
+<table><tr><th>Schema</th><th>Domain</th><th>Tables</th></tr><tr><td>mcms_billing</td><td>Billing</td><td>5</td></tr><tr><td>mcms_clinic</td><td>Clinics & Appointments</td><td>4</td></tr><tr><td>mcms_core</td><td>Core / Event-Store / RBAC</td><td>12</td></tr><tr><td>mcms_dialysis</td><td>Dialysis</td><td>2</td></tr><tr><td>mcms_emergency</td><td>Emergency</td><td>3</td></tr><tr><td>mcms_emr</td><td>EMR</td><td>10</td></tr><tr><td>mcms_erp</td><td>ERP / Supply Chain</td><td>9</td></tr><tr><td>mcms_hr</td><td>HR & Payroll</td><td>8</td></tr><tr><td>mcms_icu</td><td>ICU</td><td>6</td></tr><tr><td>mcms_lab</td><td>Laboratory</td><td>6</td></tr><tr><td>mcms_nursery</td><td>Nursery/Neonatal</td><td>3</td></tr><tr><td>mcms_physio</td><td>Physiotherapy</td><td>3</td></tr><tr><td>mcms_rad</td><td>Radiology</td><td>4</td></tr><tr><td>mcms_rx</td><td>Pharmacy</td><td>7</td></tr><tr><td>mcms_surgical</td><td>Surgical</td><td>7</td></tr>
+<tr><th>TOTAL</th><th></th><th>89</th></tr></table>
+<h3>Entity–Relationship Diagram</h3>
+<pre class="mermaid">
+erDiagram
+  %% ===== Billing (mcms_billing) =====
+  billing__insurance_claim {
+    bigint claim_id PK
+    bigint invoice_id
+    text policy_no
+    text insurance_provider
+    bigint patient_id
+    numeric billed_amount
+    numeric approved_amount
+    numeric rejected_amount
+    claim_status status
+    timestamptz submitted_at
+    timestamptz adjudicated_at
+    timestamptz paid_at
+    text claim_no_external
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  billing__invoice {
+    bigint invoice_id PK
+    text invoice_no
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    bigint issued_by
+    inv_status status
+    numeric subtotal
+    numeric tax_amount
+    numeric discount_amount
+    numeric insurance_covers
+    numeric patient_pays
+    numeric total
+    text currency
+    timestamptz issued_at
+    date due_date
+    timestamptz paid_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  billing__invoice_line {
+    bigint line_id PK
+    bigint invoice_id
+    bigint service_id
+    text source_schema
+    text source_table
+    bigint source_id
+    text description
+    numeric qty
+    numeric unit_price
+    numeric line_total
+    timestamptz created_at
+  }
+  billing__payment {
+    bigint payment_id PK
+    bigint invoice_id
+    pay_method method
+    numeric amount
+    text currency
+    timestamptz paid_at
+    bigint received_by
+    text txn_ref
+    text notes
+  }
+  billing__service_price {
+    bigint service_id PK
+    text code
+    text name
+    service_type service_type
+    bigint department_id
+    numeric unit_price
+    text currency
+    boolean is_taxable
+    boolean is_active
+    date effective_from
+    date effective_to
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Clinics & Appointments (mcms_clinic) =====
+  clinic__appointment {
+    bigint appointment_id PK
+    text mrn
+    bigint patient_id
+    bigint clinician_user_id
+    bigint room_id
+    bigint department_id
+    timestamptz starts_at
+    timestamptz ends_at
+    slot_status status
+    text reason
+    bigint booked_by
+    bigint encounter_id
+    timestamptz created_at
+    timestamptz updated_at
+    uuid confirmation_token
+    timestamptz confirmation_deadline
+    timestamptz confirmed_at
+    boolean patient_confirmed
+  }
+  clinic__consultation {
+    bigint consultation_id PK
+    bigint appointment_id
+    bigint queue_id
+    bigint encounter_id
+    bigint room_id
+    bigint clinician_user_id
+    int duration_minutes
+    text subjective
+    text objective
+    text assessment
+    text plan
+    int follow_up_days
+    consult_status status
+    timestamptz started_at
+    timestamptz completed_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  clinic__patient_queue {
+    bigint queue_id PK
+    bigint patient_id
+    text mrn
+    bigint department_id
+    bigint assigned_clinician
+    bigint room_id
+    int priority
+    queue_status status
+    timestamptz checked_in_at
+    timestamptz called_at
+    timestamptz started_at
+    timestamptz finished_at
+    bigint encounter_id
+  }
+  clinic__room {
+    bigint room_id PK
+    bigint department_id
+    text code
+    text name
+    int capacity
+    _text equipment
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Core / Event-Store / RBAC (mcms_core) =====
+  core__address {
+    bigint address_id PK
+    bigint party_id
+    text label
+    text line1
+    text line2
+    text city
+    text region
+    text postal_code
+    text country
+    float8 latitude
+    float8 longitude
+    boolean is_primary
+    timestamptz created_at
+  }
+  core__app_user {
+    bigint user_id PK
+    bigint party_id
+    text username
+    text password_hash
+    user_role role
+    text specialization
+    boolean is_active
+    timestamptz last_login_at
+    int failed_logins
+    timestamptz locked_until
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  core__audit_trail {
+    bigint audit_id PK
+    text table_schema
+    text table_name
+    bigint row_id
+    text action
+    bigint changed_by
+    timestamptz changed_at
+    jsonb before
+    jsonb after
+    bigint event_id
+  }
+  core__contact {
+    bigint contact_id PK
+    bigint party_id
+    text kind
+    text value
+    boolean is_primary
+    timestamptz verified_at
+    timestamptz created_at
+  }
+  core__event_log {
+    bigint event_id PK
+    bigint seq
+    timestamptz occurred_at
+    event_kind kind
+    event_severity severity
+    bigint actor_user_id
+    bigint subject_party_id
+    text source_schema
+    text source_table
+    bigint source_id
+    jsonb payload
+    text channel
+  }
+  core__lookup {
+    bigint lookup_id PK
+    text namespace
+    text code
+    text label
+    text parent_code
+    int sort_order
+    boolean is_active
+    text label_en
+    text label_ar
+  }
+  core__notification {
+    bigint notification_id PK
+    bigint recipient_user_id
+    bigint recipient_party_id
+    text category
+    notification_channel channel
+    text subject
+    text body
+    notification_status status
+    text source_schema
+    text source_table
+    bigint source_id
+    timestamptz sent_at
+    timestamptz read_at
+    timestamptz created_at
+  }
+  core__party {
+    bigint party_id PK
+    party_type party_type
+    text code
+    text display_name
+    text legal_name
+    gender_type gender
+    date date_of_birth
+    blood_type blood_type
+    text tax_id
+    text national_id
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+    text preferred_language
+  }
+  core__permission {
+    bigint permission_id PK
+    text code
+    text description
+  }
+  core__role {
+    bigint role_id PK
+    text code
+    text name_en
+    text name_ar
+    text description
+    boolean is_active
+    timestamptz created_at
+  }
+  core__role_permission {
+    bigint role_id PK
+    bigint permission_id PK
+  }
+  core__user_role_map {
+    bigint user_id PK
+    bigint role_id PK
+    bigint department_id
+  }
+  %% ===== Dialysis (mcms_dialysis) =====
+  dialysis__session {
+    bigint session_id PK
+    bigint patient_id
+    bigint encounter_id
+    bigint station_id
+    bigint nurse_user_id
+    bigint nephrologist_user_id
+    modality modality
+    timestamptz scheduled_at
+    timestamptz started_at
+    timestamptz ended_at
+    int duration_minutes
+    numeric pre_weight_kg
+    text pre_bp
+    numeric dry_weight_kg
+    numeric post_weight_kg
+    text post_bp
+    int fluid_removed_ml
+    int blood_flow_rate
+    int dialysate_flow
+    int heparin_units
+    numeric kt_v
+    text complications
+    dialysis_status status
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  dialysis__station {
+    bigint station_id PK
+    text code
+    text name
+    bigint department_id
+    boolean has_ro_water
+    bed_status status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Emergency (mcms_emergency) =====
+  emergency__ed_bed {
+    bigint ed_bed_id PK
+    bigint triage_id
+    text bed_label
+    timestamptz assigned_at
+    timestamptz released_at
+    int observation_minutes
+    text notes
+  }
+  emergency__resuscitation {
+    bigint resus_id PK
+    bigint triage_id
+    bigint encounter_id
+    bigint patient_id
+    timestamptz code_initiated_at
+    text code_type
+    bigint team_leader_id
+    text airway
+    _text interventions
+    text iv_access
+    _text meds_administered
+    boolean rosc
+    timestamptz rosc_at
+    int duration_minutes
+    text outcome
+    text notes
+    timestamptz created_at
+  }
+  emergency__triage {
+    bigint triage_id PK
+    text ed_visit_no
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    timestamptz presentation_time
+    text chief_complaint
+    int esi_level
+    text arrival_mode
+    boolean trauma_alert
+    numeric vital_temp_c
+    int vital_hr_bpm
+    int vital_sbp_mmhg
+    int vital_dbp_mmhg
+    int vital_rr_pm
+    numeric vital_spo2_pct
+    int vital_pain_score
+    int vital_gcs
+    text allergies_known
+    _text meds_on_arrival
+    bigint triage_nurse_user_id
+    timestamptz triaged_at
+    triage_status status
+    text disposition
+    text disposition_destination
+    timestamptz disposition_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== EMR (mcms_emr) =====
+  emr__allergy {
+    bigint allergy_id PK
+    bigint patient_id
+    text substance
+    text reaction
+    allergy_severity severity
+    text onset_age
+    timestamptz noted_on
+    bigint noted_by
+    boolean is_active
+  }
+  emr__clinical_note {
+    bigint note_id PK
+    bigint encounter_id
+    bigint patient_id
+    note_type note_type
+    text title
+    text body
+    bigint author_user_id
+    _int8 coauthor_ids
+    boolean signed
+    timestamptz signed_at
+    timestamptz amended_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  emr__diagnosis {
+    bigint diagnosis_id PK
+    bigint encounter_id
+    bigint patient_id
+    text condition_code
+    text condition_desc
+    diagnosis_role role
+    diagnosis_status status
+    date onset_date
+    timestamptz resolved_at
+    bigint recorded_by
+    boolean is_chronic
+    timestamptz created_at
+  }
+  emr__encounter {
+    bigint encounter_id PK
+    text mrn
+    bigint patient_id
+    encounter_status status
+    encounter_class class
+    bigint attending_user_id
+    bigint referring_user_id
+    bigint department_id
+    text reason_for_visit
+    text chief_complaint
+    timestamptz started_at
+    timestamptz ended_at
+    bigint bed_assign_id
+    bigint originating_encounter_id
+    timestamptz created_at
+    timestamptz updated_at
+    text fhir_id
+  }
+  emr__family_history {
+    bigint fh_id PK
+    bigint patient_id
+    text relative
+    text relationship
+    text condition_code
+    text condition_desc
+    int age_at_onset
+    boolean is_deceased
+    timestamptz recorded_at
+  }
+  emr__immunization {
+    bigint immunization_id PK
+    bigint patient_id
+    text vaccine_code
+    text vaccine_name
+    int dose_number
+    timestamptz given_at
+    bigint given_by
+    text lot_number
+    text site
+    text reaction
+  }
+  emr__medication_order {
+    bigint order_id PK
+    bigint encounter_id
+    bigint patient_id
+    bigint prescriber_user_id
+    bigint drug_item_id
+    text drug_name
+    text dose
+    med_route route
+    text frequency
+    int duration_days
+    boolean prn
+    int refill_count
+    text instructions
+    med_order_status status
+    timestamptz ordered_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  emr__patient {
+    bigint patient_id PK
+    bigint party_id
+    text mrn
+    text emergency_contact_name
+    text emergency_contact_phone
+    bigint next_of_kin_party_id
+    text insurance_provider
+    text insurance_policy_no
+    text insurance_group_no
+    boolean coverage_verified
+    timestamptz coverage_verified_at
+    text preferred_language
+    boolean organ_donor
+    boolean living_will
+    timestamptz created_at
+    timestamptz updated_at
+    text fhir_id
+    text hl7_mpi
+  }
+  emr__social_history {
+    bigint sh_id PK
+    bigint patient_id
+    text tobacco_status
+    numeric packs_per_day
+    int years_smoked
+    text alcohol_status
+    int drinks_per_week
+    _text illicit_drugs
+    text occupation
+    text relationship_status
+    timestamptz recorded_at
+  }
+  emr__vitals {
+    bigint vital_id PK
+    bigint encounter_id
+    bigint patient_id
+    timestamptz taken_at
+    bigint taken_by
+    numeric temp_c
+    int hr_bpm
+    int rr_pm
+    int sbp_mmhg
+    int dbp_mmhg
+    numeric spo2_pct
+    numeric weight_kg
+    numeric height_cm
+    numeric bmi
+    int pain_score
+    int glucose_mgdl
+  }
+  %% ===== ERP / Supply Chain (mcms_erp) =====
+  erp__gl_account {
+    bigint account_id PK
+    text code
+    text name
+    account_type account_type
+    bigint parent_account_id
+    boolean is_postable
+    boolean is_active
+  }
+  erp__goods_receipt {
+    bigint grn_id PK
+    text grn_no
+    bigint po_id
+    bigint supplier_id
+    bigint received_by
+    timestamptz received_at
+    grn_status status
+    text notes
+  }
+  erp__goods_receipt_line {
+    bigint line_id PK
+    bigint grn_id
+    bigint po_line_id
+    bigint item_id
+    bigint drug_item_id
+    int qty_received
+    text lot_number
+    date expiration_date
+    numeric unit_cost
+  }
+  erp__inventory_item {
+    bigint item_id PK
+    text code
+    text name
+    item_type type
+    text unit
+    int reorder_level
+    int reorder_qty
+    numeric cost_per_unit
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  erp__inventory_stock {
+    bigint stock_id PK
+    bigint item_id
+    bigint department_id
+    int qty_on_hand
+    int qty_reserved
+    timestamptz last_count_at
+    timestamptz updated_at
+  }
+  erp__purchase_order {
+    bigint po_id PK
+    text po_no
+    bigint supplier_id
+    bigint requested_by
+    bigint approved_by
+    po_status status
+    date expected_at
+    timestamptz ordered_at
+    timestamptz received_at
+    timestamptz closed_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  erp__purchase_order_line {
+    bigint line_id PK
+    bigint po_id
+    bigint item_id
+    bigint drug_item_id
+    text item_description
+    int qty
+    numeric unit_price
+    int qty_received
+    numeric line_total
+  }
+  erp__stock_movement {
+    bigint movement_id PK
+    bigint item_id
+    bigint from_department_id
+    bigint to_department_id
+    int qty_delta
+    move_type movement_type
+    text reference_table
+    bigint reference_id
+    bigint performed_by
+    timestamptz performed_at
+    text reason
+  }
+  erp__supplier {
+    bigint supplier_id PK
+    bigint party_id
+    text supplier_code
+    bigint contact_user_id
+    int payment_terms_days
+    boolean is_active
+    timestamptz created_at
+  }
+  %% ===== HR & Payroll (mcms_hr) =====
+  hr__attendance {
+    bigint attendance_id PK
+    bigint employee_id
+    bigint shift_id
+    timestamptz clock_in_at
+    timestamptz clock_out_at
+    attendance_status status
+    text note
+    timestamptz created_at
+  }
+  hr__department {
+    bigint department_id PK
+    text code
+    text name
+    bigint parent_department_id
+    text kind
+    bigint head_user_id
+    text location_building
+    int location_floor
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__employee {
+    bigint employee_id PK
+    bigint party_id
+    bigint user_id
+    text employee_no
+    bigint primary_department_id
+    text role
+    text job_title
+    text specialisation
+    text license_number
+    contract_type contract_type
+    employment_status status
+    date hired_at
+    date terminated_at
+    numeric base_salary_monthly
+    text bank_account
+    text tax_number
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__employee_department {
+    bigint emp_dept_id PK
+    bigint employee_id
+    bigint department_id
+    text role
+    date start_date
+    date end_date
+    boolean is_primary
+  }
+  hr__leave_request {
+    bigint leave_id PK
+    bigint employee_id
+    leave_type leave_type
+    date start_date
+    date end_date
+    int days_off
+    text reason
+    leave_status status
+    bigint approved_by
+    timestamptz approved_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  hr__payroll_item {
+    bigint item_id PK
+    bigint period_id
+    bigint employee_id
+    numeric base_amount
+    numeric overtime_amount
+    numeric deduction_amount
+    numeric bonus_amount
+    numeric net_amount
+    boolean is_paid
+    timestamptz paid_at
+    timestamptz created_at
+  }
+  hr__payroll_period {
+    bigint period_id PK
+    text code
+    date start_date
+    date end_date
+    pay_status status
+    timestamptz closed_at
+    timestamptz created_at
+  }
+  hr__shift {
+    bigint shift_id PK
+    bigint department_id
+    bigint employee_id
+    shift_type shift_type
+    timestamptz start_at
+    timestamptz end_at
+    timestamptz created_at
+  }
+  %% ===== ICU (mcms_icu) =====
+  icu__admission {
+    bigint admission_id PK
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint bed_id
+    bigint primary_physician_id
+    bigint attending_nurse_id
+    icu_status status
+    text admit_diagnosis
+    text admit_reason
+    timestamptz admitted_at
+    timestamptz discharged_at
+    text discharge_destination
+    timestamptz expired_at
+    text notes
+  }
+  icu__bed {
+    bigint bed_id PK
+    text room_code
+    text bed_label
+    bigint department_id
+    int level
+    bed_status status
+    boolean has_ventilator
+    boolean has_dialysis
+    boolean is_isolation
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  icu__bed_stay {
+    bigint stay_id PK
+    bigint admission_id
+    bigint bed_id
+    timestamptz assigned_at
+    timestamptz released_at
+  }
+  icu__score {
+    bigint score_id PK
+    bigint admission_id
+    text type
+    int raw
+    numeric computed_value
+    text interpretation
+    timestamptz assessed_at
+    bigint assessed_by
+  }
+  icu__support_session {
+    bigint session_id PK
+    bigint admission_id
+    support_kind support_kind
+    timestamptz started_at
+    timestamptz stopped_at
+    jsonb parameters
+    text stopped_reason
+  }
+  icu__vitals_stream {
+    bigint stream_id PK
+    bigint admission_id
+    bigint patient_id
+    timestamptz recorded_at
+    bigint charted_by
+    numeric temp_c
+    int hr_bpm
+    int rr_pm
+    int sbp_mmhg
+    int dbp_mmhg
+    int mbp_mmhg
+    numeric spo2_pct
+    int etco2_mmhg
+    int cvp_cmh2o
+    int urine_ml_hour
+    int gcs
+    text pupils
+    text notes
+  }
+  %% ===== Laboratory (mcms_lab) =====
+  lab__lab_order {
+    bigint order_id PK
+    text order_no
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint requested_by
+    order_priority order_priority
+    bigint panel_id
+    text clinical_indication
+    timestamptz requested_at
+  }
+  lab__result {
+    bigint result_id PK
+    bigint sample_id
+    bigint test_id
+    text value_text
+    numeric value_numeric
+    text unit
+    text ref_range
+    result_flag flag
+    bigint analysed_by
+    timestamptz analysed_at
+    bigint verified_by
+    timestamptz verified_at
+    timestamptz rejected_at
+    text rejected_reason
+    timestamptz created_at
+  }
+  lab__sample {
+    bigint sample_id PK
+    text sample_no
+    bigint lab_order_id
+    _int8 test_ids
+    specimen_type specimen_type
+    numeric volume_collected
+    timestamptz collected_at
+    bigint collected_by
+    timestamptz received_at
+    bigint received_by
+    sample_status status
+    text rejected_reason
+  }
+  lab__test_catalog {
+    bigint test_id PK
+    text loinc_code
+    text name
+    text category
+    specimen_type specimen_type
+    numeric volume_required
+    text unit
+    numeric ref_low
+    numeric ref_high
+    int turnaround_minutes
+    boolean is_active
+    timestamptz created_at
+  }
+  lab__test_panel {
+    bigint panel_id PK
+    text code
+    text name
+    timestamptz created_at
+  }
+  lab__test_panel_item {
+    bigint ppi_id PK
+    bigint panel_id
+    bigint test_id
+    int sort_order
+  }
+  %% ===== Nursery/Neonatal (mcms_nursery) =====
+  nursery__cot {
+    bigint cot_id PK
+    text code
+    text name
+    bigint department_id
+    boolean is_incubator
+    boolean has_phototherapy
+    cot_status status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  nursery__growth_entry {
+    bigint entry_id PK
+    bigint neonate_id
+    timestamptz recorded_at
+    int weight_g
+    numeric length_cm
+    numeric head_circ_cm
+    numeric temperature_c
+    text feeding_type
+    int feed_volume_ml
+    bigint nurse_user_id
+    text notes
+  }
+  nursery__neonate_record {
+    bigint neonate_id PK
+    bigint patient_id
+    bigint mother_party_id
+    bigint cot_id
+    numeric gestational_age_weeks
+    int birth_weight_g
+    int apgar_1min
+    int apgar_5min
+    timestamptz admitted_at
+    timestamptz discharged_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Physiotherapy (mcms_physio) =====
+  physio__session {
+    bigint session_id PK
+    bigint plan_id
+    bigint patient_id
+    bigint therapist_user_id
+    bigint therapy_id
+    bigint room_id
+    int sessions_in_seq
+    timestamptz scheduled_at
+    int duration_minutes
+    int pain_before_score
+    int pain_after_score
+    text rom_before
+    text rom_after
+    text subjective
+    text interventions
+    session_status status
+    timestamptz started_at
+    timestamptz completed_at
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  physio__therapy_catalog {
+    bigint therapy_id PK
+    text code
+    text name
+    therapy_type type
+    text body_region
+    int duration_minutes
+    _text equipment
+    boolean is_active
+    timestamptz created_at
+  }
+  physio__treatment_plan {
+    bigint plan_id PK
+    bigint patient_id
+    bigint encounter_id
+    bigint therapist_user_id
+    text diagnosis
+    text treatment_goals
+    int sessions_planned
+    int sessions_completed
+    text frequency
+    date starts_on
+    date ends_on
+    plan_status status
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Radiology (mcms_rad) =====
+  rad__exam_catalog {
+    bigint exam_id PK
+    text snomed_code
+    text name
+    text body_part
+    modality_type default_modality
+    boolean contrast_used
+    int duration_minutes
+    timestamptz created_at
+  }
+  rad__image_instance {
+    bigint image_id PK
+    bigint study_id
+    int series_number
+    int instance_number
+    text sop_instance_uid
+    image_type image_type
+    text storage_uri
+    int rows
+    int columns
+    int bits_allocated
+    timestamptz created_at
+  }
+  rad__modality_suite {
+    bigint suite_id PK
+    bigint department_id
+    text code
+    text name
+    modality_type modality
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  rad__study_request {
+    bigint study_id PK
+    text accession_no
+    bigint encounter_id
+    bigint patient_id
+    text mrn
+    bigint exam_id
+    bigint suite_id
+    bigint requested_by
+    order_priority priority
+    text clinical_indication
+    study_status status
+    timestamptz scheduled_at
+    timestamptz started_at
+    timestamptz completed_at
+    int image_count
+    numeric radiation_dose_msv
+    jsonb contrast_data
+    text findings
+    text impression
+    bigint reported_by
+    timestamptz reported_at
+    bigint verified_by
+    timestamptz verified_at
+    text cancelled_reason
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  %% ===== Pharmacy (mcms_rx) =====
+  rx__administration {
+    bigint administer_id PK
+    bigint patient_id
+    bigint med_order_id
+    bigint drug_item_id
+    text dose_given
+    timestamptz dose_at
+    bigint administered_by
+    bigint witnessed_by
+    text site
+    text notes
+  }
+  rx__dispensation {
+    bigint dispensation_id PK
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    bigint med_order_id
+    bigint drug_item_id
+    bigint lot_id
+    int quantity
+    timestamptz dispensed_at
+    bigint dispensed_by
+    text instructions
+    text notes
+  }
+  rx__drug_alternative {
+    bigint alternative_id PK
+    bigint drug_item_id
+    bigint alt_drug_item_id
+    text reason
+    boolean is_generic_equiv
+    timestamptz created_at
+  }
+  rx__drug_interaction {
+    bigint interaction_id PK
+    bigint drug_item_id_a
+    bigint drug_item_id_b
+    interaction_severity severity
+    text mechanism
+    text clinical_effect
+    text management
+    text source_ref
+    timestamptz created_at
+  }
+  rx__drug_item {
+    bigint drug_item_id PK
+    text generic_name
+    text brand_name
+    drug_class drug_class
+    text form
+    text strength
+    text unit
+    text atc_code
+    boolean controlled_substance
+    boolean requires_cold_chain
+    text manufacturer
+    int reorder_level
+    int reorder_qty
+    boolean is_active
+    numeric cost_per_unit
+    numeric sale_price_per_unit
+    timestamptz created_at
+    timestamptz updated_at
+    text rxnorm_code
+  }
+  rx__drug_lot {
+    bigint lot_id PK
+    bigint drug_item_id
+    text lot_number
+    int received_qty
+    int on_hand_qty
+    date manufactured_on
+    date expires_on
+    timestamptz received_at
+    bigint supplier_party_id
+    bigint purchase_order_id
+    numeric unit_cost
+    lot_status status
+  }
+  rx__stock_movement {
+    bigint movement_id PK
+    bigint drug_item_id
+    bigint lot_id
+    move_type movement_type
+    int qty_delta
+    int balance_after
+    bigint related_movement_id
+    text reason
+    bigint performed_by
+    timestamptz performed_at
+  }
+  %% ===== Surgical (mcms_surgical) =====
+  surgical__intra_op_vitals {
+    bigint iov_id PK
+    bigint surgery_id
+    timestamptz recorded_at
+    bigint recorded_by
+    int hr_bpm
+    int sbp_mmhg
+    int dbp_mmhg
+    numeric spo2_pct
+    int etco2_mmhg
+    int anaesthesia_depth
+    numeric temp_c
+    int urine_ml
+    text notes
+  }
+  surgical__operating_room {
+    bigint or_id PK
+    bigint department_id
+    text code
+    text name
+    text room_type
+    or_status status
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  surgical__post_op_note {
+    bigint pon_id PK
+    bigint surgery_id
+    timestamptz written_at
+    bigint written_by
+    text recovery_room
+    int pain_score
+    text findings
+    text instructions
+    int follow_up_days
+    boolean is_signed
+    timestamptz signed_at
+  }
+  surgical__pre_op_checklist {
+    bigint poc_id PK
+    bigint surgery_id
+    boolean fasting_confirmed
+    boolean consent_signed
+    boolean site_marked
+    boolean antibiotics_given
+    boolean iv_secured
+    boolean labs_checked
+    boolean imaging_checked
+    text risk_score
+    bigint checklist_by
+    timestamptz completed_at
+    timestamptz created_at
+  }
+  surgical__procedure_catalog {
+    bigint proc_cat_id PK
+    text cpt_code
+    text name
+    text body_site
+    int default_duration_min
+    text notes
+    timestamptz created_at
+  }
+  surgical__surgery {
+    bigint surgery_id PK
+    text operation_no
+    bigint encounter_id
+    bigint patient_id
+    bigint or_id
+    bigint surgeon_user_id
+    bigint anaesthetist_user_id
+    bigint primary_dept_id
+    bigint procedure_id
+    text laterality
+    surg_status status
+    timestamptz scheduled_at
+    timestamptz incision_at
+    timestamptz closure_at
+    timestamptz patient_in_or_at
+    timestamptz patient_out_or_at
+    text anaesthesia_type
+    int blood_loss_ml
+    int tourniquet_time_minutes
+    text complications
+    text notes
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  surgical__surgical_team {
+    bigint surg_team_id PK
+    bigint surgery_id
+    bigint user_id
+    team_role role
+    timestamptz joined_at
+    timestamptz left_at
+  }
+  billing__invoice ||--o{ billing__insurance_claim : ""
+  billing__invoice ||--o{ billing__invoice_line : ""
+  billing__service_price ||--o{ billing__invoice_line : ""
+  billing__invoice ||--o{ billing__payment : ""
+  clinic__room ||--o{ clinic__appointment : ""
+  clinic__appointment ||--o{ clinic__consultation : ""
+  clinic__patient_queue ||--o{ clinic__consultation : ""
+  clinic__room ||--o{ clinic__consultation : ""
+  clinic__room ||--o{ clinic__patient_queue : ""
+  core__party ||--o{ core__address : ""
+  core__party ||--o{ core__app_user : ""
+  core__app_user ||--o{ core__audit_trail : ""
+  core__event_log ||--o{ core__audit_trail : ""
+  core__party ||--o{ core__contact : ""
+  core__app_user ||--o{ core__event_log : ""
+  core__party ||--o{ core__event_log : ""
+  core__app_user ||--o{ core__notification : ""
+  core__party ||--o{ core__notification : ""
+  core__permission ||--o{ core__role_permission : ""
+  core__role ||--o{ core__role_permission : ""
+  core__app_user ||--o{ core__user_role_map : ""
+  core__role ||--o{ core__user_role_map : ""
+  dialysis__station ||--o{ dialysis__session : ""
+  emergency__triage ||--o{ emergency__ed_bed : ""
+  emergency__triage ||--o{ emergency__resuscitation : ""
+  emr__patient ||--o{ emr__allergy : ""
+  emr__encounter ||--o{ emr__clinical_note : ""
+  emr__patient ||--o{ emr__clinical_note : ""
+  emr__encounter ||--o{ emr__diagnosis : ""
+  emr__patient ||--o{ emr__diagnosis : ""
+  emr__encounter ||--o{ emr__encounter : "self"
+  emr__patient ||--o{ emr__encounter : ""
+  emr__patient ||--o{ emr__family_history : ""
+  emr__patient ||--o{ emr__immunization : ""
+  emr__encounter ||--o{ emr__medication_order : ""
+  emr__patient ||--o{ emr__medication_order : ""
+  emr__patient ||--o{ emr__social_history : ""
+  emr__encounter ||--o{ emr__vitals : ""
+  emr__patient ||--o{ emr__vitals : ""
+  erp__gl_account ||--o{ erp__gl_account : "self"
+  erp__purchase_order ||--o{ erp__goods_receipt : ""
+  erp__supplier ||--o{ erp__goods_receipt : ""
+  erp__goods_receipt ||--o{ erp__goods_receipt_line : ""
+  erp__inventory_item ||--o{ erp__goods_receipt_line : ""
+  erp__purchase_order_line ||--o{ erp__goods_receipt_line : ""
+  erp__inventory_item ||--o{ erp__inventory_stock : ""
+  erp__supplier ||--o{ erp__purchase_order : ""
+  erp__inventory_item ||--o{ erp__purchase_order_line : ""
+  erp__purchase_order ||--o{ erp__purchase_order_line : ""
+  erp__inventory_item ||--o{ erp__stock_movement : ""
+  hr__employee ||--o{ hr__attendance : ""
+  hr__shift ||--o{ hr__attendance : ""
+  hr__department ||--o{ hr__department : "self"
+  hr__department ||--o{ hr__employee : ""
+  hr__department ||--o{ hr__employee_department : ""
+  hr__employee ||--o{ hr__employee_department : ""
+  hr__employee ||--o{ hr__leave_request : ""
+  hr__employee ||--o{ hr__payroll_item : ""
+  hr__payroll_period ||--o{ hr__payroll_item : ""
+  hr__department ||--o{ hr__shift : ""
+  hr__employee ||--o{ hr__shift : ""
+  icu__bed ||--o{ icu__admission : ""
+  icu__admission ||--o{ icu__bed_stay : ""
+  icu__bed ||--o{ icu__bed_stay : ""
+  icu__admission ||--o{ icu__score : ""
+  icu__admission ||--o{ icu__support_session : ""
+  icu__admission ||--o{ icu__vitals_stream : ""
+  lab__test_panel ||--o{ lab__lab_order : ""
+  lab__sample ||--o{ lab__result : ""
+  lab__test_catalog ||--o{ lab__result : ""
+  lab__lab_order ||--o{ lab__sample : ""
+  lab__test_catalog ||--o{ lab__test_panel_item : ""
+  lab__test_panel ||--o{ lab__test_panel_item : ""
+  nursery__neonate_record ||--o{ nursery__growth_entry : ""
+  nursery__cot ||--o{ nursery__neonate_record : ""
+  physio__therapy_catalog ||--o{ physio__session : ""
+  physio__treatment_plan ||--o{ physio__session : ""
+  rad__study_request ||--o{ rad__image_instance : ""
+  rad__exam_catalog ||--o{ rad__study_request : ""
+  rad__modality_suite ||--o{ rad__study_request : ""
+  rx__drug_item ||--o{ rx__administration : ""
+  rx__drug_item ||--o{ rx__dispensation : ""
+  rx__drug_lot ||--o{ rx__dispensation : ""
+  rx__drug_item ||--o{ rx__drug_alternative : ""
+  rx__drug_item ||--o{ rx__drug_interaction : ""
+  rx__drug_item ||--o{ rx__drug_lot : ""
+  rx__drug_item ||--o{ rx__stock_movement : ""
+  rx__drug_lot ||--o{ rx__stock_movement : ""
+  rx__stock_movement ||--o{ rx__stock_movement : "self"
+  surgical__surgery ||--o{ surgical__intra_op_vitals : ""
+  surgical__surgery ||--o{ surgical__post_op_note : ""
+  surgical__surgery ||--o{ surgical__pre_op_checklist : ""
+  surgical__operating_room ||--o{ surgical__surgery : ""
+  surgical__procedure_catalog ||--o{ surgical__surgery : ""
+  surgical__surgery ||--o{ surgical__surgical_team : ""
+</pre></div>
+<script>mermaid.initialize({startOnLoad:true,theme:'default',er:{layoutDirection:'TB'},maxTextSize:200000});</script>
+</body></html>

@@ -1,0 +1,61 @@
+erDiagram
+  emergency__ed_bed {
+    bigint ed_bed_id PK
+    bigint triage_id
+    text bed_label
+    timestamptz assigned_at
+    timestamptz released_at
+    int observation_minutes
+    text notes
+  }
+  emergency__resuscitation {
+    bigint resus_id PK
+    bigint triage_id
+    bigint encounter_id
+    bigint patient_id
+    timestamptz code_initiated_at
+    text code_type
+    bigint team_leader_id
+    text airway
+    _text interventions
+    text iv_access
+    _text meds_administered
+    boolean rosc
+    timestamptz rosc_at
+    int duration_minutes
+    text outcome
+    text notes
+    timestamptz created_at
+  }
+  emergency__triage {
+    bigint triage_id PK
+    text ed_visit_no
+    bigint patient_id
+    text mrn
+    bigint encounter_id
+    timestamptz presentation_time
+    text chief_complaint
+    int esi_level
+    text arrival_mode
+    boolean trauma_alert
+    numeric vital_temp_c
+    int vital_hr_bpm
+    int vital_sbp_mmhg
+    int vital_dbp_mmhg
+    int vital_rr_pm
+    numeric vital_spo2_pct
+    int vital_pain_score
+    int vital_gcs
+    text allergies_known
+    _text meds_on_arrival
+    bigint triage_nurse_user_id
+    timestamptz triaged_at
+    triage_status status
+    text disposition
+    text disposition_destination
+    timestamptz disposition_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  emergency__triage ||--o{ emergency__ed_bed : "triage_id"
+  emergency__triage ||--o{ emergency__resuscitation : "triage_id"

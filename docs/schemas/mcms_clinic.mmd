@@ -1,0 +1,71 @@
+erDiagram
+  clinic__appointment {
+    bigint appointment_id PK
+    text mrn
+    bigint patient_id
+    bigint clinician_user_id
+    bigint room_id
+    bigint department_id
+    timestamptz starts_at
+    timestamptz ends_at
+    slot_status status
+    text reason
+    bigint booked_by
+    bigint encounter_id
+    timestamptz created_at
+    timestamptz updated_at
+    uuid confirmation_token
+    timestamptz confirmation_deadline
+    timestamptz confirmed_at
+    boolean patient_confirmed
+  }
+  clinic__consultation {
+    bigint consultation_id PK
+    bigint appointment_id
+    bigint queue_id
+    bigint encounter_id
+    bigint room_id
+    bigint clinician_user_id
+    int duration_minutes
+    text subjective
+    text objective
+    text assessment
+    text plan
+    int follow_up_days
+    consult_status status
+    timestamptz started_at
+    timestamptz completed_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  clinic__patient_queue {
+    bigint queue_id PK
+    bigint patient_id
+    text mrn
+    bigint department_id
+    bigint assigned_clinician
+    bigint room_id
+    int priority
+    queue_status status
+    timestamptz checked_in_at
+    timestamptz called_at
+    timestamptz started_at
+    timestamptz finished_at
+    bigint encounter_id
+  }
+  clinic__room {
+    bigint room_id PK
+    bigint department_id
+    text code
+    text name
+    int capacity
+    _text equipment
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  clinic__room ||--o{ clinic__appointment : "room_id"
+  clinic__appointment ||--o{ clinic__consultation : "appointment_id"
+  clinic__patient_queue ||--o{ clinic__consultation : "queue_id"
+  clinic__room ||--o{ clinic__consultation : "room_id"
+  clinic__room ||--o{ clinic__patient_queue : "room_id"
