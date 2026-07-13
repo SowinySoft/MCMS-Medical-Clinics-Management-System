@@ -52,7 +52,7 @@ class DrugAlternative(models.Model):
     alt_drug_item = models.ForeignKey('DrugItem', models.DO_NOTHING, related_name='drugalternative_alt_drug_item_set')
     reason = models.TextField(blank=True, null=True)
     is_generic_equiv = models.BooleanField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -68,7 +68,7 @@ class DrugInteraction(models.Model):
     clinical_effect = models.TextField(blank=True, null=True)
     management = models.TextField(blank=True, null=True)
     source_ref = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -92,8 +92,8 @@ class DrugItem(models.Model):
     is_active = models.BooleanField()
     cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
     sale_price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
     rxnorm_code = models.TextField(blank=True, null=True)
 
     class Meta:

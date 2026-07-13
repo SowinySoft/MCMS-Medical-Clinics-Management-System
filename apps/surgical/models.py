@@ -36,8 +36,8 @@ class OperatingRoom(models.Model):
     room_type = models.TextField()
     status = models.TextField()  # This field type is a guess.
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)
@@ -76,7 +76,7 @@ class PreOpChecklist(models.Model):
     risk_score = models.TextField(blank=True, null=True)
     checklist_by = models.BigIntegerField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -89,7 +89,7 @@ class ProcedureCatalog(models.Model):
     body_site = models.TextField(blank=True, null=True)
     default_duration_min = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.name)
@@ -120,8 +120,8 @@ class Surgery(models.Model):
     tourniquet_time_minutes = models.IntegerField(blank=True, null=True)
     complications = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False

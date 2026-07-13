@@ -5,6 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { TableBrowser } from "./components/TableBrowser";
+import { Reports } from "./components/Reports";
 import { toggleLanguage } from "./i18n";
 import { useTranslation } from "react-i18next";
 
@@ -28,9 +29,11 @@ function Shell() {
       <main style={{ flex: 1, minHeight: "100vh", background: "#010409", color: "#e6edf3" }}>
         <div style={topbar}>
           <button style={langBtn} onClick={toggleLanguage}>{t("language")}: EN / ع</button>
+          <button style={reportsBtn} onClick={() => navigate("/reports")}>{t("Reports")}</button>
         </div>
         <Routes>
           <Route path="/" element={<Dashboard onOpen={open} />} />
+          <Route path="/reports" element={<Reports />} />
           <Route path="/browse/:schema" element={<Dashboard onOpen={open} />} />
           <Route path="/browse/:schema/:model" element={<TableBrowser schema={view.schema} model={view.model} />} />
         </Routes>
@@ -39,8 +42,9 @@ function Shell() {
   );
 }
 
-const topbar: any = { height: 44, display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 16px", borderBottom: "1px solid #30363d", background: "#0d1117" };
+const topbar: any = { height: 44, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "0 16px", borderBottom: "1px solid #30363d", background: "#0d1117" };
 const langBtn: any = { background: "#21262d", color: "#e6edf3", border: "1px solid #30363d", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 };
+const reportsBtn: any = { background: "#1f6feb", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 12 };
 
 function Root() {
   const { access } = useAuth();

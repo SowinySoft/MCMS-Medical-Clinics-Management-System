@@ -17,7 +17,7 @@ class Attendance(models.Model):
     clock_out_at = models.DateTimeField(blank=True, null=True)
     status = models.TextField()  # This field type is a guess.
     note = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -33,8 +33,8 @@ class Department(models.Model):
     location_building = models.TextField(blank=True, null=True)
     location_floor = models.IntegerField(blank=True, null=True)
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)
@@ -60,8 +60,8 @@ class Employee(models.Model):
     base_salary_monthly = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     bank_account = models.TextField(blank=True, null=True)
     tax_number = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -92,8 +92,8 @@ class LeaveRequest(models.Model):
     status = models.TextField()  # This field type is a guess.
     approved_by = models.BigIntegerField(blank=True, null=True)
     approved_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -110,7 +110,7 @@ class PayrollItem(models.Model):
     net_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_paid = models.BooleanField()
     paid_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -124,7 +124,7 @@ class PayrollPeriod(models.Model):
     end_date = models.DateField()
     status = models.TextField()  # This field type is a guess.
     closed_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.code)
@@ -140,7 +140,7 @@ class Shift(models.Model):
     shift_type = models.TextField()  # This field type is a guess.
     start_at = models.DateTimeField()
     end_at = models.DateTimeField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False

@@ -22,7 +22,7 @@ class Address(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     is_primary = models.BooleanField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.label)
@@ -42,8 +42,8 @@ class AppUser(models.Model):
     last_login_at = models.DateTimeField(blank=True, null=True)
     failed_logins = models.IntegerField()
     locked_until = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.username)
@@ -75,7 +75,7 @@ class Contact(models.Model):
     value = models.TextField()
     is_primary = models.BooleanField()
     verified_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -132,7 +132,7 @@ class Notification(models.Model):
     source_id = models.BigIntegerField(blank=True, null=True)
     sent_at = models.DateTimeField(blank=True, null=True)
     read_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -150,8 +150,8 @@ class Party(models.Model):
     tax_id = models.TextField(blank=True, null=True)
     national_id = models.TextField(blank=True, null=True)
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
     preferred_language = models.TextField()
 
     def __str__(self):
@@ -180,7 +180,7 @@ class Role(models.Model):
     name_ar = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.code)

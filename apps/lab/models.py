@@ -43,7 +43,7 @@ class Result(models.Model):
     verified_at = models.DateTimeField(blank=True, null=True)
     rejected_at = models.DateTimeField(blank=True, null=True)
     rejected_reason = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -80,7 +80,7 @@ class TestCatalog(models.Model):
     ref_high = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)  # max_digits and decimal_places have been guessed, as this database handles decimal fields as float
     turnaround_minutes = models.IntegerField(blank=True, null=True)
     is_active = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.name)
@@ -93,7 +93,7 @@ class TestPanel(models.Model):
     panel_id = models.BigAutoField(primary_key=True)
     code = models.TextField(unique=True)
     name = models.TextField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.name)

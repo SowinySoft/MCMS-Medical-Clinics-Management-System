@@ -24,8 +24,8 @@ class InsuranceClaim(models.Model):
     paid_at = models.DateTimeField(blank=True, null=True)
     claim_no_external = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -50,8 +50,8 @@ class Invoice(models.Model):
     due_date = models.DateField(blank=True, null=True)
     paid_at = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.mrn)
@@ -71,7 +71,7 @@ class InvoiceLine(models.Model):
     qty = models.DecimalField(max_digits=8, decimal_places=2)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     line_total = models.DecimalField(max_digits=14, decimal_places=2, blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -104,8 +104,8 @@ class ServicePrice(models.Model):
     is_active = models.BooleanField()
     effective_from = models.DateField()
     effective_to = models.DateField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)

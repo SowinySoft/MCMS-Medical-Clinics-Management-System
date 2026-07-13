@@ -17,7 +17,7 @@ class ExamCatalog(models.Model):
     default_modality = models.TextField()  # This field type is a guess.
     contrast_used = models.BooleanField()
     duration_minutes = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.name)
@@ -37,7 +37,7 @@ class ImageInstance(models.Model):
     rows = models.IntegerField(blank=True, null=True)
     columns = models.IntegerField(blank=True, null=True)
     bits_allocated = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -51,8 +51,8 @@ class ModalitySuite(models.Model):
     name = models.TextField()
     modality = models.TextField()  # This field type is a guess.
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)
@@ -86,8 +86,8 @@ class StudyRequest(models.Model):
     verified_by = models.BigIntegerField(blank=True, null=True)
     verified_at = models.DateTimeField(blank=True, null=True)
     cancelled_reason = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.mrn)

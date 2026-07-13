@@ -43,8 +43,8 @@ class Bed(models.Model):
     has_ventilator = models.BooleanField()
     has_dialysis = models.BooleanField()
     is_isolation = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False

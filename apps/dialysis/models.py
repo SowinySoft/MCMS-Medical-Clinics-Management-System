@@ -34,8 +34,8 @@ class Session(models.Model):
     complications = models.TextField(blank=True, null=True)
     status = models.TextField()  # This field type is a guess.
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -48,8 +48,8 @@ class Station(models.Model):
     department_id = models.BigIntegerField(blank=True, null=True)
     has_ro_water = models.BooleanField()
     status = models.TextField()  # This field type is a guess.
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)

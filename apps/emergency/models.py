@@ -39,7 +39,7 @@ class Resuscitation(models.Model):
     duration_minutes = models.IntegerField(blank=True, null=True)
     outcome = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -72,8 +72,8 @@ class Triage(models.Model):
     disposition = models.TextField(blank=True, null=True)
     disposition_destination = models.TextField(blank=True, null=True)
     disposition_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.mrn)

@@ -67,8 +67,8 @@ class InventoryItem(models.Model):
     reorder_qty = models.IntegerField()
     cost_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)
@@ -84,7 +84,7 @@ class InventoryStock(models.Model):
     qty_on_hand = models.IntegerField()
     qty_reserved = models.IntegerField()
     last_count_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -103,8 +103,8 @@ class PurchaseOrder(models.Model):
     received_at = models.DateTimeField(blank=True, null=True)
     closed_at = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.po_no)
@@ -152,7 +152,7 @@ class Supplier(models.Model):
     contact_user_id = models.BigIntegerField(blank=True, null=True)
     payment_terms_days = models.IntegerField()
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False

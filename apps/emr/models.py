@@ -36,8 +36,8 @@ class ClinicalNote(models.Model):
     signed = models.BooleanField()
     signed_at = models.DateTimeField(blank=True, null=True)
     amended_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.title)
@@ -58,7 +58,7 @@ class Diagnosis(models.Model):
     resolved_at = models.DateTimeField(blank=True, null=True)
     recorded_by = models.BigIntegerField(blank=True, null=True)
     is_chronic = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
         managed = False
@@ -79,8 +79,8 @@ class Encounter(models.Model):
     ended_at = models.DateTimeField(blank=True, null=True)
     bed_assign_id = models.BigIntegerField(blank=True, null=True)
     originating_encounter = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
     fhir_id = models.TextField(unique=True, blank=True, null=True)
 
     def __str__(self):
@@ -137,8 +137,8 @@ class MedicationOrder(models.Model):
     instructions = models.TextField(blank=True, null=True)
     status = models.TextField()  # This field type is a guess.
     ordered_at = models.DateTimeField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -159,8 +159,8 @@ class Patient(models.Model):
     preferred_language = models.TextField(blank=True, null=True)
     organ_donor = models.BooleanField(blank=True, null=True)
     living_will = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
     fhir_id = models.TextField(unique=True, blank=True, null=True)
     hl7_mpi = models.TextField(blank=True, null=True)
 

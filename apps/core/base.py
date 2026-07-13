@@ -19,15 +19,17 @@ def serializer_factory(model, fields="__all__", read_only=None):
     Create a ModelSerializer subclass for `model` on the fly.
     Class is namespaced by app label (e.g. PhysioSessionSerializer) so the
     OpenAPI schema never collides on tables that share a name across schemas.
+    `created_at`/`updated_at` are DB-managed audit columns (DEFAULT now()) and
+    are exposed read-only so create/edit forms never have to supply them.
     """
     app = model._meta.app_label
     base = model.__name__
     cls_name = f"{app.capitalize()}{base}Serializer"
     meta = type("Meta", (), {"model": model, "fields": fields})
+    ro = set(read_only or []) | {"created_at", "updated_at"}
     attrs = {"Meta": meta}
-    if read_only:
-        for f in read_only:
-            attrs[f] = serializers.ReadOnlyField()
+    for f in ro:
+        attrs[f] = serializers.ReadOnlyField()
     return type(cls_name, (serializers.ModelSerializer,), attrs)
 
 

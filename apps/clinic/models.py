@@ -22,8 +22,8 @@ class Appointment(models.Model):
     reason = models.TextField(blank=True, null=True)
     booked_by = models.BigIntegerField(blank=True, null=True)
     encounter_id = models.BigIntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
     confirmation_token = models.UUIDField(blank=True, null=True)
     confirmation_deadline = models.DateTimeField(blank=True, null=True)
     confirmed_at = models.DateTimeField(blank=True, null=True)
@@ -52,8 +52,8 @@ class Consultation(models.Model):
     status = models.TextField()  # This field type is a guess.
     started_at = models.DateTimeField()
     completed_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -89,8 +89,8 @@ class Room(models.Model):
     capacity = models.IntegerField(blank=True, null=True)
     equipment = models.TextField(blank=True, null=True)  # This field type is a guess.
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     def __str__(self):
         return str(self.name)

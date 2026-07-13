@@ -29,8 +29,8 @@ class Session(models.Model):
     started_at = models.DateTimeField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
@@ -45,7 +45,7 @@ class TherapyCatalog(models.Model):
     duration_minutes = models.IntegerField()
     equipment = models.TextField(blank=True, null=True)  # This field type is a guess.
     is_active = models.BooleanField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         return str(self.name)
@@ -68,8 +68,8 @@ class TreatmentPlan(models.Model):
     ends_on = models.DateField(blank=True, null=True)
     status = models.TextField()  # This field type is a guess.
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
 
     class Meta:
         managed = False
