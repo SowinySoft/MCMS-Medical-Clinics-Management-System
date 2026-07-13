@@ -5,9 +5,31 @@ import { LiveFeed } from "./LiveFeed";
 import { useTranslation } from "react-i18next";
 import { MODEL_LABELS } from "../schemas";
 
+// schema (app label) -> READ permission, mirroring the backend router's
+// DOMAIN_PERMS (apps/core/routers.py). Used so quick-access chips only show
+// tables the user can actually open. (Group-level perms in SCHEMA_GROUPS are
+// coarser; per-schema read perms must match the API exactly.)
+const SCHEMA_READ_PERM: Record<string, string> = {
+  core: "admin.all",
+  emr: "emr.read",
+  clinic: "appointment.manage",
+  hr: "hr.read",
+  surgical: "emr.read",
+  emergency: "emr.read",
+  rx: "pharmacy.dispense",
+  lab: "lab_rad.result",
+  rad: "lab_rad.result",
+  icu: "emr.read",
+  physio: "emr.read",
+  dialysis: "emr.read",
+  nursery: "emr.read",
+  billing: "billing.read",
+  erp: "inventory.manage",
+};
+
 // Dashboard: KPI tiles (live counts from the API) + the live event feed.
 export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) => void }) {
-  const { roles } = useAuth();
+  const { roles, hasPerm } = useAuth();
   const { t } = useTranslation();
   const [kpis, setKpis] = useState<any>(null);
 
@@ -34,6 +56,13 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
     { label: "Invoices", value: kpis?.invoices ?? "—", target: ["billing", "invoice"] },
   ];
 
+  // quick-access chips: only tables whose schema the user can read
+  const chips = Object.entries(MODEL_LABELS).filter(([k]) => {
+    const s = k.split("/")[0];
+    const perm = SCHEMA_READ_PERM[s];
+    return !perm || hasPerm(perm);
+  });
+
   return (
     <div style={styles.grid}>
       <div style={styles.main}>
@@ -49,7 +78,7 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
         </div>
         <h3 style={styles.h3}>Quick access</h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {Object.entries(MODEL_LABELS).map(([k, v]) => {
+          {chips.map(([k, v]) => {
             const [s, m] = k.split("/");
             return (
               <button key={k} style={styles.chip} onClick={() => onOpen(s, m)}>{v.en}</button>
