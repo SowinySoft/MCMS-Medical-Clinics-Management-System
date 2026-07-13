@@ -33,7 +33,7 @@ class OperatingRoom(models.Model):
     department_id = models.BigIntegerField()
     code = models.TextField(unique=True)
     name = models.TextField()
-    room_type = models.TextField()
+    room_type = models.TextField(choices=[('general','general'),('cardiac','cardiac'),('ortho','ortho'),('neuro','neuro'),('day_case','day_case'),('hybrid','hybrid')])
     status = models.TextField()  # This field type is a guess.
     is_active = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True, )
@@ -108,7 +108,7 @@ class Surgery(models.Model):
     anaesthetist_user_id = models.BigIntegerField(blank=True, null=True)
     primary_dept_id = models.BigIntegerField()
     procedure = models.ForeignKey(ProcedureCatalog, models.DO_NOTHING)
-    laterality = models.TextField(blank=True, null=True)
+    laterality = models.TextField(blank=True, null=True, choices=[('left','left'),('right','right'),('bilateral','bilateral'),('na','na')])
     status = models.TextField()  # This field type is a guess.
     scheduled_at = models.DateTimeField(blank=True, null=True)
     incision_at = models.DateTimeField(blank=True, null=True)

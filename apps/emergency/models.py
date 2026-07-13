@@ -28,7 +28,7 @@ class Resuscitation(models.Model):
     encounter_id = models.BigIntegerField()
     patient_id = models.BigIntegerField()
     code_initiated_at = models.DateTimeField()
-    code_type = models.TextField(blank=True, null=True)
+    code_type = models.TextField(blank=True, null=True, choices=[('medical','medical'),('trauma','trauma'),('cardiac','cardiac'),('respiratory','respiratory'),('paediatric','paediatric'),('obstetric','obstetric')])
     team_leader_id = models.BigIntegerField(blank=True, null=True)
     airway = models.TextField(blank=True, null=True)
     interventions = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -54,7 +54,7 @@ class Triage(models.Model):
     presentation_time = models.DateTimeField()
     chief_complaint = models.TextField()
     esi_level = models.IntegerField()
-    arrival_mode = models.TextField(blank=True, null=True)
+    arrival_mode = models.TextField(blank=True, null=True, choices=[('walk_in','walk_in'),('ambulance','ambulance'),('helicopter','helicopter'),('transfer','transfer'),('police','police')])
     trauma_alert = models.BooleanField()
     vital_temp_c = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     vital_hr_bpm = models.IntegerField(blank=True, null=True)

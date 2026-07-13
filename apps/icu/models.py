@@ -38,7 +38,7 @@ class Bed(models.Model):
     room_code = models.TextField()
     bed_label = models.TextField()
     department_id = models.BigIntegerField()
-    level = models.IntegerField(blank=True, null=True)
+    level = models.IntegerField(blank=True, null=True, choices=[(1,'1'),(2,'2'),(3,'3')])
     status = models.TextField()  # This field type is a guess.
     has_ventilator = models.BooleanField()
     has_dialysis = models.BooleanField()

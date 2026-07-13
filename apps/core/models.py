@@ -57,7 +57,7 @@ class AuditTrail(models.Model):
     table_schema = models.TextField()
     table_name = models.TextField()
     row_id = models.BigIntegerField()
-    action = models.TextField()
+    action = models.TextField(choices=[('insert','insert'),('update','update'),('delete','delete')])
     changed_by = models.ForeignKey(AppUser, models.DO_NOTHING, db_column='changed_by', blank=True, null=True)
     changed_at = models.DateTimeField()
     before = models.JSONField(blank=True, null=True)
@@ -71,7 +71,7 @@ class AuditTrail(models.Model):
 class Contact(models.Model):
     contact_id = models.BigAutoField(primary_key=True)
     party = models.ForeignKey('Party', models.DO_NOTHING)
-    kind = models.TextField()
+    kind = models.TextField(choices=[('phone','phone'),('mobile','mobile'),('email','email'),('fax','fax'),('web','web')])
     value = models.TextField()
     is_primary = models.BooleanField()
     verified_at = models.DateTimeField(blank=True, null=True)
@@ -152,7 +152,7 @@ class Party(models.Model):
     is_active = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True, )
     updated_at = models.DateTimeField(auto_now=True, )
-    preferred_language = models.TextField()
+    preferred_language = models.TextField(choices=[('ar','ar'),('en','en')])
 
     def __str__(self):
         return str(self.display_name)

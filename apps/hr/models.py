@@ -28,7 +28,7 @@ class Department(models.Model):
     code = models.TextField(unique=True)
     name = models.TextField()
     parent_department = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
-    kind = models.TextField()
+    kind = models.TextField(choices=[('clinic','clinic'),('surgical','surgical'),('emergency','emergency'),('icu','icu'),('lab','lab'),('radiology','radiology'),('pharmacy','pharmacy'),('physio','physio'),('billing','billing'),('hr','hr'),('administration','administration'),('maintenance','maintenance'),('housekeeping','housekeeping'),('other','other')])
     head_user_id = models.BigIntegerField(blank=True, null=True)
     location_building = models.TextField(blank=True, null=True)
     location_floor = models.IntegerField(blank=True, null=True)
