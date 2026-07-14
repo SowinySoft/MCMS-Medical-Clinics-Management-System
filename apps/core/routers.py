@@ -9,8 +9,10 @@ Pattern: convention over configuration. Adding a table to the DB + rerunning
 inspectdb yields a fully secured REST endpoint with zero extra wiring.
 """
 import re
+
 from django.apps import apps as django_apps
 from rest_framework.routers import DefaultRouter
+
 from apps.core.base import build_viewset
 
 # schema (app label) -> (read_perm, write_perm)

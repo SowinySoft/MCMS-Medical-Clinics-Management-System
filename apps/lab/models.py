@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class LabOrder(models.Model):
     order_id = models.BigAutoField(primary_key=True)
     order_no = models.TextField(unique=True)

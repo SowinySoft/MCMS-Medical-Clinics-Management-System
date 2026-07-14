@@ -5,8 +5,9 @@ Uses OPTIONS metadata to learn required fields AND valid choices, so the test
 is resilient to the real schema (enums, FKs). Runs in a transaction (rolled
 back) leaving no residue. All steps use the admin (sysadmin) client.
 """
-import pytest
 import uuid
+
+import pytest
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -83,6 +84,11 @@ def _build(client, url):
             payload[k] = "2026-07-14T10:00:00"
         elif k == "party_id":
             payload[k] = "__PARTY__"
+        elif model_name == "party" and k == "party_id":
+            # avoid colliding with the test-identity parties (1,2) created by
+            # sql/97_test_users.sql; use a high random id (no rollback in tests)
+            import random
+            payload[k] = random.randint(900000, 999999)
         elif k == "patient" or k == "patient_id":
             payload[k] = "__PATIENT__"
         elif k == "encounter":

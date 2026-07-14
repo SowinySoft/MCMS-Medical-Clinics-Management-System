@@ -6,9 +6,10 @@ already has all 89 tables + triggers + RBAC matrix) and tell pytest-django to
 reuse it rather than clone into test_mcms. Tests are written to be
 non-destructive (read-only by default; the e2e path creates+deletes in a txn).
 """
+import os as _os
+
 from .settings import *  # noqa: F401,F403
 from .settings import _SCHEMAS  # noqa: F401
-import os as _os
 
 DEBUG = False
 

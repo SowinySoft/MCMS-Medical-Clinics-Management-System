@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Attendance(models.Model):
     attendance_id = models.BigAutoField(primary_key=True)
     employee = models.ForeignKey('Employee', models.DO_NOTHING)

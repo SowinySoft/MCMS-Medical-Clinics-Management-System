@@ -4,8 +4,9 @@ Routes HTTP to Django (DRF/Swagger) and WebSocket (/ws/events/) to Channels.
 Served by Daphne in dev/prod:  daphne config.asgi:application
 """
 import os
-from django.core.asgi import get_asgi_application
+
 from channels.routing import ProtocolTypeRouter, URLRouter
+from django.core.asgi import get_asgi_application
 from django.urls import path
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")

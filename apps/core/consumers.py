@@ -8,11 +8,12 @@ Pattern: event-stream-over-WS. The DB already emits events via triggers
 (mcms_core.event_log); we poll for new seq values and forward them. This keeps
 the realtime layer a thin projection of the event store (single source of truth).
 """
-import json
 import asyncio
+import json
 from datetime import date, datetime, time
-from channels.generic.websocket import AsyncWebsocketConsumer
+
 from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.db import connection
 
 
@@ -53,7 +54,7 @@ def fetch_since(since, kinds):
     with connection.cursor() as cur:
         cur.execute(sql, params)
         cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, row)) for row in cur.fetchall()]
+        return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
 
 
 class EventStreamConsumer(AsyncWebsocketConsumer):

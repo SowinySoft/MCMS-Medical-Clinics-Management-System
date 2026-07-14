@@ -10,12 +10,13 @@ menus without an extra round-trip (the server still re-checks on every call).
 Brute-force protection: the token endpoint is wrapped with django-axes so
 failed logins are rate-limited/locked (see config/settings.py AXES_*).
 """
+from axes.decorators import axes_dispatch
+from django.db import connection
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from axes.decorators import axes_dispatch
-from django.utils.decorators import method_decorator
+
 from apps.core.permissions import _perms_for_username
-from django.db import connection
 
 
 def _roles_for_username(username):

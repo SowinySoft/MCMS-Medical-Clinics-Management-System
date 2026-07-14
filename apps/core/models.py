@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Address(models.Model):
     address_id = models.BigAutoField(primary_key=True)
     party = models.ForeignKey('Party', models.DO_NOTHING)

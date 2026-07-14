@@ -6,8 +6,8 @@ Usage:
     python manage.py provision_user --username drmona --password pass123 \
         --role doctor --party-name "Dr Mona Kassem"
 """
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand
 from django.db import connection
 
 

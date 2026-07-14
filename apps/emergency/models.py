@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class EdBed(models.Model):
     ed_bed_id = models.BigAutoField(primary_key=True)
     triage = models.ForeignKey('Triage', models.DO_NOTHING)

@@ -8,15 +8,18 @@ MCMS URL configuration.
   /api/redoc/                  -> ReDoc
 """
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework_simplejwt.views import TokenRefreshView
+from django.urls import include, path
 from drf_spectacular.views import (
-    SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView,
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
 )
-from apps.core.auth import MCMSTokenObtainPairView
-from apps.core.routers import build_router
-from apps.core.reports import ReportViewSet
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from apps.core.admin_panel import SystemViewSet
+from apps.core.auth import MCMSTokenObtainPairView
+from apps.core.reports import ReportViewSet
+from apps.core.routers import build_router
 
 router = build_router()
 router.register("reports", ReportViewSet, basename="reports")

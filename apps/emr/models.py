@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Allergy(models.Model):
     allergy_id = models.BigAutoField(primary_key=True)
     patient = models.ForeignKey('Patient', models.DO_NOTHING)

@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class IntraOpVitals(models.Model):
     iov_id = models.BigAutoField(primary_key=True)
     surgery = models.ForeignKey('Surgery', models.DO_NOTHING)

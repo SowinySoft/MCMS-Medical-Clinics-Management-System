@@ -1,0 +1,24 @@
+# Ruff lint configuration (see https://docs.astral.sh/ruff/)
+# Backend models are inspectdb-generated (managed=False); they carry a lot of
+# "this field type is a guess" noise that is expected, so we keep the baseline
+# lenient and only enforce the highest-signal checks in CI.
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["F", "E", "W", "I", "B", "UP"]
+ignore = ["E501", "B008", "B904", "UP007", "UP015", "UP038", "E702", "E701"]
+
+[lint.per-file-ignores]
+# generated/legacy files
+"apps/*/models.py" = ["F401", "F403", "E402"]
+"**/migrations/**" = ["F401", "E402"]
+"scripts/*" = ["E402", "F403"]
+# conftest/base intentionally patch at import time (after django setup)
+"conftest.py" = ["E402"]
+"apps/core/base.py" = ["E402"]
+# settings.py loads env vars at import (intentional, not top-of-file)
+"config/settings.py" = ["E402"]
+
+[format]
+quote-style = "double"

@@ -11,6 +11,7 @@ Domain apps only override when they need custom behaviour (validation,
 computed fields, extra actions). Everything else is generated.
 """
 from rest_framework import serializers, viewsets
+
 from .permissions import HasRolePermission
 
 

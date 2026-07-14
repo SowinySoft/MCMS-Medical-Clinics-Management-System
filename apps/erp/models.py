@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class GlAccount(models.Model):
     account_id = models.BigAutoField(primary_key=True)
     code = models.TextField(unique=True)

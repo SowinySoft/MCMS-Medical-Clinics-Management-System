@@ -6,20 +6,21 @@ optional `since` / `until` (ISO date) range on the relevant timestamp column.
 Reports span multiple schemas via plain parameterised SQL (no ORM). All are
 RBAC-gated by HasRolePermission via `required_perms`.
 """
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+
 from django.db import connection
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from apps.core.permissions import HasRolePermission, effective_perms
-from datetime import date
 
 
 def _rows(sql, params=None):
     with connection.cursor() as cur:
         cur.execute(sql, params or [])
         cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, row)) for row in cur.fetchall()]
+        return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
 
 
 def _range(request, column):

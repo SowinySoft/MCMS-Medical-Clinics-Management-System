@@ -6,8 +6,8 @@ Design patterns applied:
   * thin settings, fat app packages under apps/
   * declarative RBAC driven by DB tables (mcms_core.role/permission)
 """
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -92,6 +92,7 @@ _SCHEMAS = ",".join([
     "mcms_erp",
 ])
 import os as _os
+
 _SP_OVERRIDE = _os.environ.get("MCMS_SEARCH_PATH")
 DATABASES = {
     "default": {

@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Appointment(models.Model):
     appointment_id = models.BigAutoField(primary_key=True)
     mrn = models.TextField()

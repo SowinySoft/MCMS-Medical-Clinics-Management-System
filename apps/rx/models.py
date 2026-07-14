@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Administration(models.Model):
     administer_id = models.BigAutoField(primary_key=True)
     patient_id = models.BigIntegerField()

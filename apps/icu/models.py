@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class Admission(models.Model):
     admission_id = models.BigAutoField(primary_key=True)
     encounter_id = models.BigIntegerField()

@@ -10,7 +10,6 @@ A ViewSet declares required permission codes via `required_perms`:
     class InvoiceViewSet(BaseModelViewSet):
         required_perms = {"GET": "billing.read", "*": "billing.manage"}
 """
-from functools import lru_cache
 from django.db import connection
 from rest_framework.permissions import BasePermission
 

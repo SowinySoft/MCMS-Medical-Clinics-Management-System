@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class InsuranceClaim(models.Model):
     claim_id = models.BigAutoField(primary_key=True)
     invoice = models.ForeignKey('Invoice', models.DO_NOTHING)

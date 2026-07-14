@@ -6,9 +6,9 @@ violated on write, Django raises IntegrityError deep in the ORM. Rather than
 leak a 500, we surface a clean 400 so the client gets a actionable error and
 the system never returns an unhandled 500 from a constraint violation.
 """
-from django.db import IntegrityError, DataError
-from rest_framework.views import exception_handler
+from django.db import DataError, IntegrityError
 from rest_framework.response import Response
+from rest_framework.views import exception_handler
 
 
 def mcms_exception_handler(exc, context):

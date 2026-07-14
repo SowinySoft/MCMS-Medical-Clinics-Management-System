@@ -9,6 +9,7 @@ Pattern: reflection layer — Django never DDLs these tables.
 """
 from django.db import models
 
+
 class ExamCatalog(models.Model):
     exam_id = models.BigAutoField(primary_key=True)
     snomed_code = models.TextField(blank=True, null=True)

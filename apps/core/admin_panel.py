@@ -12,17 +12,17 @@ are safe to run from the app:
 
 Pattern mirrors apps/core/reports.py (ViewSet + raw SQL + HasRolePermission).
 """
+import io
 import os
 import subprocess
-import io
 from datetime import datetime
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.db import connection
 from django.conf import settings
+from django.db import connection
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.core.permissions import HasRolePermission, effective_perms
 
@@ -33,7 +33,7 @@ def _rows(sql, params=None):
     with connection.cursor() as cur:
         cur.execute(sql, params or [])
         cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, row)) for row in cur.fetchall()]
+        return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
 
 
 def _guard(request):

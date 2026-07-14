@@ -15,12 +15,13 @@ import django.test.utils as _tu
 
 # No-op DB setup: prevent pytest-django from dropping/recreating the pre-built
 # `mcms_test` (which would otherwise wipe our restored schema+data every run).
+# We keep the default teardown so pytest-django still rolls back the test
+# transaction afterwards (no test data leaks between runs).
 _tu.setup_databases = lambda *a, **k: None  # type: ignore[assignment]
-_tu.teardown_databases = lambda *a, **k: None  # type: ignore[assignment]
 
 import pytest
-from rest_framework.test import APIClient
 from django.contrib.auth.models import User
+from rest_framework.test import APIClient
 
 
 @pytest.fixture(scope="session")
