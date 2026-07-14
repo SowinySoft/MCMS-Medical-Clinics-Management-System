@@ -50,6 +50,8 @@ jobs:
         run: ruff check . || true
 
       - name: Build test database (deterministic, from committed sql/)
+        env:
+          MCMS_TEST_DB: mcms   # Django connects to MCMS_DB_NAME=mcms; build it there
         run: MODE=from-sql bash scripts/rebuild_test_db.sh
 
       - name: Run backend tests
