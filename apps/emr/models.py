@@ -159,6 +159,28 @@ class MedicationOrder(models.Model):
         managed = False
         db_table = 'mcms_emr"."medication_order'
 
+class Referral(models.Model):
+    """Internal referral workflow (clinician -> specialist). Reuses
+    encounter/diagnosis; the accepting clinician may open a target encounter."""
+    referral_id = models.BigAutoField(primary_key=True)
+    from_encounter = models.ForeignKey('Encounter', models.DO_NOTHING, db_column='from_encounter_id', related_name='referrals_from')
+    to_encounter = models.ForeignKey('Encounter', models.DO_NOTHING, blank=True, null=True, db_column='to_encounter_id', related_name='referrals_to')
+    from_user = models.ForeignKey('core.AppUser', models.DO_NOTHING, db_column='from_user_id')
+    to_user = models.BigIntegerField(blank=True, null=True, db_column='to_user_id')
+    to_department = models.BigIntegerField(blank=True, null=True, db_column='to_department_id')
+    diagnosis = models.ForeignKey('Diagnosis', models.DO_NOTHING, blank=True, null=True, db_column='diagnosis_id')
+    reason = models.TextField(blank=True, null=True)
+    clinical_summary = models.TextField(blank=True, null=True)
+    urgency = models.TextField()
+    status = models.TextField()  # This field type is a guess.
+    responded_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_emr"."referral'
+
 class Patient(models.Model):
     patient_id = models.BigAutoField(primary_key=True)
     party_id = models.BigIntegerField(unique=True)

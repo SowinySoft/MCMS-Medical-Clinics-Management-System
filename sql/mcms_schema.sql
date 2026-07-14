@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dUx6jEgUorBWChJQlzXbHdishVTVTgdst3QvV0kW5IbNtYyr1ZZfbhKqaRAxdZV
+\restrict feLyR4Bko4hV1w7LWkhjY63NcNcmMqkOwq1l4v0WdZulwPMBjtcolvzBn1z91ec
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -410,7 +410,8 @@ CREATE TYPE mcms_core.event_kind AS ENUM (
     'notification_sent',
     'create',
     'update',
-    'delete'
+    'delete',
+    'appointment_noshow'
 );
 
 
@@ -652,7 +653,22 @@ CREATE TYPE mcms_emr.note_type AS ENUM (
     'discharge',
     'consult',
     'op_note',
-    'ed_note'
+    'ed_note',
+    'lab_result'
+);
+
+
+--
+-- Name: referral_status; Type: TYPE; Schema: mcms_emr; Owner: -
+--
+
+CREATE TYPE mcms_emr.referral_status AS ENUM (
+    'draft',
+    'pending',
+    'accepted',
+    'declined',
+    'completed',
+    'cancelled'
 );
 
 
@@ -1201,15 +1217,36 @@ CREATE TYPE mcms_surgical.team_role AS ENUM (
 
 CREATE FUNCTION mcms_billing.fn_claim_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='submitted') THEN
-      PERFORM mcms_core.emit_event('insurance_claim_submitted','info', NULL, NULL,
-         'mcms_billing','insurance_claim', NEW.claim_id,
-         jsonb_build_object('provider', NEW.insurance_provider,'amount', NEW.billed_amount));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='submitted') THEN
+      PERFORM mcms_core.emit_event('insurance_claim_submitted','info', NULL, NULL,
+         'mcms_billing','insurance_claim', NEW.claim_id,
+         jsonb_build_object('provider', NEW.insurance_provider,'amount', NEW.billed_amount));
+   END IF;
+   RETURN NEW;
 END$$;
+
+
+--
+-- Name: fn_claim_notify(); Type: FUNCTION; Schema: mcms_billing; Owner: -
+--
+
+CREATE FUNCTION mcms_billing.fn_claim_notify() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE v_party bigint;
+BEGIN
+  SELECT p.party_id INTO v_party FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
+  PERFORM mcms_core.fn_make_notification(
+    'claim_update',
+    'Insurance claim ' || NEW.status,
+    'Claim #' || NEW.claim_id || ' for invoice #' || NEW.invoice_id || ' is now ' || NEW.status || '.',
+    NULL, v_party,
+    'mcms_billing', 'insurance_claim', NEW.claim_id);
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1218,14 +1255,14 @@ END$$;
 
 CREATE FUNCTION mcms_billing.fn_invoice_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='INSERT' AND NEW.status IN ('issued','partial','paid')) THEN
-      PERFORM mcms_core.emit_event('invoice_issued','info', NEW.issued_by, NEW.patient_id,
-         'mcms_billing','invoice', NEW.invoice_id,
-         jsonb_build_object('invoice_no', NEW.invoice_no, 'total', NEW.total));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='INSERT' AND NEW.status IN ('issued','partial','paid')) THEN
+      PERFORM mcms_core.emit_event('invoice_issued','info', NEW.issued_by, NEW.patient_id,
+         'mcms_billing','invoice', NEW.invoice_id,
+         jsonb_build_object('invoice_no', NEW.invoice_no, 'total', NEW.total));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1235,21 +1272,42 @@ END$$;
 
 CREATE FUNCTION mcms_billing.fn_payment_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   inv mcms_billing.invoice%ROWTYPE;
-   paid NUMERIC(14,2);
-BEGIN
-   SELECT * INTO inv FROM mcms_billing.invoice WHERE invoice_id = NEW.invoice_id;
-   SELECT COALESCE(SUM(amount),0) INTO paid FROM mcms_billing.payment WHERE invoice_id = NEW.invoice_id;
-   IF inv.total > 0 AND paid >= inv.total AND inv.status <> 'paid' THEN
-     UPDATE mcms_billing.invoice SET status='paid', paid_at = now() WHERE invoice_id = NEW.invoice_id;
-   END IF;
-   PERFORM mcms_core.emit_event('payment_received','info', NEW.received_by, NULL,
-      'mcms_billing','payment', NEW.payment_id,
-      jsonb_build_object('invoice_id', NEW.invoice_id, 'amount', NEW.amount, 'method', NEW.method::text));
-   RETURN NEW;
+    AS $$
+DECLARE
+   inv mcms_billing.invoice%ROWTYPE;
+   paid NUMERIC(14,2);
+BEGIN
+   SELECT * INTO inv FROM mcms_billing.invoice WHERE invoice_id = NEW.invoice_id;
+   SELECT COALESCE(SUM(amount),0) INTO paid FROM mcms_billing.payment WHERE invoice_id = NEW.invoice_id;
+   IF inv.total > 0 AND paid >= inv.total AND inv.status <> 'paid' THEN
+     UPDATE mcms_billing.invoice SET status='paid', paid_at = now() WHERE invoice_id = NEW.invoice_id;
+   END IF;
+   PERFORM mcms_core.emit_event('payment_received','info', NEW.received_by, NULL,
+      'mcms_billing','payment', NEW.payment_id,
+      jsonb_build_object('invoice_id', NEW.invoice_id, 'amount', NEW.amount, 'method', NEW.method::text));
+   RETURN NEW;
 END$$;
+
+
+--
+-- Name: fn_appointment_reminder(); Type: FUNCTION; Schema: mcms_clinic; Owner: -
+--
+
+CREATE FUNCTION mcms_clinic.fn_appointment_reminder() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE v_party bigint;
+BEGIN
+  SELECT p.party_id INTO v_party FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
+  PERFORM mcms_core.fn_make_notification(
+    'appointment_reminder',
+    'Appointment booked',
+    'Appointment on ' || to_char(NEW.starts_at, 'YYYY-MM-DD HH24:MI') || ' (' || NEW.status || ').',
+    NEW.clinician_user_id, v_party,
+    'mcms_clinic', 'appointment', NEW.appointment_id);
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1263,9 +1321,10 @@ DECLARE pid BIGINT;
 BEGIN
    SELECT party_id INTO pid FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    PERFORM mcms_core.emit_event(
-      CASE WHEN (TG_OP='INSERT') THEN 'appointment_booked'
-           WHEN (TG_OP='UPDATE' AND NEW.status='cancelled') THEN 'appointment_cancelled'
-           WHEN (TG_OP='UPDATE' AND NEW.status='completed') THEN 'appointment_completed'
+      CASE WHEN (TG_OP='INSERT') THEN 'appointment_booked'::mcms_core.event_kind
+           WHEN (TG_OP='UPDATE' AND NEW.status::text='cancelled') THEN 'appointment_cancelled'::mcms_core.event_kind
+           WHEN (TG_OP='UPDATE' AND NEW.status::text='completed') THEN 'appointment_completed'::mcms_core.event_kind
+           WHEN (TG_OP='UPDATE' AND NEW.status::text='noshow') THEN 'appointment_noshow'::mcms_core.event_kind
            ELSE NULL END,
       'info', NEW.clinician_user_id, pid,
       'mcms_clinic','appointment', NEW.appointment_id,
@@ -1273,7 +1332,8 @@ BEGIN
                          'status', NEW.status::text)
    );
    RETURN NEW;
-END$$;
+END;
+$$;
 
 
 --
@@ -1282,14 +1342,14 @@ END$$;
 
 CREATE FUNCTION mcms_clinic.fn_consult_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='completed') THEN
-      PERFORM mcms_core.emit_event('consultation_completed','info', NEW.clinician_user_id, NULL,
-         'mcms_clinic','consultation', NEW.consultation_id,
-         jsonb_build_object('duration_minutes', NEW.duration_minutes, 'encounter_id', NEW.encounter_id));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='completed') THEN
+      PERFORM mcms_core.emit_event('consultation_completed','info', NEW.clinician_user_id, NULL,
+         'mcms_clinic','consultation', NEW.consultation_id,
+         jsonb_build_object('duration_minutes', NEW.duration_minutes, 'encounter_id', NEW.encounter_id));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1299,11 +1359,11 @@ END$$;
 
 CREATE FUNCTION mcms_core.emit_event(p_kind mcms_core.event_kind, p_severity mcms_core.event_severity DEFAULT 'info'::mcms_core.event_severity, p_actor_user_id bigint DEFAULT NULL::bigint, p_subject_party_id bigint DEFAULT NULL::bigint, p_source_schema text DEFAULT NULL::text, p_source_table text DEFAULT NULL::text, p_source_id bigint DEFAULT NULL::bigint, p_payload jsonb DEFAULT '{}'::jsonb, p_channel text DEFAULT 'mcms'::text) RETURNS bigint
     LANGUAGE sql
-    AS $$
-   INSERT INTO mcms_core.event_log
-     (kind, severity, actor_user_id, subject_party_id, source_schema, source_table, source_id, payload, channel)
-   VALUES (p_kind, p_severity, p_actor_user_id, p_subject_party_id, p_source_schema, p_source_table, p_source_id, p_payload, p_channel)
-   RETURNING event_id;
+    AS $$
+   INSERT INTO mcms_core.event_log
+     (kind, severity, actor_user_id, subject_party_id, source_schema, source_table, source_id, payload, channel)
+   VALUES (p_kind, p_severity, p_actor_user_id, p_subject_party_id, p_source_schema, p_source_table, p_source_id, p_payload, p_channel)
+   RETURNING event_id;
 $$;
 
 
@@ -1355,49 +1415,86 @@ $$;
 
 CREATE FUNCTION mcms_core.fn_generic_audit() RETURNS trigger
     LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_kind   mcms_core.event_kind;
+  v_schema text := TG_TABLE_SCHEMA;
+  v_table  text := TG_TABLE_NAME;
+  v_row    jsonb;
+  v_id     bigint := NULL;
+  k        text;
+BEGIN
+  v_kind := CASE TG_OP
+    WHEN 'INSERT' THEN 'create'::mcms_core.event_kind
+    WHEN 'UPDATE' THEN 'update'::mcms_core.event_kind
+    WHEN 'DELETE' THEN 'delete'::mcms_core.event_kind
+    ELSE 'audit_note'::mcms_core.event_kind
+  END;
+
+  v_row := CASE TG_OP WHEN 'DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
+
+  -- derive the PK value generically, preferring the real primary key
+  IF v_row ? 'id' THEN
+    v_id := (v_row->>'id')::bigint;
+  ELSIF v_row ? (v_table || '_id') THEN
+    v_id := (v_row->>(v_table || '_id'))::bigint;
+  ELSE
+    FOR k IN SELECT jsonb_object_keys(v_row) LOOP
+      IF k LIKE '%_id' THEN v_id := (v_row->>k)::bigint; EXIT; END IF;
+    END LOOP;
+  END IF;
+
+  INSERT INTO mcms_core.event_log
+    (seq, occurred_at, kind, severity, source_schema, source_table, source_id, payload, channel)
+  VALUES (
+    nextval('mcms_core.event_log_seq'),
+    now(),
+    v_kind,
+    'info'::mcms_core.event_severity,
+    v_schema,
+    v_table,
+    v_id,
+    v_row,
+    'db-trigger'
+  );
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+
+--
+-- Name: fn_make_notification(text, text, text, bigint, bigint, text, text, bigint); Type: FUNCTION; Schema: mcms_core; Owner: -
+--
+
+CREATE FUNCTION mcms_core.fn_make_notification(p_category text, p_subject text, p_body text, p_recipient_user_id bigint, p_recipient_party_id bigint, p_source_schema text, p_source_table text, p_source_id bigint) RETURNS void
+    LANGUAGE plpgsql
     AS $$
-DECLARE
-  v_kind   mcms_core.event_kind;
-  v_schema text := TG_TABLE_SCHEMA;
-  v_table  text := TG_TABLE_NAME;
-  v_row    jsonb;
-  v_id     bigint := NULL;
-  k        text;
 BEGIN
-  v_kind := CASE TG_OP
-    WHEN 'INSERT' THEN 'create'::mcms_core.event_kind
-    WHEN 'UPDATE' THEN 'update'::mcms_core.event_kind
-    WHEN 'DELETE' THEN 'delete'::mcms_core.event_kind
-    ELSE 'audit_note'::mcms_core.event_kind
-  END;
+  INSERT INTO mcms_core.notification
+    (recipient_user_id, recipient_party_id, category, channel, subject, body,
+     status, source_schema, source_table, source_id)
+  VALUES (p_recipient_user_id, p_recipient_party_id, p_category, 'in_app',
+          p_subject, p_body, 'pending', p_source_schema, p_source_table, p_source_id);
+  -- WS broadcast is done by trg_notify_after_insert -> fn_notify_broadcast,
+  -- so we don't notify here (avoids double delivery).
+END;
+$$;
 
-  v_row := CASE TG_OP WHEN 'DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
 
-  -- derive the PK value generically, preferring the real primary key
-  IF v_row ? 'id' THEN
-    v_id := (v_row->>'id')::bigint;
-  ELSIF v_row ? (v_table || '_id') THEN
-    v_id := (v_row->>(v_table || '_id'))::bigint;
-  ELSE
-    FOR k IN SELECT jsonb_object_keys(v_row) LOOP
-      IF k LIKE '%_id' THEN v_id := (v_row->>k)::bigint; EXIT; END IF;
-    END LOOP;
-  END IF;
+--
+-- Name: fn_notify_broadcast(); Type: FUNCTION; Schema: mcms_core; Owner: -
+--
 
-  INSERT INTO mcms_core.event_log
-    (seq, occurred_at, kind, severity, source_schema, source_table, source_id, payload, channel)
-  VALUES (
-    nextval('mcms_core.event_log_seq'),
-    now(),
-    v_kind,
-    'info'::mcms_core.event_severity,
-    v_schema,
-    v_table,
-    v_id,
-    v_row,
-    'db-trigger'
-  );
-  RETURN COALESCE(NEW, OLD);
+CREATE FUNCTION mcms_core.fn_notify_broadcast() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  PERFORM pg_notify('notifications', json_build_object(
+    'notification_id', NEW.notification_id, 'category', NEW.category,
+    'subject', NEW.subject, 'recipient_user_id', NEW.recipient_user_id,
+    'recipient_party_id', NEW.recipient_party_id,
+    'source_table', NEW.source_table, 'source_id', NEW.source_id)::text);
+  RETURN NEW;
 END;
 $$;
 
@@ -1408,7 +1505,7 @@ $$;
 
 CREATE FUNCTION mcms_core.fn_touch() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
+    AS $$
 BEGIN NEW.updated_at := now(); RETURN NEW; END$$;
 
 
@@ -1452,12 +1549,12 @@ $$;
 
 CREATE FUNCTION mcms_emergency.fn_resus_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   PERFORM mcms_core.emit_event('resuscitation_initiated','critical', NEW.team_leader_id, NEW.patient_id,
-      'mcms_emergency','resuscitation', NEW.resus_id,
-      jsonb_build_object('code_type', NEW.code_type, 'code_initiated_at', NEW.code_initiated_at));
-   RETURN NEW;
+    AS $$
+BEGIN
+   PERFORM mcms_core.emit_event('resuscitation_initiated','critical', NEW.team_leader_id, NEW.patient_id,
+      'mcms_emergency','resuscitation', NEW.resus_id,
+      jsonb_build_object('code_type', NEW.code_type, 'code_initiated_at', NEW.code_initiated_at));
+   RETURN NEW;
 END$$;
 
 
@@ -1467,24 +1564,24 @@ END$$;
 
 CREATE FUNCTION mcms_emergency.fn_triage_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='INSERT') THEN
-      PERFORM mcms_core.emit_event('triage_recorded','info', NEW.triage_nurse_user_id, NEW.patient_id,
-         'mcms_emergency','triage', NEW.triage_id,
-         jsonb_build_object('ed_visit_no', NEW.ed_visit_no,'esi_level', NEW.esi_level,
-                            'trauma_alert', NEW.trauma_alert));
-      IF NEW.trauma_alert THEN
-         PERFORM mcms_core.emit_event('ed_admitted','warning', NULL, NEW.patient_id,
-            'mcms_emergency','triage', NEW.triage_id,
-            jsonb_build_object('esi_level', NEW.esi_level,'trauma', true));
-      END IF;
-   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='discharged') THEN
-      PERFORM mcms_core.emit_event('ed_discharged','info', NULL, NEW.patient_id,
-         'mcms_emergency','triage', NEW.triage_id,
-         jsonb_build_object('disposition', NEW.disposition));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='INSERT') THEN
+      PERFORM mcms_core.emit_event('triage_recorded','info', NEW.triage_nurse_user_id, NEW.patient_id,
+         'mcms_emergency','triage', NEW.triage_id,
+         jsonb_build_object('ed_visit_no', NEW.ed_visit_no,'esi_level', NEW.esi_level,
+                            'trauma_alert', NEW.trauma_alert));
+      IF NEW.trauma_alert THEN
+         PERFORM mcms_core.emit_event('ed_admitted','warning', NULL, NEW.patient_id,
+            'mcms_emergency','triage', NEW.triage_id,
+            jsonb_build_object('esi_level', NEW.esi_level,'trauma', true));
+      END IF;
+   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='discharged') THEN
+      PERFORM mcms_core.emit_event('ed_discharged','info', NULL, NEW.patient_id,
+         'mcms_emergency','triage', NEW.triage_id,
+         jsonb_build_object('disposition', NEW.disposition));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1494,16 +1591,16 @@ END$$;
 
 CREATE FUNCTION mcms_emr.fn_diag_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE v_pid BIGINT;
-BEGIN
-   SELECT e.patient_id INTO v_pid FROM mcms_emr.encounter e WHERE e.encounter_id = NEW.encounter_id;
-   PERFORM mcms_core.emit_event(
-      'diagnosis_recorded','info', NEW.recorded_by, v_pid,
-      'mcms_emr','diagnosis', NEW.diagnosis_id,
-      jsonb_build_object('code', NEW.condition_code,'desc', NEW.condition_desc,
-                         'role', NEW.role::text,'status', NEW.status::text));
-   RETURN NEW;
+    AS $$
+DECLARE v_pid BIGINT;
+BEGIN
+   SELECT e.patient_id INTO v_pid FROM mcms_emr.encounter e WHERE e.encounter_id = NEW.encounter_id;
+   PERFORM mcms_core.emit_event(
+      'diagnosis_recorded','info', NEW.recorded_by, v_pid,
+      'mcms_emr','diagnosis', NEW.diagnosis_id,
+      jsonb_build_object('code', NEW.condition_code,'desc', NEW.condition_desc,
+                         'role', NEW.role::text,'status', NEW.status::text));
+   RETURN NEW;
 END$$;
 
 
@@ -1513,28 +1610,28 @@ END$$;
 
 CREATE FUNCTION mcms_emr.fn_encounter_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   v_pid BIGINT;
-   v_mrn TEXT;
-   v_uid BIGINT;
-BEGIN
-   SELECT p.patient_id, p.mrn INTO v_pid, v_mrn FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
-   SELECT a.party_id INTO v_uid FROM mcms_core.app_user a WHERE a.user_id = NEW.attending_user_id;
-   IF (TG_OP = 'INSERT') THEN
-      PERFORM mcms_core.emit_event(
-         'encounter_opened','info', NEW.attending_user_id, v_pid,
-         'mcms_emr','encounter', NEW.encounter_id,
-         jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text, 'reason', NEW.reason_for_visit)
-      );
-   ELSIF (TG_OP = 'UPDATE' AND OLD.status <> NEW.status) THEN
-      IF NEW.status = 'finished' THEN
-        PERFORM mcms_core.emit_event('encounter_closed','info', NEW.attending_user_id, v_pid,
-            'mcms_emr','encounter', NEW.encounter_id,
-            jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text));
-      END IF;
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE
+   v_pid BIGINT;
+   v_mrn TEXT;
+   v_uid BIGINT;
+BEGIN
+   SELECT p.patient_id, p.mrn INTO v_pid, v_mrn FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
+   SELECT a.party_id INTO v_uid FROM mcms_core.app_user a WHERE a.user_id = NEW.attending_user_id;
+   IF (TG_OP = 'INSERT') THEN
+      PERFORM mcms_core.emit_event(
+         'encounter_opened','info', NEW.attending_user_id, v_pid,
+         'mcms_emr','encounter', NEW.encounter_id,
+         jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text, 'reason', NEW.reason_for_visit)
+      );
+   ELSIF (TG_OP = 'UPDATE' AND OLD.status <> NEW.status) THEN
+      IF NEW.status = 'finished' THEN
+        PERFORM mcms_core.emit_event('encounter_closed','info', NEW.attending_user_id, v_pid,
+            'mcms_emr','encounter', NEW.encounter_id,
+            jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text));
+      END IF;
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1544,14 +1641,14 @@ END$$;
 
 CREATE FUNCTION mcms_emr.fn_med_order_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   PERFORM mcms_core.emit_event(
-      'prescription_issued','info', NEW.prescriber_user_id, NEW.patient_id,
-      'mcms_emr','medication_order', NEW.order_id,
-      jsonb_build_object('drug_name', NEW.drug_name, 'dose', NEW.dose,
-                         'route', NEW.route::text, 'frequency', NEW.frequency));
-   RETURN NEW;
+    AS $$
+BEGIN
+   PERFORM mcms_core.emit_event(
+      'prescription_issued','info', NEW.prescriber_user_id, NEW.patient_id,
+      'mcms_emr','medication_order', NEW.order_id,
+      jsonb_build_object('drug_name', NEW.drug_name, 'dose', NEW.dose,
+                         'route', NEW.route::text, 'frequency', NEW.frequency));
+   RETURN NEW;
 END$$;
 
 
@@ -1561,53 +1658,53 @@ END$$;
 
 CREATE FUNCTION mcms_erp.fn_grn_line_insert() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   inv   mcms_erp.inventory_item%ROWTYPE;
-   stock mcms_erp.inventory_stock%ROWTYPE;
-   po_line mcms_erp.purchase_order_line%ROWTYPE;
-   cnt INT;
-   newlot BIGINT;
-   pid BIGINT;
-BEGIN
-   IF NEW.item_id IS NOT NULL THEN
-      -- Insert into inventory_stock if not exists, or increment qty.
-      SELECT * INTO stock FROM mcms_erp.inventory_stock WHERE item_id = NEW.item_id AND department_id = (
-         SELECT COALESCE(to_department_id, from_department_id) FROM mcms_erp.goods_receipt g, mcms_erp.purchase_order p
-         WHERE g.grn_id = NEW.grn_id AND (g.po_id = p.po_id)
-         LIMIT 1);
-      -- Determine the receiving department; default: link via PO that requested by user's primary dept
-      PERFORM mcms_erp.upsert_stock(NEW.item_id, NEW.qty_received, NULL);
-   ELSIF NEW.drug_item_id IS NOT NULL THEN
-      INSERT INTO mcms_rx.drug_lot (drug_item_id, lot_number, received_qty, on_hand_qty, expires_on, supplier_party_id, unit_cost)
-      VALUES (NEW.drug_item_id, NEW.lot_number, NEW.qty_received, NEW.qty_received, NEW.expiration_date,
-              (SELECT s.party_id FROM mcms_erp.supplier s JOIN mcms_erp.goods_receipt g ON g.supplier_id = s.supplier_id WHERE g.grn_id = NEW.grn_id),
-              NEW.unit_cost)
-      RETURNING lot_id INTO newlot;
-   END IF;
-
-   -- Update po_line.qty_received
-   IF NEW.po_line_id IS NOT NULL THEN
-      UPDATE mcms_erp.purchase_order_line
-         SET qty_received = qty_received + NEW.qty_received
-       WHERE line_id = NEW.po_line_id
-       RETURNING * INTO po_line;
-   END IF;
-
-   -- If all lines received, mark PO as 'received'
-   IF (SELECT COUNT(*) FROM mcms_erp.purchase_order_line WHERE po_id = po_line.po_id AND qty_received < qty) = 0 THEN
-      UPDATE mcms_erp.purchase_order SET status='received', received_at=now()
-       WHERE po_id = po_line.po_id AND status IN ('sent','partial_received','approved');
-   ELSE
-      UPDATE mcms_erp.purchase_order SET status='partial_received' WHERE po_id = po_line.po_id AND status IN ('approved','sent');
-   END IF;
-
-   PERFORM mcms_core.emit_event('purchase_order_raised','info', NULL, NULL,
-      'mcms_erp','goods_receipt_line', NEW.line_id,
-      jsonb_build_object('grn_id', NEW.grn_id, 'item_id', NEW.item_id, 'drug_item_id', NEW.drug_item_id,
-                         'qty_received', NEW.qty_received),
-      p_channel := 'mcms_inventory');
-   RETURN NEW;
+    AS $$
+DECLARE
+   inv   mcms_erp.inventory_item%ROWTYPE;
+   stock mcms_erp.inventory_stock%ROWTYPE;
+   po_line mcms_erp.purchase_order_line%ROWTYPE;
+   cnt INT;
+   newlot BIGINT;
+   pid BIGINT;
+BEGIN
+   IF NEW.item_id IS NOT NULL THEN
+      -- Insert into inventory_stock if not exists, or increment qty.
+      SELECT * INTO stock FROM mcms_erp.inventory_stock WHERE item_id = NEW.item_id AND department_id = (
+         SELECT COALESCE(to_department_id, from_department_id) FROM mcms_erp.goods_receipt g, mcms_erp.purchase_order p
+         WHERE g.grn_id = NEW.grn_id AND (g.po_id = p.po_id)
+         LIMIT 1);
+      -- Determine the receiving department; default: link via PO that requested by user's primary dept
+      PERFORM mcms_erp.upsert_stock(NEW.item_id, NEW.qty_received, NULL);
+   ELSIF NEW.drug_item_id IS NOT NULL THEN
+      INSERT INTO mcms_rx.drug_lot (drug_item_id, lot_number, received_qty, on_hand_qty, expires_on, supplier_party_id, unit_cost)
+      VALUES (NEW.drug_item_id, NEW.lot_number, NEW.qty_received, NEW.qty_received, NEW.expiration_date,
+              (SELECT s.party_id FROM mcms_erp.supplier s JOIN mcms_erp.goods_receipt g ON g.supplier_id = s.supplier_id WHERE g.grn_id = NEW.grn_id),
+              NEW.unit_cost)
+      RETURNING lot_id INTO newlot;
+   END IF;
+
+   -- Update po_line.qty_received
+   IF NEW.po_line_id IS NOT NULL THEN
+      UPDATE mcms_erp.purchase_order_line
+         SET qty_received = qty_received + NEW.qty_received
+       WHERE line_id = NEW.po_line_id
+       RETURNING * INTO po_line;
+   END IF;
+
+   -- If all lines received, mark PO as 'received'
+   IF (SELECT COUNT(*) FROM mcms_erp.purchase_order_line WHERE po_id = po_line.po_id AND qty_received < qty) = 0 THEN
+      UPDATE mcms_erp.purchase_order SET status='received', received_at=now()
+       WHERE po_id = po_line.po_id AND status IN ('sent','partial_received','approved');
+   ELSE
+      UPDATE mcms_erp.purchase_order SET status='partial_received' WHERE po_id = po_line.po_id AND status IN ('approved','sent');
+   END IF;
+
+   PERFORM mcms_core.emit_event('purchase_order_raised','info', NULL, NULL,
+      'mcms_erp','goods_receipt_line', NEW.line_id,
+      jsonb_build_object('grn_id', NEW.grn_id, 'item_id', NEW.item_id, 'drug_item_id', NEW.drug_item_id,
+                         'qty_received', NEW.qty_received),
+      p_channel := 'mcms_inventory');
+   RETURN NEW;
 END$$;
 
 
@@ -1617,16 +1714,16 @@ END$$;
 
 CREATE FUNCTION mcms_erp.upsert_stock(p_item_id bigint, p_qty integer, p_dept_id bigint) RETURNS void
     LANGUAGE plpgsql
-    AS $$
-DECLARE sid BIGINT;
-BEGIN
-   INSERT INTO mcms_erp.inventory_stock (item_id, department_id, qty_on_hand)
-   VALUES (p_item_id, COALESCE(p_dept_id, (SELECT MIN(department_id) FROM mcms_hr.department)),
-           p_qty)
-   ON CONFLICT (item_id, department_id)
-   DO UPDATE SET qty_on_hand = inventory_stock.qty_on_hand + p_qty,
-                 updated_at = now()
-   RETURNING stock_id INTO sid;
+    AS $$
+DECLARE sid BIGINT;
+BEGIN
+   INSERT INTO mcms_erp.inventory_stock (item_id, department_id, qty_on_hand)
+   VALUES (p_item_id, COALESCE(p_dept_id, (SELECT MIN(department_id) FROM mcms_hr.department)),
+           p_qty)
+   ON CONFLICT (item_id, department_id)
+   DO UPDATE SET qty_on_hand = inventory_stock.qty_on_hand + p_qty,
+                 updated_at = now()
+   RETURNING stock_id INTO sid;
 END$$;
 
 
@@ -1636,13 +1733,13 @@ END$$;
 
 CREATE FUNCTION mcms_hr.fn_employee_hire_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   PERFORM mcms_core.emit_event('employee_hired','info', NULL, NEW.party_id,
-       'mcms_hr','employee', NEW.employee_id,
-       jsonb_build_object('employee_no', NEW.employee_no,
-                          'role', NEW.role, 'department_id', NEW.primary_department_id));
-   RETURN NEW;
+    AS $$
+BEGIN
+   PERFORM mcms_core.emit_event('employee_hired','info', NULL, NEW.party_id,
+       'mcms_hr','employee', NEW.employee_id,
+       jsonb_build_object('employee_no', NEW.employee_no,
+                          'role', NEW.role, 'department_id', NEW.primary_department_id));
+   RETURN NEW;
 END$$;
 
 
@@ -1652,30 +1749,30 @@ END$$;
 
 CREATE FUNCTION mcms_icu.fn_admission_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='INSERT') THEN
-      PERFORM mcms_core.emit_event('icu_admit','warning', NULL, NEW.patient_id,
-         'mcms_icu','admission', NEW.admission_id,
-         jsonb_build_object('bed_id', NEW.bed_id, 'reason', NEW.admit_reason));
-      IF NEW.bed_id IS NOT NULL THEN
-         UPDATE mcms_icu.bed SET status='occupied' WHERE bed_id = NEW.bed_id;
-         INSERT INTO mcms_icu.bed_stay (admission_id, bed_id, assigned_at)
-         VALUES (NEW.admission_id, NEW.bed_id, now())
-         ON CONFLICT DO NOTHING;
-      END IF;
-   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status IN ('discharged','transferred','expired')) THEN
-      PERFORM mcms_core.emit_event('icu_discharge','info', NULL, NEW.patient_id,
-         'mcms_icu','admission', NEW.admission_id,
-         jsonb_build_object('destination', NEW.discharge_destination,'status', NEW.status::text));
-      -- Release any open bed_stay rows for this admission AND flip the admission.bed_id to cleaning.
-      UPDATE mcms_icu.bed_stay SET released_at = now() WHERE admission_id = NEW.admission_id AND released_at IS NULL;
-      UPDATE mcms_icu.bed
-         SET status='cleaning'
-       WHERE bed_id IN (SELECT bed_id FROM mcms_icu.bed_stay WHERE admission_id = NEW.admission_id)
-          OR bed_id = NEW.bed_id;
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='INSERT') THEN
+      PERFORM mcms_core.emit_event('icu_admit','warning', NULL, NEW.patient_id,
+         'mcms_icu','admission', NEW.admission_id,
+         jsonb_build_object('bed_id', NEW.bed_id, 'reason', NEW.admit_reason));
+      IF NEW.bed_id IS NOT NULL THEN
+         UPDATE mcms_icu.bed SET status='occupied' WHERE bed_id = NEW.bed_id;
+         INSERT INTO mcms_icu.bed_stay (admission_id, bed_id, assigned_at)
+         VALUES (NEW.admission_id, NEW.bed_id, now())
+         ON CONFLICT DO NOTHING;
+      END IF;
+   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status IN ('discharged','transferred','expired')) THEN
+      PERFORM mcms_core.emit_event('icu_discharge','info', NULL, NEW.patient_id,
+         'mcms_icu','admission', NEW.admission_id,
+         jsonb_build_object('destination', NEW.discharge_destination,'status', NEW.status::text));
+      -- Release any open bed_stay rows for this admission AND flip the admission.bed_id to cleaning.
+      UPDATE mcms_icu.bed_stay SET released_at = now() WHERE admission_id = NEW.admission_id AND released_at IS NULL;
+      UPDATE mcms_icu.bed
+         SET status='cleaning'
+       WHERE bed_id IN (SELECT bed_id FROM mcms_icu.bed_stay WHERE admission_id = NEW.admission_id)
+          OR bed_id = NEW.bed_id;
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1685,20 +1782,20 @@ END$$;
 
 CREATE FUNCTION mcms_icu.fn_vent_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='INSERT' AND NEW.support_kind='mechanical_ventilation' AND NEW.stopped_at IS NULL) THEN
-      PERFORM mcms_core.emit_event('ventilator_started','warning', NULL,
-         (SELECT patient_id FROM mcms_icu.admission WHERE admission_id = NEW.admission_id),
-         'mcms_icu','support_session', NEW.session_id,
-         jsonb_build_object('started_at', NEW.started_at));
-   ELSIF (TG_OP='UPDATE' AND OLD.stopped_at IS NULL AND NEW.stopped_at IS NOT NULL AND NEW.support_kind='mechanical_ventilation') THEN
-      PERFORM mcms_core.emit_event('ventilator_stopped','info', NULL,
-         (SELECT patient_id FROM mcms_icu.admission WHERE admission_id = NEW.admission_id),
-         'mcms_icu','support_session', NEW.session_id,
-         jsonb_build_object('stopped_at', NEW.stopped_at, 'stopped_reason', NEW.stopped_reason));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='INSERT' AND NEW.support_kind='mechanical_ventilation' AND NEW.stopped_at IS NULL) THEN
+      PERFORM mcms_core.emit_event('ventilator_started','warning', NULL,
+         (SELECT patient_id FROM mcms_icu.admission WHERE admission_id = NEW.admission_id),
+         'mcms_icu','support_session', NEW.session_id,
+         jsonb_build_object('started_at', NEW.started_at));
+   ELSIF (TG_OP='UPDATE' AND OLD.stopped_at IS NULL AND NEW.stopped_at IS NOT NULL AND NEW.support_kind='mechanical_ventilation') THEN
+      PERFORM mcms_core.emit_event('ventilator_stopped','info', NULL,
+         (SELECT patient_id FROM mcms_icu.admission WHERE admission_id = NEW.admission_id),
+         'mcms_icu','support_session', NEW.session_id,
+         jsonb_build_object('stopped_at', NEW.stopped_at, 'stopped_reason', NEW.stopped_reason));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1708,24 +1805,24 @@ END$$;
 
 CREATE FUNCTION mcms_icu.fn_vitals_alert_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   crit BOOLEAN := FALSE;
-   pid BIGINT;
-BEGIN
-   crit := (NEW.hr_bpm IS NOT NULL AND NEW.hr_bpm > 130)
-        OR (NEW.sbp_mmhg IS NOT NULL AND NEW.sbp_mmhg < 90)
-        OR (NEW.spo2_pct IS NOT NULL AND NEW.spo2_pct < 88)
-        OR (NEW.gcs   IS NOT NULL AND NEW.gcs   < 8);
-   IF crit THEN
-      SELECT patient_id INTO pid FROM mcms_icu.admission WHERE admission_id = NEW.admission_id;
-      PERFORM mcms_core.emit_event('deterioration_alert','critical', NULL, pid,
-         'mcms_icu','vitals_stream', NEW.stream_id,
-         jsonb_build_object('hr', NEW.hr_bpm, 'sbp', NEW.sbp_mmhg,
-                            'spo2', NEW.spo2_pct, 'gcs', NEW.gcs),
-         p_channel := 'mcms_critical');
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE
+   crit BOOLEAN := FALSE;
+   pid BIGINT;
+BEGIN
+   crit := (NEW.hr_bpm IS NOT NULL AND NEW.hr_bpm > 130)
+        OR (NEW.sbp_mmhg IS NOT NULL AND NEW.sbp_mmhg < 90)
+        OR (NEW.spo2_pct IS NOT NULL AND NEW.spo2_pct < 88)
+        OR (NEW.gcs   IS NOT NULL AND NEW.gcs   < 8);
+   IF crit THEN
+      SELECT patient_id INTO pid FROM mcms_icu.admission WHERE admission_id = NEW.admission_id;
+      PERFORM mcms_core.emit_event('deterioration_alert','critical', NULL, pid,
+         'mcms_icu','vitals_stream', NEW.stream_id,
+         jsonb_build_object('hr', NEW.hr_bpm, 'sbp', NEW.sbp_mmhg,
+                            'spo2', NEW.spo2_pct, 'gcs', NEW.gcs),
+         p_channel := 'mcms_critical');
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1735,13 +1832,59 @@ END$$;
 
 CREATE FUNCTION mcms_lab.fn_lab_order_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   PERFORM mcms_core.emit_event('lab_order_placed','info', NEW.requested_by, NEW.patient_id,
-      'mcms_lab','lab_order', NEW.order_id,
-      jsonb_build_object('order_no', NEW.order_no, 'priority', NEW.order_priority::text, 'panel_id', NEW.panel_id));
-   RETURN NEW;
+    AS $$
+BEGIN
+   PERFORM mcms_core.emit_event('lab_order_placed','info', NEW.requested_by, NEW.patient_id,
+      'mcms_lab','lab_order', NEW.order_id,
+      jsonb_build_object('order_no', NEW.order_no, 'priority', NEW.order_priority::text, 'panel_id', NEW.panel_id));
+   RETURN NEW;
 END$$;
+
+
+--
+-- Name: fn_result_critical(); Type: FUNCTION; Schema: mcms_lab; Owner: -
+--
+
+CREATE FUNCTION mcms_lab.fn_result_critical() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_patient bigint; v_party bigint; v_encounter bigint;
+  v_test text; v_cat text;
+BEGIN
+  IF NEW.flag = 'pending' OR NEW.flag IS NULL THEN RETURN NEW; END IF;
+  SELECT lo.patient_id, lo.encounter_id, tc.name
+    INTO v_patient, v_encounter, v_test
+    FROM mcms_lab.sample s
+    JOIN mcms_lab.lab_order lo ON lo.order_id = s.lab_order_id
+    JOIN mcms_lab.test_catalog tc ON tc.test_id = NEW.test_id
+    WHERE s.sample_id = NEW.sample_id;
+  SELECT p.party_id INTO v_party FROM mcms_emr.patient p WHERE p.patient_id = v_patient;
+
+  v_cat := CASE WHEN NEW.flag = 'critical' THEN 'critical_result'
+                ELSE 'abnormal_result' END;
+  PERFORM mcms_core.fn_make_notification(
+    v_cat,
+    v_cat || ': ' || v_test,
+    'Result for ' || v_test || ' flagged ' || NEW.flag || '.',
+    NULL, v_party,
+    'mcms_lab', 'result', NEW.result_id);
+
+  -- auto-route: attach a clinical note to the encounter (if any)
+  IF v_encounter IS NOT NULL THEN
+    INSERT INTO mcms_emr.clinical_note
+      (encounter_id, patient_id, note_type, title, body, author_user_id, signed, created_at, updated_at)
+    VALUES (v_encounter, v_patient, 'lab_result',
+            'Lab result: ' || v_test,
+            'Auto-routed from mcms_lab.result #' || NEW.result_id ||
+            ' | flag=' || NEW.flag ||
+            ' | value=' || COALESCE(NEW.value_text, NEW.value_numeric::text),
+            COALESCE(NEW.verified_by, NEW.analysed_by),
+            false, now(), now());
+  END IF;
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1750,24 +1893,24 @@ END$$;
 
 CREATE FUNCTION mcms_lab.fn_result_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   samp mcms_lab.sample%ROWTYPE;
-   pid BIGINT;
-   sev mcms_core.event_severity;
-BEGIN
-   SELECT * INTO samp FROM mcms_lab.sample WHERE sample_id = NEW.sample_id;
-   SELECT patient_id INTO pid FROM mcms_lab.lab_order WHERE order_id = samp.lab_order_id;
-   sev := CASE WHEN NEW.flag='critical' THEN 'critical' ELSE 'info' END;
-   IF (TG_OP='UPDATE' AND NEW.verified_at IS NOT NULL) THEN
-      PERFORM mcms_core.emit_event('result_verified', sev, NEW.verified_by, pid,
-         'mcms_lab','result', NEW.result_id,
-         jsonb_build_object('test_id', NEW.test_id, 'flag', NEW.flag::text,
-                            'value_text', NEW.value_text, 'value_numeric', NEW.value_numeric,
-                            'critical', NEW.flag='critical'),
-         p_channel := CASE WHEN NEW.flag='critical' THEN 'mcms_critical' ELSE 'mcms' END);
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE
+   samp mcms_lab.sample%ROWTYPE;
+   pid BIGINT;
+   sev mcms_core.event_severity;
+BEGIN
+   SELECT * INTO samp FROM mcms_lab.sample WHERE sample_id = NEW.sample_id;
+   SELECT patient_id INTO pid FROM mcms_lab.lab_order WHERE order_id = samp.lab_order_id;
+   sev := CASE WHEN NEW.flag='critical' THEN 'critical' ELSE 'info' END;
+   IF (TG_OP='UPDATE' AND NEW.verified_at IS NOT NULL) THEN
+      PERFORM mcms_core.emit_event('result_verified', sev, NEW.verified_by, pid,
+         'mcms_lab','result', NEW.result_id,
+         jsonb_build_object('test_id', NEW.test_id, 'flag', NEW.flag::text,
+                            'value_text', NEW.value_text, 'value_numeric', NEW.value_numeric,
+                            'critical', NEW.flag='critical'),
+         p_channel := CASE WHEN NEW.flag='critical' THEN 'mcms_critical' ELSE 'mcms' END);
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1777,18 +1920,18 @@ END$$;
 
 CREATE FUNCTION mcms_lab.fn_sample_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (NEW.status = 'collected' AND ((TG_OP='INSERT') OR (TG_OP='UPDATE' AND OLD.status <> NEW.status))) THEN
-      PERFORM mcms_core.emit_event('sample_collected','info', NEW.collected_by, NULL,
-         'mcms_lab','sample', NEW.sample_id,
-         jsonb_build_object('sample_no', NEW.sample_no, 'specimen_type', NEW.specimen_type::text));
-   ELSIF (TG_OP='UPDATE' AND NEW.status = 'rejected' AND OLD.status <> 'rejected') THEN
-      PERFORM mcms_core.emit_event('result_rejected','warning', NEW.received_by, NULL,
-         'mcms_lab','sample', NEW.sample_id,
-         jsonb_build_object('rejected_reason', COALESCE(NEW.rejected_reason,'')));
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (NEW.status = 'collected' AND ((TG_OP='INSERT') OR (TG_OP='UPDATE' AND OLD.status <> NEW.status))) THEN
+      PERFORM mcms_core.emit_event('sample_collected','info', NEW.collected_by, NULL,
+         'mcms_lab','sample', NEW.sample_id,
+         jsonb_build_object('sample_no', NEW.sample_no, 'specimen_type', NEW.specimen_type::text));
+   ELSIF (TG_OP='UPDATE' AND NEW.status = 'rejected' AND OLD.status <> 'rejected') THEN
+      PERFORM mcms_core.emit_event('result_rejected','warning', NEW.received_by, NULL,
+         'mcms_lab','sample', NEW.sample_id,
+         jsonb_build_object('rejected_reason', COALESCE(NEW.rejected_reason,'')));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1798,20 +1941,20 @@ END$$;
 
 CREATE FUNCTION mcms_physio.fn_session_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='completed') THEN
-      PERFORM mcms_core.emit_event('physio_session_completed','info', NEW.therapist_user_id, NEW.patient_id,
-         'mcms_physio','session', NEW.session_id,
-         jsonb_build_object('plan_id', NEW.plan_id, 'therapy_id', NEW.therapy_id,
-                            'session_no', NEW.sessions_in_seq));
-      UPDATE mcms_physio.treatment_plan
-         SET sessions_completed = sessions_completed + 1,
-             status = CASE WHEN sessions_completed + 1 >= sessions_planned THEN 'completed'::mcms_physio.plan_status
-                           ELSE status END
-       WHERE plan_id = NEW.plan_id;
-   END IF;
-   RETURN NEW;
+    AS $$
+BEGIN
+   IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='completed') THEN
+      PERFORM mcms_core.emit_event('physio_session_completed','info', NEW.therapist_user_id, NEW.patient_id,
+         'mcms_physio','session', NEW.session_id,
+         jsonb_build_object('plan_id', NEW.plan_id, 'therapy_id', NEW.therapy_id,
+                            'session_no', NEW.sessions_in_seq));
+      UPDATE mcms_physio.treatment_plan
+         SET sessions_completed = sessions_completed + 1,
+             status = CASE WHEN sessions_completed + 1 >= sessions_planned THEN 'completed'::mcms_physio.plan_status
+                           ELSE status END
+       WHERE plan_id = NEW.plan_id;
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1821,25 +1964,25 @@ END$$;
 
 CREATE FUNCTION mcms_rad.fn_study_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE ev mcms_core.event_kind;
-BEGIN
-   IF (TG_OP = 'INSERT') THEN ev := 'study_requested';
-   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status) THEN
-      ev := CASE NEW.status
-         WHEN 'completed' THEN 'study_completed'
-         WHEN 'verified'  THEN 'report_finalised'
-         ELSE NULL END;
-   ELSE ev := NULL;
-   END IF;
-   IF ev IS NOT NULL THEN
-      PERFORM mcms_core.emit_event(ev, 'info', NEW.requested_by, NEW.patient_id,
-         'mcms_rad','study_request', NEW.study_id,
-         jsonb_build_object('accession_no', NEW.accession_no,
-                            'status', NEW.status::text,
-                            'priority', NEW.priority::text));
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE ev mcms_core.event_kind;
+BEGIN
+   IF (TG_OP = 'INSERT') THEN ev := 'study_requested';
+   ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status) THEN
+      ev := CASE NEW.status
+         WHEN 'completed' THEN 'study_completed'
+         WHEN 'verified'  THEN 'report_finalised'
+         ELSE NULL END;
+   ELSE ev := NULL;
+   END IF;
+   IF ev IS NOT NULL THEN
+      PERFORM mcms_core.emit_event(ev, 'info', NEW.requested_by, NEW.patient_id,
+         'mcms_rad','study_request', NEW.study_id,
+         jsonb_build_object('accession_no', NEW.accession_no,
+                            'status', NEW.status::text,
+                            'priority', NEW.priority::text));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1849,12 +1992,12 @@ END$$;
 
 CREATE FUNCTION mcms_rx.fn_administer_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   PERFORM mcms_core.emit_event('medication_administered','info', NEW.administered_by, NEW.patient_id,
-      'mcms_rx','administration', NEW.administer_id,
-      jsonb_build_object('drug_item_id', NEW.drug_item_id, 'dose', NEW.dose_given));
-   RETURN NEW;
+    AS $$
+BEGIN
+   PERFORM mcms_core.emit_event('medication_administered','info', NEW.administered_by, NEW.patient_id,
+      'mcms_rx','administration', NEW.administer_id,
+      jsonb_build_object('drug_item_id', NEW.drug_item_id, 'dose', NEW.dose_given));
+   RETURN NEW;
 END$$;
 
 
@@ -1864,43 +2007,43 @@ END$$;
 
 CREATE FUNCTION mcms_rx.fn_dispense_event_and_stock() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-   bal INT;
-   drugrow mcms_rx.drug_item%ROWTYPE;
-BEGIN
-   -- decrement lot on_hand (assumed new lot_id is set)
-   IF NEW.lot_id IS NOT NULL THEN
-      UPDATE mcms_rx.drug_lot
-         SET on_hand_qty = on_hand_qty - NEW.quantity
-       WHERE lot_id = NEW.lot_id AND on_hand_qty >= NEW.quantity
-       RETURNING on_hand_qty INTO bal;
-      IF bal IS NULL THEN
-          RAISE EXCEPTION 'Insufficient stock in lot %', NEW.lot_id
-            USING ERRCODE = '40001';   -- 40001 serialization_failure handled by caller / DDL abort
-      END IF;
-
-      -- balance_after for stock_movement
-      bal := bal;
-      INSERT INTO mcms_rx.stock_movement (drug_item_id, lot_id, movement_type, qty_delta, balance_after, performed_by, reason)
-      VALUES (NEW.drug_item_id, NEW.lot_id, 'dispense', -NEW.quantity, bal, NEW.dispensed_by,
-              'dispense to patient ' || NEW.mrn);
-   END IF;
-
-   PERFORM mcms_core.emit_event('medication_dispensed','info', NEW.dispensed_by, NEW.patient_id,
-      'mcms_rx','dispensation', NEW.dispensation_id,
-      jsonb_build_object('drug_item_id', NEW.drug_item_id, 'qty', NEW.quantity, 'mrn', NEW.mrn));
-
-   -- low stock check
-   SELECT * INTO drugrow FROM mcms_rx.drug_item WHERE drug_item_id = NEW.drug_item_id;
-   SELECT COALESCE(SUM(on_hand_qty), 0) INTO bal FROM mcms_rx.drug_lot WHERE drug_item_id = NEW.drug_item_id AND status = 'on_hand';
-   IF drugrow.reorder_level > 0 AND bal <= drugrow.reorder_level THEN
-       PERFORM mcms_core.emit_event('low_stock_alert','warning', NULL, NULL,
-          'mcms_rx','drug_item', NEW.drug_item_id,
-          jsonb_build_object('drug', drugrow.generic_name, 'on_hand', bal, 'reorder_level', drugrow.reorder_level),
-          p_channel := 'mcms_inventory');
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE
+   bal INT;
+   drugrow mcms_rx.drug_item%ROWTYPE;
+BEGIN
+   -- decrement lot on_hand (assumed new lot_id is set)
+   IF NEW.lot_id IS NOT NULL THEN
+      UPDATE mcms_rx.drug_lot
+         SET on_hand_qty = on_hand_qty - NEW.quantity
+       WHERE lot_id = NEW.lot_id AND on_hand_qty >= NEW.quantity
+       RETURNING on_hand_qty INTO bal;
+      IF bal IS NULL THEN
+          RAISE EXCEPTION 'Insufficient stock in lot %', NEW.lot_id
+            USING ERRCODE = '40001';   -- 40001 serialization_failure handled by caller / DDL abort
+      END IF;
+
+      -- balance_after for stock_movement
+      bal := bal;
+      INSERT INTO mcms_rx.stock_movement (drug_item_id, lot_id, movement_type, qty_delta, balance_after, performed_by, reason)
+      VALUES (NEW.drug_item_id, NEW.lot_id, 'dispense', -NEW.quantity, bal, NEW.dispensed_by,
+              'dispense to patient ' || NEW.mrn);
+   END IF;
+
+   PERFORM mcms_core.emit_event('medication_dispensed','info', NEW.dispensed_by, NEW.patient_id,
+      'mcms_rx','dispensation', NEW.dispensation_id,
+      jsonb_build_object('drug_item_id', NEW.drug_item_id, 'qty', NEW.quantity, 'mrn', NEW.mrn));
+
+   -- low stock check
+   SELECT * INTO drugrow FROM mcms_rx.drug_item WHERE drug_item_id = NEW.drug_item_id;
+   SELECT COALESCE(SUM(on_hand_qty), 0) INTO bal FROM mcms_rx.drug_lot WHERE drug_item_id = NEW.drug_item_id AND status = 'on_hand';
+   IF drugrow.reorder_level > 0 AND bal <= drugrow.reorder_level THEN
+       PERFORM mcms_core.emit_event('low_stock_alert','warning', NULL, NULL,
+          'mcms_rx','drug_item', NEW.drug_item_id,
+          jsonb_build_object('drug', drugrow.generic_name, 'on_hand', bal, 'reorder_level', drugrow.reorder_level),
+          p_channel := 'mcms_inventory');
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -1910,16 +2053,16 @@ END$$;
 
 CREATE FUNCTION mcms_rx.scan_expired_lots() RETURNS integer
     LANGUAGE plpgsql
-    AS $$
-DECLARE n INT;
-BEGIN
-   UPDATE mcms_rx.drug_lot SET status='expired'
-    WHERE expires_on < now()::date AND status='on_hand'
-    RETURNING drug_item_id INTO n;
-   PERFORM mcms_core.emit_event('low_stock_alert','warning', NULL, NULL,
-       'mcms_rx','drug_lot', NULL,
-       jsonb_build_object('note', 'expired lot quarantine done'));
-   RETURN n;
+    AS $$
+DECLARE n INT;
+BEGIN
+   UPDATE mcms_rx.drug_lot SET status='expired'
+    WHERE expires_on < now()::date AND status='on_hand'
+    RETURNING drug_item_id INTO n;
+   PERFORM mcms_core.emit_event('low_stock_alert','warning', NULL, NULL,
+       'mcms_rx','drug_lot', NULL,
+       jsonb_build_object('note', 'expired lot quarantine done'));
+   RETURN n;
 END$$;
 
 
@@ -1929,17 +2072,17 @@ END$$;
 
 CREATE FUNCTION mcms_surgical.fn_or_busy_on_surgery() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-BEGIN
-   IF (TG_OP='UPDATE' AND NEW.status IN ('patient_in_or','incision_start','in_progress','closure_start')) THEN
-      UPDATE mcms_surgical.operating_room SET status='busy', updated_at=now()
-      WHERE or_id = NEW.or_id;
-   ELSIF (TG_OP='UPDATE' AND NEW.status IN ('patient_out_or','recovery','completed','cancelled') OR
-          (TG_OP='DELETE')) THEN
-      UPDATE mcms_surgical.operating_room SET status='cleaning', updated_at=now()
-      WHERE or_id = OLD.or_id;
-   END IF;
-   RETURN COALESCE(NEW, OLD);
+    AS $$
+BEGIN
+   IF (TG_OP='UPDATE' AND NEW.status IN ('patient_in_or','incision_start','in_progress','closure_start')) THEN
+      UPDATE mcms_surgical.operating_room SET status='busy', updated_at=now()
+      WHERE or_id = NEW.or_id;
+   ELSIF (TG_OP='UPDATE' AND NEW.status IN ('patient_out_or','recovery','completed','cancelled') OR
+          (TG_OP='DELETE')) THEN
+      UPDATE mcms_surgical.operating_room SET status='cleaning', updated_at=now()
+      WHERE or_id = OLD.or_id;
+   END IF;
+   RETURN COALESCE(NEW, OLD);
 END$$;
 
 
@@ -1949,25 +2092,25 @@ END$$;
 
 CREATE FUNCTION mcms_surgical.fn_surg_event() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$
-DECLARE ev_kind mcms_core.event_kind;
-BEGIN
-   IF TG_OP='INSERT' THEN
-      ev_kind := 'surgery_scheduled';
-   ELSIF TG_OP='UPDATE' AND OLD.status <> NEW.status THEN
-      ev_kind := CASE NEW.status
-         WHEN 'incision_start' THEN 'surgery_started'
-         WHEN 'completed'       THEN 'surgery_completed'
-         WHEN 'cancelled'       THEN 'surgery_cancelled'
-         ELSE NULL END;
-   END IF;
-   IF ev_kind IS NOT NULL THEN
-      PERFORM mcms_core.emit_event(ev_kind, 'info', NEW.surgeon_user_id, NEW.patient_id,
-         'mcms_surgical','surgery', NEW.surgery_id,
-         jsonb_build_object('operation_no', NEW.operation_no, 'or_id', NEW.or_id,
-                            'procedure_id', NEW.procedure_id, 'status', NEW.status::text));
-   END IF;
-   RETURN NEW;
+    AS $$
+DECLARE ev_kind mcms_core.event_kind;
+BEGIN
+   IF TG_OP='INSERT' THEN
+      ev_kind := 'surgery_scheduled';
+   ELSIF TG_OP='UPDATE' AND OLD.status <> NEW.status THEN
+      ev_kind := CASE NEW.status
+         WHEN 'incision_start' THEN 'surgery_started'
+         WHEN 'completed'       THEN 'surgery_completed'
+         WHEN 'cancelled'       THEN 'surgery_cancelled'
+         ELSE NULL END;
+   END IF;
+   IF ev_kind IS NOT NULL THEN
+      PERFORM mcms_core.emit_event(ev_kind, 'info', NEW.surgeon_user_id, NEW.patient_id,
+         'mcms_surgical','surgery', NEW.surgery_id,
+         jsonb_build_object('operation_no', NEW.operation_no, 'or_id', NEW.or_id,
+                            'procedure_id', NEW.procedure_id, 'status', NEW.status::text));
+   END IF;
+   RETURN NEW;
 END$$;
 
 
@@ -2352,6 +2495,8 @@ CREATE TABLE mcms_clinic.appointment (
     confirmation_deadline timestamp with time zone,
     confirmed_at timestamp with time zone,
     patient_confirmed boolean DEFAULT false NOT NULL,
+    no_show_at timestamp with time zone,
+    reminder_sent_at timestamp with time zone,
     CONSTRAINT appointment_check CHECK ((ends_at > starts_at))
 );
 
@@ -3582,6 +3727,42 @@ CREATE SEQUENCE mcms_emr.patient_patient_id_seq
 --
 
 ALTER SEQUENCE mcms_emr.patient_patient_id_seq OWNED BY mcms_emr.patient.patient_id;
+
+
+--
+-- Name: referral; Type: TABLE; Schema: mcms_emr; Owner: -
+--
+
+CREATE TABLE mcms_emr.referral (
+    referral_id bigint NOT NULL,
+    from_encounter_id bigint NOT NULL,
+    to_encounter_id bigint,
+    from_user_id bigint NOT NULL,
+    to_user_id bigint,
+    to_department_id bigint,
+    diagnosis_id bigint,
+    reason text,
+    clinical_summary text,
+    urgency text DEFAULT 'routine'::text NOT NULL,
+    status mcms_emr.referral_status DEFAULT 'draft'::mcms_emr.referral_status NOT NULL,
+    responded_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: referral_referral_id_seq; Type: SEQUENCE; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE mcms_emr.referral ALTER COLUMN referral_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME mcms_emr.referral_referral_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
 
 --
@@ -7392,6 +7573,14 @@ ALTER TABLE ONLY mcms_emr.patient
 
 
 --
+-- Name: referral referral_pkey; Type: CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_pkey PRIMARY KEY (referral_id);
+
+
+--
 -- Name: social_history social_history_pkey; Type: CONSTRAINT; Schema: mcms_emr; Owner: -
 --
 
@@ -8977,6 +9166,27 @@ CREATE INDEX ix_mcms_emr_vitals_taken_by ON mcms_emr.vitals USING btree (taken_b
 
 
 --
+-- Name: ix_referral_from; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_referral_from ON mcms_emr.referral USING btree (from_encounter_id);
+
+
+--
+-- Name: ix_referral_status; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_referral_status ON mcms_emr.referral USING btree (status);
+
+
+--
+-- Name: ix_referral_to_user; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_referral_to_user ON mcms_emr.referral USING btree (to_user_id);
+
+
+--
 -- Name: medication_order_encounter_id_idx; Type: INDEX; Schema: mcms_emr; Owner: -
 --
 
@@ -10258,6 +10468,13 @@ CREATE TRIGGER trg_claim_event AFTER UPDATE OF status ON mcms_billing.insurance_
 
 
 --
+-- Name: insurance_claim trg_claim_notify; Type: TRIGGER; Schema: mcms_billing; Owner: -
+--
+
+CREATE TRIGGER trg_claim_notify AFTER INSERT OR UPDATE OF status ON mcms_billing.insurance_claim FOR EACH ROW EXECUTE FUNCTION mcms_billing.fn_claim_notify();
+
+
+--
 -- Name: insurance_claim trg_claim_touch; Type: TRIGGER; Schema: mcms_billing; Owner: -
 --
 
@@ -10304,6 +10521,13 @@ CREATE TRIGGER trg_payment_event AFTER INSERT ON mcms_billing.payment FOR EACH R
 --
 
 CREATE TRIGGER trg_svc_price_touch BEFORE UPDATE ON mcms_billing.service_price FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_touch();
+
+
+--
+-- Name: appointment trg_appointment_reminder; Type: TRIGGER; Schema: mcms_clinic; Owner: -
+--
+
+CREATE TRIGGER trg_appointment_reminder AFTER INSERT ON mcms_clinic.appointment FOR EACH ROW EXECUTE FUNCTION mcms_clinic.fn_appointment_reminder();
 
 
 --
@@ -10437,6 +10661,13 @@ CREATE TRIGGER trg_mcms_core_role_permission_audit AFTER INSERT OR DELETE OR UPD
 --
 
 CREATE TRIGGER trg_mcms_core_user_role_map_audit AFTER INSERT OR DELETE OR UPDATE ON mcms_core.user_role_map FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_generic_audit();
+
+
+--
+-- Name: notification trg_notify_after_insert; Type: TRIGGER; Schema: mcms_core; Owner: -
+--
+
+CREATE TRIGGER trg_notify_after_insert AFTER INSERT ON mcms_core.notification FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_notify_broadcast();
 
 
 --
@@ -10577,6 +10808,20 @@ CREATE TRIGGER trg_note_touch BEFORE UPDATE ON mcms_emr.clinical_note FOR EACH R
 --
 
 CREATE TRIGGER trg_patient_touch BEFORE UPDATE ON mcms_emr.patient FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_touch();
+
+
+--
+-- Name: referral trg_referral_audit; Type: TRIGGER; Schema: mcms_emr; Owner: -
+--
+
+CREATE TRIGGER trg_referral_audit AFTER INSERT OR DELETE OR UPDATE ON mcms_emr.referral FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_generic_audit();
+
+
+--
+-- Name: referral trg_referral_touch; Type: TRIGGER; Schema: mcms_emr; Owner: -
+--
+
+CREATE TRIGGER trg_referral_touch BEFORE INSERT OR UPDATE ON mcms_emr.referral FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_touch();
 
 
 --
@@ -10815,6 +11060,13 @@ CREATE TRIGGER trg_mcms_lab_test_panel_audit AFTER INSERT OR DELETE OR UPDATE ON
 --
 
 CREATE TRIGGER trg_mcms_lab_test_panel_item_audit AFTER INSERT OR DELETE OR UPDATE ON mcms_lab.test_panel_item FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_generic_audit();
+
+
+--
+-- Name: result trg_result_critical; Type: TRIGGER; Schema: mcms_lab; Owner: -
+--
+
+CREATE TRIGGER trg_result_critical AFTER INSERT OR UPDATE OF flag ON mcms_lab.result FOR EACH ROW EXECUTE FUNCTION mcms_lab.fn_result_critical();
 
 
 --
@@ -11749,6 +12001,54 @@ ALTER TABLE ONLY mcms_emr.patient
 
 ALTER TABLE ONLY mcms_emr.patient
     ADD CONSTRAINT patient_party_id_fkey FOREIGN KEY (party_id) REFERENCES mcms_core.party(party_id) ON DELETE CASCADE;
+
+
+--
+-- Name: referral referral_diagnosis_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_diagnosis_id_fkey FOREIGN KEY (diagnosis_id) REFERENCES mcms_emr.diagnosis(diagnosis_id);
+
+
+--
+-- Name: referral referral_from_encounter_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_from_encounter_id_fkey FOREIGN KEY (from_encounter_id) REFERENCES mcms_emr.encounter(encounter_id);
+
+
+--
+-- Name: referral referral_from_user_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_from_user_id_fkey FOREIGN KEY (from_user_id) REFERENCES mcms_core.app_user(user_id);
+
+
+--
+-- Name: referral referral_to_department_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_to_department_id_fkey FOREIGN KEY (to_department_id) REFERENCES mcms_hr.department(department_id);
+
+
+--
+-- Name: referral referral_to_encounter_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_to_encounter_id_fkey FOREIGN KEY (to_encounter_id) REFERENCES mcms_emr.encounter(encounter_id);
+
+
+--
+-- Name: referral referral_to_user_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.referral
+    ADD CONSTRAINT referral_to_user_id_fkey FOREIGN KEY (to_user_id) REFERENCES mcms_core.app_user(user_id);
 
 
 --
@@ -12875,5 +13175,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dUx6jEgUorBWChJQlzXbHdishVTVTgdst3QvV0kW5IbNtYyr1ZZfbhKqaRAxdZV
+\unrestrict feLyR4Bko4hV1w7LWkhjY63NcNcmMqkOwq1l4v0WdZulwPMBjtcolvzBn1z91ec
 

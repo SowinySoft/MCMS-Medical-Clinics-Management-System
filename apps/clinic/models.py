@@ -29,6 +29,8 @@ class Appointment(models.Model):
     confirmation_deadline = models.DateTimeField(blank=True, null=True)
     confirmed_at = models.DateTimeField(blank=True, null=True)
     patient_confirmed = models.BooleanField()
+    no_show_at = models.DateTimeField(blank=True, null=True)
+    reminder_sent_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return str(self.mrn)

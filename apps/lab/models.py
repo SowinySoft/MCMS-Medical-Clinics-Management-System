@@ -62,7 +62,7 @@ class Sample(models.Model):
     collected_by = models.BigIntegerField(blank=True, null=True)
     received_at = models.DateTimeField(blank=True, null=True)
     received_by = models.BigIntegerField(blank=True, null=True)
-    status = models.TextField()  # This field type is a guess.
+    status = models.TextField(default="collected")  # native enum sample_status (default 'collected')
     rejected_reason = models.TextField(blank=True, null=True)
 
     class Meta:

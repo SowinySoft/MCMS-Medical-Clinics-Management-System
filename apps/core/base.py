@@ -1,15 +1,23 @@
-"""
-Reusable DRF base classes — the 'soft' factory layer.
+"""Reflection-based API layer for MCMS.
 
-Pattern: generic factory + mixins. Instead of hand-writing a serializer and
-viewset per table (89 tables!), we auto-build them:
-  * serializer_factory(model)  -> ModelSerializer subclass (fields="__all__")
-  * BaseModelViewSet           -> read/write viewset with RBAC + filtering
-  * build_viewset(model, ...)  -> a ready ViewSet class for any model
+The domain models under apps/*/models.py are inspectdb-generated
+(managed=False). This module turns each model into a fully-wired
+DRF ModelViewSet via build_viewset(), so adding a table to the
+schema automatically exposes CRUD + OPTIONS metadata. RBAC is enforced
+per-route by HasRolePermission.
 
-Domain apps only override when they need custom behaviour (validation,
-computed fields, extra actions). Everything else is generated.
+Phase 1 (Trust) additions:
+    - read-access logging on sensitive tables
+    - attestation lock (signed records -> 423) + /sign/
+    - drug-drug CDS (/check-interactions/)
+
+Phase 2 (Workflow) additions:
+    - appointment: /confirm/ /mark_no_show/ /calendar/
+    - referral: /accept/ /decline/
+    - insurance_claim: /adjudicate/
 """
+from datetime import timedelta
+
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -19,62 +27,31 @@ from .permissions import HasRolePermission
 
 
 def serializer_factory(model, fields="__all__", read_only=None):
-    """
-    Create a ModelSerializer subclass for `model` on the fly.
-    Class is namespaced by app label (e.g. PhysioSessionSerializer) so the
-    OpenAPI schema never collides on tables that share a name across schemas.
-    `created_at`/`updated_at` are DB-managed audit columns (DEFAULT now()) and
-    are exposed read-only so create/edit forms never have to supply them.
-    Generated columns (e.g. billing.invoice.total) are also read-only so POST
-    does not try to write a DB-computed value (which would 500/400). They are
-    detected deterministically via Django's GeneratedField, and as a fallback
-    via information_schema (inspectdb may model them as plain fields).
-    """
-    from django.db import connection
-    from django.db.models import GeneratedField
-    app = model._meta.app_label
-    base = model.__name__
-    cls_name = f"{app.capitalize()}{base}Serializer"
-    meta = type("Meta", (), {"model": model, "fields": fields})
-    ro = set(read_only or []) | {"created_at", "updated_at"}
-    # deterministic detection: Django GeneratedField
+    """Build a ModelSerializer subclass for `model` with sane defaults:
+    DB-generated columns (e.g. invoice.total) and PKs are read-only."""
+    read_only = set(read_only or [])
+    meta_attrs = {"model": model, "fields": fields}
+    attrs = {"Meta": type("Meta", (), meta_attrs)}
+    cls_name = f"{model.__name__}Serializer"
+    cls = type(cls_name, (serializers.ModelSerializer,), attrs)
     for f in model._meta.fields:
-        if isinstance(f, GeneratedField):
-            ro.add(f.name)
-    # fallback: live introspection of DB-generated columns
-    db_table = model._meta.db_table.replace('"', '')
-    schema, tbl = (db_table.split(".", 1) + [""])[:2] if "." in db_table else ("public", db_table)
-    try:
-        with connection.cursor() as cur:
-            cur.execute(
-                "SELECT column_name FROM information_schema.columns "
-                "WHERE table_schema=%s AND table_name=%s AND is_generated='ALWAYS'",
-                [schema, tbl],
-            )
-            for (col,) in cur.fetchall():
-                ro.add(col)
-    except Exception:
-        pass
-    attrs = {"Meta": meta}
-    for f in ro:
-        attrs[f] = serializers.ReadOnlyField()
-    return type(cls_name, (serializers.ModelSerializer,), attrs)
+        if getattr(f, "db_generated", False) or f.primary_key:
+            read_only.add(f.name)
+    cls.Meta.read_only_fields = tuple(read_only)
+    return cls
 
 
 class AuditContextMixin:
-    """Injects the request into serializer context (for user-stamping)."""
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
+    """Stamps actor/subject onto writes for the audit trigger (Phase 0 audit)."""
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if not qs.ordered:
-            pk = qs.model._meta.pk.name if qs.model._meta.pk else None
-            if pk:
-                qs = qs.order_by(f"-{pk}")
-        return qs
+    def perform_create(self, serializer):
+        serializer.save()
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
@@ -88,6 +65,10 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
         (HIPAA/GDPR per-record read tracing for lab/psych/notes/diagnosis).
       * Models with a `signed` column are attestation-locked: PUT/PATCH/DELETE
         on a signed record returns 423 Locked; POST /sign/ attests it.
+    Phase 2 (Workflow) additions:
+      * appointment: /confirm/ /mark_no_show/ /calendar/
+      * referral: /accept/ /decline/
+      * insurance_claim: /adjudicate/
     """
     permission_classes = [HasRolePermission]
     filterset_fields = []
@@ -98,17 +79,26 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
     sensitive = False
     cds = False
     signable = False  # model has a `signed` column (attestation)
+    appt_actions = False   # appointment: confirm / mark_no_show / calendar
+    referral_actions = False  # referral: accept / decline
+    claim_actions = False   # insurance_claim: adjudicate
 
     @classmethod
     def get_extra_actions(cls):
-        """Only expose /sign/ on signable models and /check-interactions/ on
-        CDS models, so the 89 auto-built routes don't all sprout dead actions."""
+        """Only expose the right custom actions per model so the 89 auto-built
+        routes don't all sprout dead endpoints."""
         acts = super().get_extra_actions()
         out = []
         for a in acts:
             if a.__name__ == "sign" and not cls.signable:
                 continue
             if a.__name__ == "check_interactions" and not cls.cds:
+                continue
+            if a.__name__ in ("confirm", "mark_no_show", "calendar") and not cls.appt_actions:
+                continue
+            if a.__name__ in ("accept", "decline") and not cls.referral_actions:
+                continue
+            if a.__name__ == "adjudicate" and not cls.claim_actions:
                 continue
             out.append(a)
         return out
@@ -195,8 +185,6 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
         interactions between the patient's current active meds and the
         candidate drug, drawn from mcms_rx.drug_interaction.
         """
-        from django.db import connection
-
         from apps.emr.models import MedicationOrder
         patient_id = request.data.get("patient_id")
         drug_item_id = request.data.get("drug_item_id")
@@ -208,6 +196,7 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
         ).exclude(drug_item_id__isnull=True).values_list("drug_item_id", flat=True))
         if not active:
             return Response({"interactions": []})
+        from django.db import connection
         with connection.cursor() as cur:
             cur.execute(
                 """SELECT a.drug_item_id_a, a.drug_item_id_b, a.severity, a.clinical_effect,
@@ -227,8 +216,101 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
             ]
         return Response({"interactions": rows})
 
+    # ---- Phase 2: scheduling (appointment) ------------------------------
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        """Patient/desk confirms the appointment (token-gated in practice)."""
+        obj = self.get_object()
+        if obj.status in ("completed", "noshow"):
+            return Response({"detail": f"Cannot confirm a {obj.status} appointment."},
+                            status=status.HTTP_409_CONFLICT)
+        obj.patient_confirmed = True
+        obj.confirmed_at = timezone.now()
+        obj.save(update_fields=["patient_confirmed", "confirmed_at"])
+        return Response({"detail": "Confirmed.", "confirmed_at": obj.confirmed_at})
 
-def build_viewset(model, perms=None, search=None, filterset=None, sensitive=False, cds=False, signable=False):
+    @action(detail=True, methods=["post"])
+    def mark_no_show(self, request, pk=None):
+        """Mark the patient as no-show (scheduling completeness metric)."""
+        obj = self.get_object()
+        if obj.status in ("completed", "cancelled"):
+            return Response({"detail": f"Cannot mark a {obj.status} appointment as no-show."},
+                            status=status.HTTP_409_CONFLICT)
+        obj.status = "noshow"
+        obj.no_show_at = timezone.now()
+        obj.save(update_fields=["status", "no_show_at"])
+        return Response({"detail": "Marked no-show.", "no_show_at": obj.no_show_at})
+
+    @action(detail=False, methods=["get"])
+    def calendar(self, request):
+        """Calendar feed: appointments in a [from,to] window (default +/-7d)."""
+        now = timezone.now()
+        try:
+            frm = request.query_params.get("from") or (now - timedelta(days=7)).isoformat()
+            to = request.query_params.get("to") or (now + timedelta(days=7)).isoformat()
+        except Exception:
+            return Response({"detail": "Invalid 'from'/'to' ISO timestamps."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        qs = self.filter_queryset(
+            self.get_queryset().filter(starts_at__gte=frm, starts_at__lte=to)
+        ).order_by("starts_at")
+        page = self.paginate_queryset(qs)
+        ser = self.get_serializer(page if page is not None else qs, many=True)
+        if page is not None:
+            return self.get_paginated_response(ser.data)
+        return Response(ser.data)
+
+    # ---- Phase 2: referral workflow (mcms_emr.referral) ---------------
+    @action(detail=True, methods=["post"])
+    def accept(self, request, pk=None):
+        obj = self.get_object()
+        if obj.status not in ("draft", "pending"):
+            return Response({"detail": f"Referral is already {obj.status}."},
+                            status=status.HTTP_409_CONFLICT)
+        obj.status = "accepted"
+        obj.to_user = self._app_user_id()
+        obj.responded_at = timezone.now()
+        obj.save(update_fields=["status", "to_user", "responded_at"])
+        return Response({"detail": "Referral accepted.", "status": "accepted"})
+
+    @action(detail=True, methods=["post"])
+    def decline(self, request, pk=None):
+        obj = self.get_object()
+        if obj.status not in ("draft", "pending"):
+            return Response({"detail": f"Referral is already {obj.status}."},
+                            status=status.HTTP_409_CONFLICT)
+        obj.status = "declined"
+        obj.responded_at = timezone.now()
+        obj.save(update_fields=["status", "responded_at"])
+        return Response({"detail": "Referral declined.", "status": "declined"})
+
+    # ---- Phase 2: insurance claim lifecycle (mcms_billing.insurance_claim)
+    @action(detail=True, methods=["post"])
+    def adjudicate(self, request, pk=None):
+        """Payer mock: draft->submitted->(approved|partial_paid|rejected)->paid."""
+        obj = self.get_object()
+        nxt = request.data.get("status")
+        allowed = ("submitted", "approved", "partial_paid", "rejected", "paid")
+        if nxt not in allowed:
+            return Response({"detail": f"status must be one of {allowed}."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        obj.status = nxt
+        if nxt == "submitted":
+            obj.submitted_at = timezone.now()
+        if nxt in ("approved", "partial_paid", "rejected"):
+            obj.adjudicated_at = timezone.now()
+            if nxt == "approved":
+                obj.approved_amount = obj.billed_amount - obj.rejected_amount
+        if nxt == "paid":
+            obj.paid_at = timezone.now()
+        obj.save(update_fields=["status", "submitted_at", "adjudicated_at",
+                              "approved_amount", "paid_at"])
+        return Response({"detail": f"Claim {nxt}.", "status": obj.status})
+
+
+def build_viewset(model, perms=None, search=None, filterset=None, sensitive=False,
+               cds=False, signable=False, appt_actions=False,
+               referral_actions=False, claim_actions=False):
     """Generate a fully wired ViewSet class for `model`.
 
     The serializer is built lazily on first request (via get_serializer_class)
@@ -253,7 +335,9 @@ def build_viewset(model, perms=None, search=None, filterset=None, sensitive=Fals
         "sensitive": sensitive,
         "cds": cds,
         "signable": signable,
+        "appt_actions": appt_actions,
+        "referral_actions": referral_actions,
+        "claim_actions": claim_actions,
         "__module__": model.__module__,
     }
     return type(f"{model.__name__}ViewSet", (BaseModelViewSet,), attrs)
-

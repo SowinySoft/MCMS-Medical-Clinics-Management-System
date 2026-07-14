@@ -45,7 +45,8 @@ SEARCH_CANDIDATES = ["display_name", "name", "code", "mrn", "invoice_no",
 # (HIPAA/GDPR access tracing). Keyed by (app_label, ModelName).
 SENSITIVE_MODELS = {
     ("emr", "Diagnosis"), ("emr", "ClinicalNote"), ("emr", "SocialHistory"),
-    ("emr", "MedicationOrder"), ("lab", "Result"),
+    ("emr", "MedicationOrder"), ("emr", "Referral"),
+    ("lab", "Result"),
 }
 # Models carrying a `signed` attestation column (e-sign + lock when signed).
 SIGNABLE_MODELS = {
@@ -53,6 +54,10 @@ SIGNABLE_MODELS = {
 }
 # Models exposing the drug-drug interaction CDS action.
 CDS_MODELS = {("emr", "MedicationOrder")}
+# Phase 2 (Workflow): which models expose which workflow actions.
+APPT_ACTIONS = {("clinic", "Appointment")}
+REFERRAL_ACTIONS = {("emr", "Referral")}
+CLAIM_ACTIONS = {("billing", "InsuranceClaim")}
 
 
 def _slug(name: str) -> str:
@@ -77,6 +82,9 @@ def build_router() -> DefaultRouter:
                 sensitive=key in SENSITIVE_MODELS,
                 cds=key in CDS_MODELS,
                 signable=key in SIGNABLE_MODELS,
+                appt_actions=key in APPT_ACTIONS,
+                referral_actions=key in REFERRAL_ACTIONS,
+                claim_actions=key in CLAIM_ACTIONS,
             )
             prefix = f"{label}/{_slug(model.__name__)}"
             router.register(prefix, vs, basename=f"{label}-{model.__name__.lower()}")
