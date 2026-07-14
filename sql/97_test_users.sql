@@ -42,4 +42,13 @@ INSERT INTO mcms_core.user_role_map (user_id, role_id)
 SELECT 2, r.role_id FROM mcms_core.role r WHERE r.code = 'accountant'
   AND NOT EXISTS (SELECT 1 FROM mcms_core.user_role_map WHERE user_id = 2 AND role_id = r.role_id);
 
+-- 5) Advance sequences past the explicit IDs so later auto-inserts (e.g. the
+--    e2e test creating new parties/users) don't collide on party_id/user_id.
+SELECT setval(pg_get_serial_sequence('mcms_core.party', 'party_id'),
+              GREATEST((SELECT max(party_id) FROM mcms_core.party), 1));
+SELECT setval(pg_get_serial_sequence('mcms_core.app_user', 'user_id'),
+              GREATEST((SELECT max(user_id) FROM mcms_core.app_user), 1));
+SELECT setval(pg_get_serial_sequence('public.auth_user', 'id'),
+              GREATEST((SELECT max(id) FROM public.auth_user), 1));
+
 COMMIT;

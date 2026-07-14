@@ -208,3 +208,37 @@ class UserRoleMap(models.Model):
         managed = False
         db_table = 'mcms_core"."user_role_map'
         unique_together = (('user', 'role'),)
+
+
+
+class Consent(models.Model):
+    """Per-party consent flags (GDPR/HIPAA-style). Drives what UI/API exposes."""
+    consent_id = models.BigAutoField(primary_key=True)
+    party = models.ForeignKey('Party', models.DO_NOTHING)
+    consent_type = models.TextField()  # consent_type enum
+    granted = models.BooleanField(default=False)
+    granted_at = models.DateTimeField(blank=True, null=True)
+    revoked_at = models.DateTimeField(blank=True, null=True)
+    granted_by = models.BigIntegerField(blank=True, null=True)  # app_user
+    note = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_core"."consent'
+        unique_together = (('party', 'consent_type'),)
+
+
+class AccessLog(models.Model):
+    """Per-record read-access log for sensitive tables (HIPAA/GDPR access tracing)."""
+    access_id = models.BigAutoField(primary_key=True)
+    reader_user = models.ForeignKey(AppUser, models.DO_NOTHING, null=True, blank=True, db_column='reader_user_id')
+    subject_party = models.ForeignKey('Party', models.DO_NOTHING, null=True, blank=True, db_column='subject_party_id')
+    table_schema = models.TextField()
+    table_name = models.TextField()
+    row_id = models.BigIntegerField()
+    read_at = models.DateTimeField(auto_now_add=True, )
+    reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_core"."access_log'

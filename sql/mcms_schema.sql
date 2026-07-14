@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7heuKmALq0rLq0pPR6cPWJX1giYsmEf7us40GF5HtzhRmP2k8BiCQ4KG6vzHZbu
+\restrict dUx6jEgUorBWChJQlzXbHdishVTVTgdst3QvV0kW5IbNtYyr1ZZfbhKqaRAxdZV
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -339,6 +339,19 @@ CREATE TYPE mcms_core.blood_type AS ENUM (
     'o+',
     'o-',
     'unknown'
+);
+
+
+--
+-- Name: consent_type; Type: TYPE; Schema: mcms_core; Owner: -
+--
+
+CREATE TYPE mcms_core.consent_type AS ENUM (
+    'data_sharing',
+    'contact_sms',
+    'contact_email',
+    'research',
+    'psycho_disclosure'
 );
 
 
@@ -1302,20 +1315,38 @@ CREATE FUNCTION mcms_core.fn_event_insert() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
-   ch TEXT;
+  ch  TEXT;
+  ph  TEXT;
+  calc TEXT;
 BEGIN
-   NEW.seq := nextval('mcms_core.event_log_seq');
-   ch := COALESCE(NEW.channel, 'mcms');
-   PERFORM pg_notify(ch, json_build_object(
-        'event_id', NEW.event_id,
-        'seq',       NEW.seq,
-        'kind',      NEW.kind::text,
-        'subject_party_id', NEW.subject_party_id,
-        'source_table', NEW.source_table,
-        'source_id', NEW.source_id
+  NEW.seq := nextval('mcms_core.event_log_seq');
+  -- previous chain head (highest seq so far)
+  SELECT e.hash INTO ph
+    FROM mcms_core.event_log e
+   ORDER BY e.seq DESC LIMIT 1;
+  NEW.prev_hash := ph;
+  calc := encode(sha256(concat(
+      COALESCE(ph, ''), '|',
+      NEW.seq, '|',
+      NEW.kind::text, '|',
+      COALESCE(NEW.source_schema, ''), '|',
+      COALESCE(NEW.source_table, ''), '|',
+      COALESCE(NEW.source_id::text, ''), '|',
+      NEW.payload::text, '|',
+      COALESCE(NEW.actor_user_id::text, ''), '|',
+      COALESCE(NEW.subject_party_id::text, '')
+    )::bytea), 'hex');
+  NEW.hash := calc;
+  ch := COALESCE(NEW.channel, 'mcms');
+  PERFORM pg_notify(ch, json_build_object(
+      'event_id', NEW.event_id, 'seq', NEW.seq, 'kind', NEW.kind::text,
+      'subject_party_id', NEW.subject_party_id,
+      'source_table', NEW.source_table, 'source_id', NEW.source_id,
+      'hash', NEW.hash
    )::text);
-   RETURN NEW;
-END$$;
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1379,6 +1410,40 @@ CREATE FUNCTION mcms_core.fn_touch() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN NEW.updated_at := now(); RETURN NEW; END$$;
+
+
+--
+-- Name: verify_event_chain(); Type: FUNCTION; Schema: mcms_core; Owner: -
+--
+
+CREATE FUNCTION mcms_core.verify_event_chain() RETURNS TABLE(broken_at bigint)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  r RECORD;
+  prev TEXT := NULL;
+  calc TEXT;
+BEGIN
+  FOR r IN SELECT event_id, seq, kind, source_schema, source_table, source_id,
+                  payload, actor_user_id, subject_party_id, prev_hash, hash
+             FROM mcms_core.event_log ORDER BY seq LOOP
+    calc := encode(sha256(concat(
+        COALESCE(prev, ''), '|',
+        r.seq, '|', r.kind::text, '|',
+        COALESCE(r.source_schema, ''), '|',
+        COALESCE(r.source_table, ''), '|',
+        COALESCE(r.source_id::text, ''), '|',
+        r.payload::text, '|',
+        COALESCE(r.actor_user_id::text, ''), '|',
+        COALESCE(r.subject_party_id::text, '')
+      )::bytea), 'hex');
+    IF calc <> r.hash OR prev IS DISTINCT FROM r.prev_hash THEN
+      broken_at := r.seq; RETURN NEXT;
+    END IF;
+    prev := r.hash;
+  END LOOP;
+END;
+$$;
 
 
 --
@@ -2433,6 +2498,41 @@ ALTER SEQUENCE mcms_clinic.room_room_id_seq OWNED BY mcms_clinic.room.room_id;
 
 
 --
+-- Name: access_log; Type: TABLE; Schema: mcms_core; Owner: -
+--
+
+CREATE TABLE mcms_core.access_log (
+    access_id bigint NOT NULL,
+    reader_user_id bigint,
+    subject_party_id bigint,
+    table_schema text NOT NULL,
+    table_name text NOT NULL,
+    row_id bigint NOT NULL,
+    read_at timestamp with time zone DEFAULT now() NOT NULL,
+    reason text
+);
+
+
+--
+-- Name: access_log_access_id_seq; Type: SEQUENCE; Schema: mcms_core; Owner: -
+--
+
+CREATE SEQUENCE mcms_core.access_log_access_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: access_log_access_id_seq; Type: SEQUENCE OWNED BY; Schema: mcms_core; Owner: -
+--
+
+ALTER SEQUENCE mcms_core.access_log_access_id_seq OWNED BY mcms_core.access_log.access_id;
+
+
+--
 -- Name: address; Type: TABLE; Schema: mcms_core; Owner: -
 --
 
@@ -2585,6 +2685,41 @@ ALTER SEQUENCE mcms_core.backup_log_backup_id_seq OWNED BY mcms_core.backup_log.
 
 
 --
+-- Name: consent; Type: TABLE; Schema: mcms_core; Owner: -
+--
+
+CREATE TABLE mcms_core.consent (
+    consent_id bigint NOT NULL,
+    party_id bigint NOT NULL,
+    consent_type mcms_core.consent_type NOT NULL,
+    granted boolean DEFAULT false NOT NULL,
+    granted_at timestamp with time zone,
+    revoked_at timestamp with time zone,
+    granted_by bigint,
+    note text
+);
+
+
+--
+-- Name: consent_consent_id_seq; Type: SEQUENCE; Schema: mcms_core; Owner: -
+--
+
+CREATE SEQUENCE mcms_core.consent_consent_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: consent_consent_id_seq; Type: SEQUENCE OWNED BY; Schema: mcms_core; Owner: -
+--
+
+ALTER SEQUENCE mcms_core.consent_consent_id_seq OWNED BY mcms_core.consent.consent_id;
+
+
+--
 -- Name: contact; Type: TABLE; Schema: mcms_core; Owner: -
 --
 
@@ -2636,6 +2771,8 @@ CREATE TABLE mcms_core.event_log (
     source_id bigint,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     channel text DEFAULT 'mcms'::text NOT NULL,
+    prev_hash text,
+    hash text,
     CONSTRAINT event_source_pair_chk CHECK ((((source_schema IS NULL) AND (source_table IS NULL) AND (source_id IS NULL)) OR ((source_schema IS NOT NULL) AND (source_table IS NOT NULL) AND (source_id IS NOT NULL))))
 );
 
@@ -3198,7 +3335,8 @@ CREATE TABLE mcms_emr.clinical_note (
     signed_at timestamp with time zone,
     amended_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    signed_by bigint
 );
 
 
@@ -3237,7 +3375,10 @@ CREATE TABLE mcms_emr.diagnosis (
     resolved_at timestamp with time zone,
     recorded_by bigint,
     is_chronic boolean DEFAULT false,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    signed boolean DEFAULT false NOT NULL,
+    signed_at timestamp with time zone,
+    signed_by bigint
 );
 
 
@@ -3398,7 +3539,10 @@ CREATE TABLE mcms_emr.medication_order (
     status mcms_emr.med_order_status DEFAULT 'active'::mcms_emr.med_order_status NOT NULL,
     ordered_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    signed boolean DEFAULT false NOT NULL,
+    signed_at timestamp with time zone,
+    signed_by bigint
 );
 
 
@@ -6257,6 +6401,13 @@ ALTER TABLE ONLY mcms_clinic.room ALTER COLUMN room_id SET DEFAULT nextval('mcms
 
 
 --
+-- Name: access_log access_id; Type: DEFAULT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.access_log ALTER COLUMN access_id SET DEFAULT nextval('mcms_core.access_log_access_id_seq'::regclass);
+
+
+--
 -- Name: address address_id; Type: DEFAULT; Schema: mcms_core; Owner: -
 --
 
@@ -6282,6 +6433,13 @@ ALTER TABLE ONLY mcms_core.audit_trail ALTER COLUMN audit_id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY mcms_core.backup_log ALTER COLUMN backup_id SET DEFAULT nextval('mcms_core.backup_log_backup_id_seq'::regclass);
+
+
+--
+-- Name: consent consent_id; Type: DEFAULT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.consent ALTER COLUMN consent_id SET DEFAULT nextval('mcms_core.consent_consent_id_seq'::regclass);
 
 
 --
@@ -6906,6 +7064,14 @@ ALTER TABLE ONLY mcms_clinic.room
 
 
 --
+-- Name: access_log access_log_pkey; Type: CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.access_log
+    ADD CONSTRAINT access_log_pkey PRIMARY KEY (access_id);
+
+
+--
 -- Name: address address_pkey; Type: CONSTRAINT; Schema: mcms_core; Owner: -
 --
 
@@ -6943,6 +7109,22 @@ ALTER TABLE ONLY mcms_core.audit_trail
 
 ALTER TABLE ONLY mcms_core.backup_log
     ADD CONSTRAINT backup_log_pkey PRIMARY KEY (backup_id);
+
+
+--
+-- Name: consent consent_party_id_consent_type_key; Type: CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.consent
+    ADD CONSTRAINT consent_party_id_consent_type_key UNIQUE (party_id, consent_type);
+
+
+--
+-- Name: consent consent_pkey; Type: CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.consent
+    ADD CONSTRAINT consent_pkey PRIMARY KEY (consent_id);
 
 
 --
@@ -8393,6 +8575,27 @@ CREATE INDEX event_log_subject_party_id_idx ON mcms_core.event_log USING btree (
 --
 
 CREATE UNIQUE INDEX event_seq_uq ON mcms_core.event_log USING btree (seq);
+
+
+--
+-- Name: ix_access_log_party; Type: INDEX; Schema: mcms_core; Owner: -
+--
+
+CREATE INDEX ix_access_log_party ON mcms_core.access_log USING btree (subject_party_id, read_at DESC);
+
+
+--
+-- Name: ix_access_log_table; Type: INDEX; Schema: mcms_core; Owner: -
+--
+
+CREATE INDEX ix_access_log_table ON mcms_core.access_log USING btree (table_schema, table_name, row_id);
+
+
+--
+-- Name: ix_consent_party; Type: INDEX; Schema: mcms_core; Owner: -
+--
+
+CREATE INDEX ix_consent_party ON mcms_core.consent USING btree (party_id);
 
 
 --
@@ -11085,6 +11288,22 @@ ALTER TABLE ONLY mcms_clinic.room
 
 
 --
+-- Name: access_log access_log_reader_user_id_fkey; Type: FK CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.access_log
+    ADD CONSTRAINT access_log_reader_user_id_fkey FOREIGN KEY (reader_user_id) REFERENCES mcms_core.app_user(user_id);
+
+
+--
+-- Name: access_log access_log_subject_party_id_fkey; Type: FK CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.access_log
+    ADD CONSTRAINT access_log_subject_party_id_fkey FOREIGN KEY (subject_party_id) REFERENCES mcms_core.party(party_id);
+
+
+--
 -- Name: address address_party_id_fkey; Type: FK CONSTRAINT; Schema: mcms_core; Owner: -
 --
 
@@ -11114,6 +11333,22 @@ ALTER TABLE ONLY mcms_core.audit_trail
 
 ALTER TABLE ONLY mcms_core.audit_trail
     ADD CONSTRAINT audit_trail_event_id_fkey FOREIGN KEY (event_id) REFERENCES mcms_core.event_log(event_id);
+
+
+--
+-- Name: consent consent_granted_by_fkey; Type: FK CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.consent
+    ADD CONSTRAINT consent_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES mcms_core.app_user(user_id);
+
+
+--
+-- Name: consent consent_party_id_fkey; Type: FK CONSTRAINT; Schema: mcms_core; Owner: -
+--
+
+ALTER TABLE ONLY mcms_core.consent
+    ADD CONSTRAINT consent_party_id_fkey FOREIGN KEY (party_id) REFERENCES mcms_core.party(party_id) ON DELETE CASCADE;
 
 
 --
@@ -11357,6 +11592,14 @@ ALTER TABLE ONLY mcms_emr.clinical_note
 
 
 --
+-- Name: clinical_note clinical_note_signed_by_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.clinical_note
+    ADD CONSTRAINT clinical_note_signed_by_fkey FOREIGN KEY (signed_by) REFERENCES mcms_core.app_user(user_id);
+
+
+--
 -- Name: diagnosis diagnosis_encounter_id_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
 --
 
@@ -11378,6 +11621,14 @@ ALTER TABLE ONLY mcms_emr.diagnosis
 
 ALTER TABLE ONLY mcms_emr.diagnosis
     ADD CONSTRAINT diagnosis_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES mcms_core.app_user(user_id);
+
+
+--
+-- Name: diagnosis diagnosis_signed_by_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.diagnosis
+    ADD CONSTRAINT diagnosis_signed_by_fkey FOREIGN KEY (signed_by) REFERENCES mcms_core.app_user(user_id);
 
 
 --
@@ -11474,6 +11725,14 @@ ALTER TABLE ONLY mcms_emr.medication_order
 
 ALTER TABLE ONLY mcms_emr.medication_order
     ADD CONSTRAINT medication_order_prescriber_user_id_fkey FOREIGN KEY (prescriber_user_id) REFERENCES mcms_core.app_user(user_id);
+
+
+--
+-- Name: medication_order medication_order_signed_by_fkey; Type: FK CONSTRAINT; Schema: mcms_emr; Owner: -
+--
+
+ALTER TABLE ONLY mcms_emr.medication_order
+    ADD CONSTRAINT medication_order_signed_by_fkey FOREIGN KEY (signed_by) REFERENCES mcms_core.app_user(user_id);
 
 
 --
@@ -12616,5 +12875,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7heuKmALq0rLq0pPR6cPWJX1giYsmEf7us40GF5HtzhRmP2k8BiCQ4KG6vzHZbu
+\unrestrict dUx6jEgUorBWChJQlzXbHdishVTVTgdst3QvV0kW5IbNtYyr1ZZfbhKqaRAxdZV
 

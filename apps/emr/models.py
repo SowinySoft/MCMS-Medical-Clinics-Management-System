@@ -36,6 +36,7 @@ class ClinicalNote(models.Model):
     coauthor_ids = models.TextField(blank=True, null=True)  # This field type is a guess.
     signed = models.BooleanField()
     signed_at = models.DateTimeField(blank=True, null=True)
+    signed_by = models.BigIntegerField(blank=True, null=True)  # app_user who attested
     amended_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, )
     updated_at = models.DateTimeField(auto_now=True, )
@@ -59,6 +60,9 @@ class Diagnosis(models.Model):
     resolved_at = models.DateTimeField(blank=True, null=True)
     recorded_by = models.BigIntegerField(blank=True, null=True)
     is_chronic = models.BooleanField(blank=True, null=True)
+    signed = models.BooleanField(blank=True, null=True, default=False)
+    signed_at = models.DateTimeField(blank=True, null=True)
+    signed_by = models.BigIntegerField(blank=True, null=True)  # app_user who attested
     created_at = models.DateTimeField(auto_now_add=True, )
 
     class Meta:
@@ -144,6 +148,9 @@ class MedicationOrder(models.Model):
     refill_count = models.IntegerField()
     instructions = models.TextField(blank=True, null=True)
     status = models.TextField()  # This field type is a guess.
+    signed = models.BooleanField(blank=True, null=True, default=False)
+    signed_at = models.DateTimeField(blank=True, null=True)
+    signed_by = models.BigIntegerField(blank=True, null=True)  # app_user who attested
     ordered_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True, )
     updated_at = models.DateTimeField(auto_now=True, )

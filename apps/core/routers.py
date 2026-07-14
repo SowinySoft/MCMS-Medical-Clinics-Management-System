@@ -41,6 +41,19 @@ DOMAIN_PERMS = {
 SEARCH_CANDIDATES = ["display_name", "name", "code", "mrn", "invoice_no",
                      "po_no", "grn_no", "username", "label", "name_en"]
 
+# Phase 1 (Trust): per-record read-access logging on sensitive clinical tables
+# (HIPAA/GDPR access tracing). Keyed by (app_label, ModelName).
+SENSITIVE_MODELS = {
+    ("emr", "Diagnosis"), ("emr", "ClinicalNote"), ("emr", "SocialHistory"),
+    ("emr", "MedicationOrder"), ("lab", "Result"),
+}
+# Models carrying a `signed` attestation column (e-sign + lock when signed).
+SIGNABLE_MODELS = {
+    ("emr", "Diagnosis"), ("emr", "ClinicalNote"), ("emr", "MedicationOrder"),
+}
+# Models exposing the drug-drug interaction CDS action.
+CDS_MODELS = {("emr", "MedicationOrder")}
+
 
 def _slug(name: str) -> str:
     s = re.sub(r"(?<!^)(?=[A-Z])", "-", name).lower()
@@ -58,7 +71,13 @@ def build_router() -> DefaultRouter:
         for model in app_config.get_models():
             fieldnames = {f.name for f in model._meta.fields}
             search = [c for c in SEARCH_CANDIDATES if c in fieldnames]
-            vs = build_viewset(model, perms=perms, search=search)
+            key = (label, model.__name__)
+            vs = build_viewset(
+                model, perms=perms, search=search,
+                sensitive=key in SENSITIVE_MODELS,
+                cds=key in CDS_MODELS,
+                signable=key in SIGNABLE_MODELS,
+            )
             prefix = f"{label}/{_slug(model.__name__)}"
             router.register(prefix, vs, basename=f"{label}-{model.__name__.lower()}")
     return router
