@@ -33,10 +33,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DUMP_PATH="$REPO_ROOT/${DUMP}"
 
-# psql/pg_dump are native Windows binaries and cannot read MSYS-style paths
-# like /d/MCMS/...; convert to a Windows path (D:\MCMS\...) when possible.
+# On Windows/MSYS, psql/pg_dump are native binaries that cannot read MSYS-style
+# paths like /d/MCMS/...; convert to a Windows path (D:\MCMS\...). On Linux/macOS
+# (e.g. GitHub Actions) psql reads POSIX paths directly, so return them as-is.
+case "$(uname -s 2>/dev/null || echo unknown)" in
+  MINGW*|MSYS*|CYGWIN*) _IS_WINDOWS=1 ;;
+  *)                     _IS_WINDOWS=0 ;;
+esac
+
 winpath() {
-  if command -v cygpath >/dev/null 2>&1; then
+  if [ "$_IS_WINDOWS" != "1" ]; then
+    echo "$1"
+  elif command -v cygpath >/dev/null 2>&1; then
     cygpath -w "$1"
   else
     echo "$1" | sed -E 's|^/([a-zA-Z])/|\U\1:\\|; s|/|\\|g'

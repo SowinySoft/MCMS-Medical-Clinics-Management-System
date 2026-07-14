@@ -18,8 +18,17 @@ LIVE_DB="${MCMS_DB_NAME:-mcms}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# On Windows/MSYS convert paths to native form; on Linux/macOS (CI/Docker)
+# psql reads POSIX paths directly, so return them as-is.
+case "$(uname -s 2>/dev/null || echo unknown)" in
+  MINGW*|MSYS*|CYGWIN*) _IS_WINDOWS=1 ;;
+  *)                     _IS_WINDOWS=0 ;;
+esac
+
 winpath() {
-  if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else echo "$1" | sed -E 's|^/([a-zA-Z])/|\U\1:\\|; s|/|\\|g'; fi
+  if [ "$_IS_WINDOWS" != "1" ]; then echo "$1"
+  elif command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"
+  else echo "$1" | sed -E 's|^/([a-zA-Z])/|\U\1:\\|; s|/|\\|g'; fi
 }
 
 PSQL="psql -h $DB_HOST -p $DB_PORT -U $DB_USER -v ON_ERROR_STOP=0"
