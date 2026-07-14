@@ -29,3 +29,8 @@ Thumbs.db
 *.log
 __pycache__/
 backups/
+staticfiles/
+.env
+.env.*
+!.env.example
+

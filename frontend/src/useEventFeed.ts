@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import cfg from "./config.json";
 
+// Vite env override (docker/nginx) with config.json fallback.
+const wsBase =
+  (import.meta.env.VITE_WS_BASE as string | undefined) || cfg.wsBase;
+
 export interface FeedEvent {
   seq: number;
   occurred_at: string;
@@ -20,7 +24,7 @@ export function useEventFeed(kinds: string[] = []) {
 
   useEffect(() => {
     if (!localStorage.getItem("access")) return;
-    const url = cfg.wsBase;
+    const url = wsBase;
     const socket = new WebSocket(url);
     ws.current = socket;
 

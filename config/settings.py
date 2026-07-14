@@ -172,6 +172,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
+STATIC_ROOT = _os.environ.get("MCMS_STATIC_ROOT", str(BASE_DIR / "staticfiles"))
 
 # ---------------------------------------------------------------- Brute-force protection (django-axes)
 # Locks an IP+username after N failed logins within COOLOFF. Tunable via env.

@@ -1,0 +1,63 @@
+# MCMS — full stack: Postgres + Redis + Django/Daphne (API+WS) + nginx (SPA).
+# Bring up with:  docker compose --env-file .env up --build
+# Tear down:      docker compose down
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${MCMS_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MCMS_DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${MCMS_DB_NAME:-mcms}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MCMS_DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    environment:
+      MCMS_DB_HOST: db
+      MCMS_DB_PORT: 5432
+      MCMS_DB_USER: ${MCMS_DB_USER:-postgres}
+      MCMS_DB_PASSWORD: ${MCMS_DB_PASSWORD:-postgres}
+      MCMS_DB_NAME: ${MCMS_DB_NAME:-mcms}
+      MCMS_SECRET_KEY: ${MCMS_SECRET_KEY:-change-me-in-prod}
+      MCMS_DEBUG: ${MCMS_DEBUG:-false}
+      MCMS_ALLOWED_HOSTS: ${MCMS_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      MCMS_REDIS_URL: redis://redis:6379/0
+      MCMS_ADMIN_USER: ${MCMS_ADMIN_USER:-admin}
+      MCMS_ADMIN_PASS: ${MCMS_ADMIN_PASS:-admin123}
+      MCMS_ACC1_USER: ${MCMS_ACC1_USER:-acc1}
+      MCMS_ACC1_PASS: ${MCMS_ACC1_PASS:-acc1123}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8010"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+
+volumes:
+  pgdata:

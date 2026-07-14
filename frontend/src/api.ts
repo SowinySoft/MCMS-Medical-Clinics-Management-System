@@ -2,7 +2,12 @@
 import axios from "axios";
 import cfg from "./config.json";
 
-const api = axios.create({ baseURL: cfg.apiBase });
+// Allow build-time override via Vite env (docker/nginx use relative "/api").
+// Falls back to config.json so local dev keeps working unchanged.
+const apiBase =
+  (import.meta.env.VITE_API_BASE as string | undefined) || cfg.apiBase;
+
+const api = axios.create({ baseURL: apiBase });
 
 api.interceptors.request.use((config) => {
   const t = localStorage.getItem("access");
