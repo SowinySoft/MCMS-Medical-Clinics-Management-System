@@ -7,13 +7,14 @@ import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { TableBrowser } from "./components/TableBrowser";
 import { SchemaBrowser } from "./components/SchemaBrowser";
+import { SysAdmin } from "./components/SysAdmin";
 import { Reports } from "./components/Reports";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { toggleLanguage } from "./i18n";
 import { useTranslation } from "react-i18next";
 
 function Shell() {
-  const { access } = useAuth();
+  const { access, hasPerm } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [view, setView] = useState<{ schema: string; model: string }>({ schema: "", model: "" });
@@ -34,10 +35,14 @@ function Shell() {
           <button style={btn} onClick={toggleLanguage}>{t("language")}: EN / ع</button>
           <ThemeSwitcher />
           <button style={btnAccent} onClick={() => navigate("/reports")}>{t("Reports")}</button>
+          {hasPerm("admin.all") && (
+            <button style={btnAccent} onClick={() => navigate("/sysadmin")}>System</button>
+          )}
         </div>
         <Routes>
           <Route path="/" element={<Dashboard onOpen={open} />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/sysadmin" element={<SysAdmin />} />
           <Route path="/browse/:schema" element={<SchemaBrowser />} />
           <Route path="/browse/:schema/:model" element={<TableBrowser schema={view.schema} model={view.model} />} />
         </Routes>

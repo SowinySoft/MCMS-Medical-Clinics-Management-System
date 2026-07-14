@@ -28,3 +28,5 @@ Thumbs.db
 # Misc
 *.log
 __pycache__/
+backups/
+*.sql

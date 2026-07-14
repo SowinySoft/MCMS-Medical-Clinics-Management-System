@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MCMS — Patient Pathway (Entry → Exit)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#21262d; --border:#30363d;
+    --text:#e6edf3; --dim:#8b949e; --accent:#58a6ff;
+    --recept:#1f6feb; --clinical:#3fb950; --diag:#a371f7;
+    --rx:#db6d28; --care:#f85149; --bill:#d29922;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:28px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:28px;font-size:12px}
+  .legend span{display:flex;align-items:center;gap:6px;color:var(--dim)}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .stage{display:grid;grid-template-columns:54px 1fr;gap:18px;margin-bottom:6px}
+  .num{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-weight:800;font-size:20px;background:var(--panel2);
+    border:1px solid var(--border);color:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--border);border-left-width:4px;
+    border-radius:10px;padding:16px 18px;position:relative}
+  .card h2{margin:0 0 6px;font-size:16px}
+  .card .role{font-size:11px;color:var(--dim);margin-bottom:10px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tag{background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+    padding:3px 8px;font-size:11px;color:var(--text)}
+  .tag.tbl{color:#9aa4ad}
+  .tag.evt{color:#7ee787;border-color:#2ea04333}
+  .tag.api{color:#79c0ff;border-color:#1f6feb33;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .arrow{height:26px;margin-left:27px;color:var(--border);font-size:18px;line-height:26px}
+  .spine{margin-top:30px;background:#0b1f17;border:1px solid #2ea04355;border-radius:10px;
+    padding:14px 18px;font-size:13px;color:#7ee787}
+  .spine b{color:#7ee787}
+  .foot{margin-top:26px;color:var(--dim);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MCMS — Patient Pathway</h1>
+  <div class="sub">Entry → Exit, mapped to the live schema (every stage = real tables, emitted events &amp; API endpoints). RBAC group shown per stage.</div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--recept)"></i>Reception</span>
+    <span><i class="dot" style="background:var(--clinical)"></i>Clinical / EMR</span>
+    <span><i class="dot" style="background:var(--diag)"></i>Diagnostics</span>
+    <span><i class="dot" style="background:var(--rx)"></i>Pharmacy</span>
+    <span><i class="dot" style="background:var(--care)"></i>Care Continuum</span>
+    <span><i class="dot" style="background:var(--bill)"></i>Billing</span>
+  </div>
+
+  <!-- 1 -->
+  <div class="stage">
+    <div class="num">1</div>
+    <div class="card" style="border-left-color:var(--recept)">
+      <h2>Entry &amp; Registration</h2>
+      <div class="role">RBAC: appointment.manage (Reception)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_core.party</span>
+        <span class="tag tbl">mcms_emr.patient</span>
+        <span class="tag tbl">mcms_clinic.appointment</span>
+        <span class="tag tbl">mcms_clinic.patient_queue</span>
+        <span class="tag evt">appointment_booked</span>
+        <span class="tag api">POST /api/core/party/</span>
+        <span class="tag api">POST /api/emr/patient/</span>
+        <span class="tag api">POST /api/clinic/appointment/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Person → party (master identity). Patient links to party (MRN, allergies, immunizations). Walk-ins queue; scheduled visits booked.</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 2 -->
+  <div class="stage">
+    <div class="num">2</div>
+    <div class="card" style="border-left-color:var(--clinical)">
+      <h2>Clinical Encounter</h2>
+      <div class="role">RBAC: emr.read / emr.write (Medical Services)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_emr.encounter</span>
+        <span class="tag tbl">mcms_emr.vitals</span>
+        <span class="tag tbl">mcms_emr.family_history</span>
+        <span class="tag tbl">mcms_emr.social_history</span>
+        <span class="tag tbl">mcms_emr.allergy</span>
+        <span class="tag tbl">mcms_emr.clinical_note</span>
+        <span class="tag evt">encounter_opened</span>
+        <span class="tag api">POST /api/emr/encounter/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Encounter opened — the clinical session tying all downstream care together. Baseline vitals &amp; history captured.</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 3 -->
+  <div class="stage">
+    <div class="num">3</div>
+    <div class="card" style="border-left-color:var(--diag)">
+      <h2>Diagnostics (if needed)</h2>
+      <div class="role">RBAC: lab_rad.result (Diagnosis group)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_lab.lab_order → sample → result</span>
+        <span class="tag tbl">mcms_rad.study_request → image_instance</span>
+        <span class="tag tbl">mcms_emergency.triage → ed_bed → resuscitation</span>
+        <span class="tag evt">lab_order_placed · sample_collected · result_verified</span>
+        <span class="tag evt">study_requested · study_completed</span>
+        <span class="tag evt">triage_recorded · ed_admitted · resuscitation_initiated</span>
+        <span class="tag api">POST /api/lab/lab-order/</span>
+        <span class="tag api">POST /api/rad/study-request/</span>
+        <span class="tag api">POST /api/emergency/triage/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Lab/Radiology orders + Emergency detour (triage → ED bed → resuscitation).</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 4 -->
+  <div class="stage">
+    <div class="num">4</div>
+    <div class="card" style="border-left-color:var(--clinical)">
+      <h2>Diagnosis &amp; Treatment Orders</h2>
+      <div class="role">RBAC: emr.read / emr.write (Medical Services)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_emr.diagnosis</span>
+        <span class="tag tbl">mcms_emr.medication_order</span>
+        <span class="tag evt">diagnosis_recorded</span>
+        <span class="tag evt">prescription_issued</span>
+        <span class="tag api">POST /api/emr/diagnosis/</span>
+        <span class="tag api">POST /api/emr/medication-order/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Clinician records diagnosis and writes medication / treatment orders.</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 5 -->
+  <div class="stage">
+    <div class="num">5</div>
+    <div class="card" style="border-left-color:var(--rx)">
+      <h2>Pharmacy &amp; Treatment</h2>
+      <div class="role">RBAC: pharmacy.dispense (Pharmaceuticals)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_rx.dispensation</span>
+        <span class="tag tbl">mcms_rx.administration</span>
+        <span class="tag tbl">mcms_rx.drug_lot · stock_movement</span>
+        <span class="tag evt">medication_dispensed · medication_administered</span>
+        <span class="tag evt">low_stock_alert</span>
+        <span class="tag api">POST /api/rx/dispensation/</span>
+        <span class="tag api">POST /api/rx/administration/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Dispensation draws from drug_lot / stock_movement; bedside administration recorded.</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 6 -->
+  <div class="stage">
+    <div class="num">6</div>
+    <div class="card" style="border-left-color:var(--care)">
+      <h2>Care Continuum (escalation)</h2>
+      <div class="role">RBAC: emr.read / emr.write (Medical Services)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_surgical.surgery · operating_room</span>
+        <span class="tag tbl">mcms_icu.admission · bed · bed_stay · vitals_stream</span>
+        <span class="tag tbl">mcms_physio.session · treatment_plan</span>
+        <span class="tag evt">surgery_scheduled · icu_admit · physio_session_completed</span>
+        <span class="tag api">POST /api/surgical/surgery/</span>
+        <span class="tag api">POST /api/icu/admission/</span>
+        <span class="tag api">POST /api/physio/session/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Optional escalation: Surgery, ICU admission, or Physiotherapy.</div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- 7 -->
+  <div class="stage">
+    <div class="num">7</div>
+    <div class="card" style="border-left-color:var(--bill)">
+      <h2>Billing &amp; Exit</h2>
+      <div class="role">RBAC: billing.read / billing.write (Management)</div>
+      <div class="tags">
+        <span class="tag tbl">mcms_billing.invoice · invoice_line</span>
+        <span class="tag tbl">mcms_billing.payment</span>
+        <span class="tag tbl">mcms_billing.insurance_claim</span>
+        <span class="tag evt">invoice_issued · payment_received · insurance_claim_submitted</span>
+        <span class="tag evt">encounter_closed</span>
+        <span class="tag api">POST /api/billing/invoice/</span>
+        <span class="tag api">POST /api/billing/payment/</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim)">Charges → invoice + payment / insurance claim. Encounter closed → patient leaves.</div>
+    </div>
+  </div>
+
+  <div class="spine">
+    <b>Real-time spine:</b> every write above emits a <b>create / update / delete</b> row to
+    <b>mcms_core.event_log</b> (generic audit triggers on all 89 tables). The WebSocket consumer streams these to the
+    Dashboard Live Feed — so the whole pathway is observable end-to-end in real time.
+  </div>
+
+  <div class="foot">
+    Source: MCMS schema (mcms_* schemas) · API: DRF routers (/api/&lt;schema&gt;/&lt;model&gt;/) · Events: mcms_core.event_kind enum.
+    Diagram reflects the live database + running backend.
+  </div>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { useAuth } from "../auth";
 import { mcmsApi } from "../api";
 import { useEffect, useState } from "react";
 import { LiveFeed } from "./LiveFeed";
+import { SystemHealth } from "./SystemHealth";
 import { useTranslation } from "react-i18next";
 import { MODEL_LABELS } from "../schemas";
 
@@ -68,6 +69,7 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
       <div style={styles.main}>
         <h2 style={styles.h2}>{t("dashboard")}</h2>
         <div style={styles.roles}>Roles: {roles.join(", ") || "—"}</div>
+        {hasPerm("admin.all") && <SystemHealth />}
         <div style={styles.tiles}>
           {tiles.map((x) => (
             <button key={x.label} style={styles.tile} onClick={() => onOpen(x.target[0], x.target[1])}>

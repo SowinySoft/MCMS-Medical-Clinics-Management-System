@@ -16,9 +16,11 @@ from drf_spectacular.views import (
 from apps.core.auth import MCMSTokenObtainPairView
 from apps.core.routers import build_router
 from apps.core.reports import ReportViewSet
+from apps.core.admin_panel import SystemViewSet
 
 router = build_router()
 router.register("reports", ReportViewSet, basename="reports")
+router.register("system", SystemViewSet, basename="system")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
