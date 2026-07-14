@@ -44,7 +44,11 @@ class Invoice(models.Model):
     discount_amount = models.DecimalField(max_digits=14, decimal_places=2)
     insurance_covers = models.DecimalField(max_digits=14, decimal_places=2)
     patient_pays = models.DecimalField(max_digits=14, decimal_places=2)
-    total = models.DecimalField(max_digits=14, decimal_places=2, blank=True, null=True)
+    total = models.GeneratedField(
+        expression="subtotal + tax_amount - discount_amount",
+        output_field=models.DecimalField(max_digits=14, decimal_places=2),
+        db_persist=True,
+    )  # DB-generated column (GENERATED ALWAYS AS ...)
     currency = models.TextField()
     issued_at = models.DateTimeField()
     due_date = models.DateField(blank=True, null=True)

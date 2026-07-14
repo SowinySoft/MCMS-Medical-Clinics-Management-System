@@ -1,0 +1,105 @@
+# MCMS Roadmap — "Phoenix" Plan
+
+> From working prototype to a **trustworthy, production-grade clinical platform**.
+> Status baseline: 15 schemas / 89 domain tables live and modeled, RBAC-as-data,
+> generic 89-table UI, 10 report endpoints, SysAdmin control panel, real-time
+> event feed, EN/AR i18n + RTL, 3 themes, zero-defect audit passed.
+> Repo: `main`. Last milestone: `ff249ce` (SysAdmin panel + system monitors).
+
+---
+
+## 1. Guiding thesis
+
+Move the system through three states:
+
+**Survive → Trust → Fly**
+
+| State | Definition | Exit criterion |
+|---|---|---|
+| **Survive** | Runs reliably; reproducible; shippable. | Automated tests + CI + one-command deploy. |
+| **Trust** | Every clinical action attributable, immutable, compliant, testable. | Hash-chained audit + attestation + access log. |
+| **Fly** | Interoperates and assists (FHIR, AI, patient reach). | FHIR export + CDS + patient portal. |
+
+The foundation (the *ashes that are actually embers*) is solid. What is missing
+is **trust, deployment, and intelligence** — not structure.
+
+---
+
+## 2. Phased plan
+
+### Phase 0 — Survive: Productionize *(highest ROI — do first)*
+
+| Area | Gap today | Recommendation |
+|---|---|---|
+| Automated tests | None. Largest gap for a clinical system. | Test pyramid: model/serializer unit tests, per-schema API contract tests, 1 e2e happy path (patient → encounter → rx → invoice). Gate merges on it. |
+| CI/CD | Manual push only. | GitHub Actions: lint + `tsc` + `pytest` + build on every PR; auto-deploy to staging. |
+| Deployment | Dev-only (Daphne + Vite). | Docker Compose (web / worker / db / redis); nginx + TLS; `deploy.sh`. |
+| Real infra | Channel layer InMemory; no worker. | Wire `MCMS_REDIS_URL` (already env-ready); add worker for long jobs (backups, sync). |
+| Secrets/config | Env-driven, clean. | `.env.example`, rotation policy, no plaintext in repo (keep clean). |
+| Backup automation | Manual `pg_dump` button only. | Scheduled nightly dump → off-site (S3/MinIO); retention + restore drill. |
+
+### Phase 1 — Trust: Safety & Compliance *(clinical non-negotiables)*
+
+| Area | Recommendation |
+|---|---|
+| Immutable audit | `event_log` is currently appendable. Add hash-chaining (each row stores previous hash) so tampering is detectable — medico-legal defensibility. |
+| Attestation / e-sign | Clinical notes, diagnoses, prescriptions need a signed/attested state (who signed, when) — not just free text. |
+| Per-record access log | Extend audit to *read* access on sensitive tables (lab results, psychiatric) for HIPAA/GDPR-style access tracing. |
+| Consent management | `party` consent flags (data sharing, contact) driving what UI/API exposes. |
+| Input safety (CDS) | Drug–drug interaction warnings at order time (the `drug_interaction` table exists but is unused) — basic clinical decision support. |
+
+### Phase 2 — Survive→Trust bridge: Workflow completeness
+
+| Capability | Exists | Gap to fill |
+|---|---|---|
+| Notifications | `notification` table + `event_log`. | Real engine: events → email/SMS/WS (appointment reminders, abnormal results). |
+| Scheduling | `appointment` table. | Calendar view + slot management + no-show tracking. |
+| Referrals | None. | Internal referral workflow (clinician → specialist) reusing encounter/diagnosis. |
+| Insurance | `insurance_claim` table. | Claim lifecycle (draft → submitted → paid/denied) + payer mock. |
+| Lab/Rad automation | Orders/results. | Auto-route result → encounter note; critical-value alert. |
+
+### Phase 3 — Fly: Interoperability
+
+- **FHIR / HL7**: expose key resources (Patient, Encounter, Observation, MedicationRequest) from existing models; import from external EMRs.
+- **Master Patient Index**: dedupe `party` across visits via national ID.
+- **Sync engine**: the SysAdmin "sync" tab currently only re-applies migrations — evolve into real inter-clinic data sync (replication slot or FHIR subscription).
+
+### Phase 4 — Fly: Intelligence
+
+- **AI coding assist**: auto-suggest ICD/SNOMED from free-text notes (the `sfas_ai` concept, not yet in MCMS).
+- **Operational prediction**: no-show risk, bed demand, inventory reorder — fed by the 10 existing reports.
+- **Anomaly alerts**: abnormal labs auto-flagged in the Live Feed.
+
+### Phase 5 — Reach
+
+- **Patient portal**: booking, results, bills (own role + consent).
+- **Mobile / PWA**: installable, offline-tolerant (React app already theme/RTL-ready).
+- **Locale expansion**: AR/EN done; i18n framework ready for more languages.
+
+---
+
+## 3. Recommended sequencing
+
+1. **Phase 0 — tests + CI/CD.** Without this, every later change is a roll of the dice. Highest leverage.
+2. **Phase 1 — immutable audit + attestation.** Clinical trust; low infra cost; reuses `event_log`.
+3. **Phase 0 — deployment (Docker/nginx).** Makes it shippable (stated preference).
+4. Then **Phase 2** workflows, then **3 / 4 / 5**.
+
+---
+
+## 4. Explicitly out of scope (for now)
+
+- **Native mobile app / full FHIR server** — premature until workflows + tests exist.
+- **Inventing external replication/sync engines** — the SysAdmin panel already honestly reports `standalone`. Build real infra only when Phase 3 is started.
+
+---
+
+## 5. Definition of "Phoenix" (done-state)
+
+The system has *risen* when:
+- a clinician can sign a note and prove it was not altered;
+- an operator can deploy a new clinic from one command and recover from backup;
+- a patient's data crosses systems via FHIR without re-entry;
+- every change is covered by a test and a traceable audit hash.
+
+*Drafted as the strategic improvement plan. Not yet committed — pending review.*

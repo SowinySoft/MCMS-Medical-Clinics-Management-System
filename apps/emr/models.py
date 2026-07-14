@@ -68,8 +68,15 @@ class Encounter(models.Model):
     encounter_id = models.BigAutoField(primary_key=True)
     mrn = models.ForeignKey('Patient', models.DO_NOTHING, db_column='mrn', to_field='mrn')
     patient = models.ForeignKey('Patient', models.DO_NOTHING, related_name='encounter_patient_set')
-    status = models.TextField()  # This field type is a guess.
-    class_field = models.TextField(db_column='class')  # Field renamed because it was a Python reserved word. This field type is a guess.
+    status = models.TextField(choices=[  # native enum encounter_status
+        ("planned", "Planned"), ("arrived", "Arrived"), ("in_progress", "In Progress"),
+        ("on_leave", "On Leave"), ("finished", "Finished"), ("cancelled", "Cancelled"),
+        ("no_show", "No Show"),
+    ])
+    class_field = models.TextField(db_column='class', choices=[  # native enum encounter_class
+        ("ambulatory", "Ambulatory"), ("emergency", "Emergency"), ("inpatient", "Inpatient"),
+        ("home", "Home"), ("virtual", "Virtual"), ("surgical", "Surgical"), ("icu", "ICU"),
+    ])  # Field renamed because it was a Python reserved word. This field type is a guess.
     attending_user_id = models.BigIntegerField(blank=True, null=True)
     referring_user_id = models.BigIntegerField(blank=True, null=True)
     department_id = models.BigIntegerField(blank=True, null=True)

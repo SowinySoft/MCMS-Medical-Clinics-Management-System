@@ -29,4 +29,3 @@ Thumbs.db
 *.log
 __pycache__/
 backups/
-*.sql
