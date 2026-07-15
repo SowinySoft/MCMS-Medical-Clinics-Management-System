@@ -119,9 +119,10 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 3 — Fly: Interoperability | `2260dee` | ✅ FHIR/HL7 export+import, MPI, real sync engine |
 | 4 — Fly: Intelligence | `9fe4413` | ✅ deterministic ICD/SNOMED assist, no-show/bed/inventory predictions, anomaly alerts |
 | 5 — Reach | `92e4f2c` | ✅ patient portal (own-record + consent), PWA (installable/offline), locale i18n |
+| 6 — National Scale: Multi-tenancy | *this commit* | ✅ organization→facility hierarchy, facility_id on 26 clinical/financial tables, queryset-layer facility scoping (superuser-safe, not RLS), write-stamping |
 
 **Verification (real, not claimed):**
-- `pytest` (apps/core/tests): **35 passed, 0 failed** — deterministic, offline, CI-testable.
+- `pytest` (apps/core/tests): **38 passed, 0 failed** — deterministic, offline, CI-testable.
 - `ruff` clean · `tsc -b` clean · `manage.py check` clean.
 - GitHub Actions `CI` workflow: backend + frontend jobs **green** on every phase push.
 
@@ -137,3 +138,22 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 - ✅ an operator can deploy a clinic from one command and recover from backup (Phase 0 Docker/nginx + Phase 2 backup engine);
 - ✅ a patient's data crosses systems via FHIR without re-entry (Phase 3);
 - ✅ every change is covered by a test and a traceable audit hash (Phases 0–5 + Phase 1 hash-chaining).
+
+---
+
+## 7. Next: "National Scale" program (for big national healthcare networks)
+
+Gap analysis grounded in the live schema. Phase 6 (multi-tenancy) is the
+foundation everything else hangs on and is **now shipped**. Remaining, in
+dependency order:
+
+| # | Gap | Depends on | Status |
+|---|---|---|---|
+| 6 | **Multi-tenancy** — org→facility hierarchy, facility scoping | — | ✅ shipped |
+| 7 | **HL7 v2 ingestion** (ADT/ORU/SIU) from existing HIS/LIS/PACS | 6 | ⬜ next |
+| 8 | **Terminology service** (LOINC/SNOMED CT mapping tables) | 6 | ⬜ |
+| 9 | **Payer integration** (eligibility + claim submit/EOB) | 6 | ⬜ |
+| 10 | **Regulatory/exec analytics** (LOS, readmission, HAI KPIs + MOH/NHA reports) | 6, 8 | ⬜ |
+| 11 | **Telemedicine + eRX/formulary** | 6 | ⬜ |
+| 12 | **Scale/infra** (read replicas, horizontal workers, multi-region) | 6 | ⬜ |
+| 13 | **Identity federation** (OIDC/SAML SSO + data-residency consent) | 6, 12 | ⬜ |

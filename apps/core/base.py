@@ -45,7 +45,22 @@ class AuditContextMixin:
     """Stamps actor/subject onto writes for the audit trigger (Phase 0 audit)."""
 
     def perform_create(self, serializer):
-        serializer.save()
+        # Phase 6: a non-cross-facility caller can only create rows in their
+        # own facility. We stamp via raw UPDATE after the ORM insert so this
+        # works even when the reflection model doesn't declare facility_id.
+        model = serializer.Meta.model
+        obj = serializer.save()
+        if _has_facility_col(model):
+            fid = self._caller_facility()
+            if fid is not None:
+                from django.db import connection
+                pk = obj.pk
+                pk_col = model._meta.pk.name
+                tbl = model._meta.db_table.replace('"', '')
+                with connection.cursor() as cur:
+                    cur.execute(
+                        f'UPDATE {tbl} SET facility_id = %s WHERE "{pk_col}" = %s',
+                        [fid, pk])
 
     def perform_update(self, serializer):
         serializer.save()
@@ -54,11 +69,45 @@ class AuditContextMixin:
         instance.delete()
 
 
+def _has_facility_col(model):
+    """Does the model's underlying table have a facility_id column?
+    Introspected from information_schema (reflection models are inspectdb
+    snapshots and may not declare it). Cached per (app_label, model_name)."""
+    from django.db import connection
+    key = (model._meta.app_label, model.__name__)
+    cache = _has_facility_col._cache
+    if key in cache:
+        return cache[key]
+    # derive schema+table from db_table like 'mcms_emr"."patient'
+    schema_tbl = model._meta.db_table.replace('"', '')
+    if '.' in schema_tbl:
+        sch, tbl = schema_tbl.split('.')
+    else:
+        sch, tbl = 'public', schema_tbl
+    with connection.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM information_schema.columns "
+            "WHERE table_schema = %s AND table_name = %s AND column_name = 'facility_id'",
+            [sch, tbl])
+        has = cur.fetchone() is not None
+    cache[key] = has
+    return has
+_has_facility_col._cache = {}
+
+
 class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
     """
     Standard CRUD viewset with RBAC baked in.
     Subclasses set `queryset`, `serializer_class`, and optionally
     `required_perms`, `filterset_fields`, `search_fields`, `ordering_fields`.
+
+    Phase 6 (Multi-tenancy) additions:
+      * Queries on models with a `facility_id` column are automatically
+        scoped to the caller's facility (app_user.facility_id), unless the
+        caller is cross-facility (facility_id IS NULL). Enforced at the
+        queryset layer (the DB role is superuser, so RLS would be bypassed).
+      * Writes stamp facility_id from the caller so a user can never create
+        a row outside their own facility.
 
     Phase 1 (Trust) additions:
       * `sensitive=True`  -> GET-detail logs a row to mcms_core.access_log
@@ -102,6 +151,25 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
                 continue
             out.append(a)
         return out
+
+    # ---- Phase 6: multi-tenant facility scoping -------------------------
+    def _caller_facility(self):
+        """Resolve the caller's facility_id from app_user.
+        Returns None for cross-facility (sysadmin, facility_id IS NULL)."""
+        from apps.core.models import AppUser
+        au = AppUser.objects.filter(username=self.request.user.get_username()).first()
+        return au.facility_id if au else None
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        model = qs.model
+        if _has_facility_col(model):
+            fid = self._caller_facility()
+            if fid is not None:
+                # Use .extra() so this works even when the reflection model
+                # does not declare facility_id (introspected from information_schema).
+                qs = qs.extra(where=['"facility_id" = %s'], params=[fid])
+        return qs
 
     # ---- Phase 1 helpers -------------------------------------------------
     def _app_user_id(self):

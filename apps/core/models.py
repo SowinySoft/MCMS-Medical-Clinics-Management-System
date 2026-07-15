@@ -43,6 +43,7 @@ class AppUser(models.Model):
     last_login_at = models.DateTimeField(blank=True, null=True)
     failed_logins = models.IntegerField()
     locked_until = models.DateTimeField(blank=True, null=True)
+    facility_id = models.BigIntegerField(blank=True, null=True)  # NULL = cross-facility (sysadmin)
     created_at = models.DateTimeField(auto_now_add=True, )
     updated_at = models.DateTimeField(auto_now=True, )
 
