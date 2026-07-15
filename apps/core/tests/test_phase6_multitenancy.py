@@ -43,7 +43,7 @@ def _make_user(username, facility_id, role_code="doctor", role_enum="physician")
                         "is_active, preferred_language) VALUES (3,'person','Test Party',true,'en')")
     auth_user = User.objects.create(username=username, is_active=True)
     au = AppUser.objects.create(
-        user_id=90000 + int(_tag()[:6], 16) % 9000, party_id=3,
+        user_id=2000000 + int(_tag()[:6], 16) % 9000, party_id=3,
         username=username, password_hash="x", role=role_enum,
         is_active=True, failed_logins=0, facility_id=facility_id)
     with connection.cursor() as cur:
@@ -60,7 +60,7 @@ def _client(client, auth_user):
 
 def test_facility_scoped_user_sees_only_own_facility(client):
     tag = _tag()
-    pa, pb = 991000 + int(tag[:5], 16) % 8000, 992000 + int(tag[5:], 16) % 8000
+    pa, pb = 2000000 + int(tag[:5], 16) % 8000, 2010000 + int(tag[5:], 16) % 8000
     # seed two patients in different facilities via raw SQL (bypass ORM default)
     from django.db import connection
     with connection.cursor() as cur:
@@ -80,7 +80,7 @@ def test_facility_scoped_user_sees_only_own_facility(client):
 
 def test_cross_facility_admin_sees_all(client):
     tag = _tag()
-    pa, pb = 993000 + int(tag[:5], 16) % 8000, 994000 + int(tag[5:], 16) % 8000
+    pa, pb = 2020000 + int(tag[:5], 16) % 8000, 2030000 + int(tag[5:], 16) % 8000
     from django.db import connection
     with connection.cursor() as cur:
         cur.execute("INSERT INTO mcms_core.party (party_id, party_type, display_name, is_active) "

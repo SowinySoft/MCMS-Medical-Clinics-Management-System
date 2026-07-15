@@ -54,6 +54,12 @@ jobs:
           MCMS_TEST_DB: mcms   # Django connects to MCMS_DB_NAME=mcms; build it there
         run: MODE=from-sql bash scripts/rebuild_test_db.sh
 
+      - name: Deep integrity audit (orphan events, sequence sync, check + model drift)
+        env:
+          MCMS_DB_NAME: mcms
+          PGPASSWORD: postgres
+        run: python scripts/audit_deep.py
+
       - name: Run backend tests
         run: pytest --no-migrations -p no:cacheprovider
 
