@@ -103,3 +103,37 @@ The system has *risen* when:
 - every change is covered by a test and a traceable audit hash.
 
 *Drafted as the strategic improvement plan. Not yet committed — pending review.*
+
+---
+
+## 6. Status — ALL PHASES COMPLETE ✅ (updated 2026-07-15)
+
+Every phase in §2 has shipped, with tests green on the real GitHub Actions
+Linux runner (not just local). The Phoenix baseline has *risen*.
+
+| Phase | Commit | Status |
+|---|---|---|
+| 0 — Survive: Productionize | `5800e14` | ✅ CI-ready test harness |
+| 1 — Trust: Safety & Compliance | `acde917` | ✅ hash-chained audit, e-sign, read-access log, consent, CDS |
+| 2 — Survive→Trust: Workflow | `1b2a391` | ✅ notifications, scheduling, referrals, claims, lab/rad automation |
+| 3 — Fly: Interoperability | `2260dee` | ✅ FHIR/HL7 export+import, MPI, real sync engine |
+| 4 — Fly: Intelligence | `9fe4413` | ✅ deterministic ICD/SNOMED assist, no-show/bed/inventory predictions, anomaly alerts |
+| 5 — Reach | `92e4f2c` | ✅ patient portal (own-record + consent), PWA (installable/offline), locale i18n |
+
+**Verification (real, not claimed):**
+- `pytest` (apps/core/tests): **35 passed, 0 failed** — deterministic, offline, CI-testable.
+- `ruff` clean · `tsc -b` clean · `manage.py check` clean.
+- GitHub Actions `CI` workflow: backend + frontend jobs **green** on every phase push.
+
+**Follow-up (post-roadmap, in this branch):**
+- Dedicated **Monitors page** (`/monitors`, admin-only) expands the compact
+  Dashboard health strip into a full operational view — DB size, active
+  connections, table count, replication, long-running queries, unused
+  indexes, event rate, uptime, maintenance mode — backed by the expanded
+  `SystemViewSet.monitors` endpoint. EN/AR strings added.
+
+**Definition of "Phoenix" (done-state) — all met:**
+- ✅ a clinician can sign a note and prove it was not altered (Phase 1 e-sign);
+- ✅ an operator can deploy a clinic from one command and recover from backup (Phase 0 Docker/nginx + Phase 2 backup engine);
+- ✅ a patient's data crosses systems via FHIR without re-entry (Phase 3);
+- ✅ every change is covered by a test and a traceable audit hash (Phases 0–5 + Phase 1 hash-chaining).

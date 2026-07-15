@@ -100,7 +100,8 @@ class SystemViewSet(viewsets.ViewSet):
     # ------------------------------------------------------------- monitors
     @action(detail=False, methods=["get"])
     def monitors(self, request):
-        """Compact health checks for the dashboard health strip."""
+        """Compact health checks for the dashboard health strip AND the
+        dedicated Monitors page (more signals than the strip uses)."""
         if (d := _guard(request)):
             return d
         db = settings.DATABASES["default"]["NAME"]
@@ -116,6 +117,14 @@ class SystemViewSet(viewsets.ViewSet):
             "SELECT count(*) AS n FROM pg_stat_activity "
             "WHERE state='active' AND pid<>pg_backend_pid() "
             "AND now()-query_start > interval '5 seconds'")[0]["n"]
+        conns = _rows(
+            "SELECT count(*) AS n FROM pg_stat_activity WHERE pid<>pg_backend_pid()")[0]["n"]
+        tables = _rows(
+            "SELECT count(*) AS n FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('pg_catalog','information_schema') "
+            "AND table_type='BASE TABLE'")[0]["n"]
+        uptime = _rows(
+            "SELECT EXTRACT(epoch FROM now()-pg_postmaster_start_time()) AS s")[0]["s"]
         return Response({
             "db_size_mb": round(size_mb, 1),
             "unused_indexes": unused_idx,
@@ -123,6 +132,9 @@ class SystemViewSet(viewsets.ViewSet):
             "event_rate_24h_avg": round(last_day / 24.0, 1),
             "replication": replication,
             "long_running_queries": long_q,
+            "active_connections": conns,
+            "total_tables": tables,
+            "uptime_seconds": int(uptime),
             "maintenance_mode": _flag("maintenance_mode", "false") == "true",
             "status": "ok" if long_q == 0 and replication in ("active", "standalone") else "warn",
             "at": datetime.now().isoformat(),
