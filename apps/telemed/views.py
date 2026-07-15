@@ -9,12 +9,13 @@ No live video transport / pharmacy gateway here (separate, later-scoped steps).
 """
 
 from django.db import connection
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.permissions import HasRolePermission, effective_perms
+from apps.core.service_viewset import ServiceViewSet
 
 
 def _app_user_id(request):
@@ -61,7 +62,7 @@ def _interactions(drug_item_id, patient_id):
         return [dict(zip(cols, r, strict=False)) for r in cur.fetchall()]
 
 
-class TelemedViewSet(viewsets.ViewSet):
+class TelemedViewSet(ServiceViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
     required_perms = {
         "GET": "emr.read",

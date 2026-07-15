@@ -23,10 +23,10 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
 
 from apps.core.models import AppUser
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 
 
 def _caller_facility(request):
@@ -43,7 +43,7 @@ def _payer_row(payer_code):
         return cur.fetchone()
 
 
-class PayerViewSet(ViewSet):
+class PayerViewSet(ServiceViewSet):
     permission_classes = [HasRolePermission]
     required_perms = {
         "eligibility_check": "billing.manage",

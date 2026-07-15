@@ -16,13 +16,14 @@ gating are fully testable offline.
 from django.contrib.auth.models import User
 from django.db import connection
 from django.utils import timezone
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.auth import MCMSTokenObtainPairSerializer
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 
 
 def _rows(sql, params=None):
@@ -41,7 +42,7 @@ def _require_consent(party_id):
     return bool(rows)
 
 
-class IdentityViewSet(viewsets.ViewSet):
+class IdentityViewSet(ServiceViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
     required_perms = {
         "providers": "admin.all",

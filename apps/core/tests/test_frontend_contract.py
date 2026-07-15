@@ -87,3 +87,30 @@ def test_prescription_create_roundtrip(client_auth):
     assert pid, "prescription create returned no id"
     r2 = client_auth.get(f"/api/rx/prescription/{pid}/")
     assert r2.status_code == 200
+
+
+# Schemas recently added to the sidebar (schemas.ts SCHEMA_GROUPS) so every
+# backend route is navigable from the UI ("no backend without pages").
+NEWLY_NAVIGABLE = ["telemed", "referral", "terminology", "ai", "payer", "identity", "fhir", "hl7v2"]
+
+
+@pytest.mark.parametrize("schema", NEWLY_NAVIGABLE)
+def test_newly_navigable_schemas_reachable(client_auth, schema):
+    # These are action-only service viewsets. SchemaBrowser falls back to
+    # GET /api/<schema>/ (ServiceViewSet.list) which returns an action
+    # inventory; that proves a UI page can navigate and call the backend.
+    r = client_auth.get(f"/api/{schema}/")
+    assert r.status_code == 200, f"/api/{schema}/ unreachable -> {r.status_code}"
+    actions = (r.data or {}).get("actions", [])
+    assert actions, f"/api/{schema}/ returned no actions -> {r.data}"
+    # at least one advertised sub-route must be reachable (not 404)
+    ok = False
+    for a in actions:
+        if a.get("detail"):
+            continue
+        sub = a["name"]
+        rr = client_auth.get(f"/api/{schema}/{sub}/")
+        if rr.status_code != 404:
+            ok = True
+            break
+    assert ok, f"no reachable sub-route under schema '{schema}' (actions={[a['name'] for a in actions][:3]})"

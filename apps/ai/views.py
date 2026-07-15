@@ -4,16 +4,17 @@ Exposes a deterministic, offline ICD-10 / SNOMED code suggester driven by the
 curated `mcms_core.lookup` table. No LLM, no API key, CI-testable.
 """
 
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.ai.engine import suggest_codes
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 
 
-class AiViewSet(viewsets.ViewSet):
+class AiViewSet(ServiceViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
     required_perms = {"suggest_codes": "emr.write"}
 

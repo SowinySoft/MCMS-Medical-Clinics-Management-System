@@ -10,11 +10,12 @@ targets by real acceptance frequency. It does NOT perform the referral write
 """
 
 from django.db import connection
-from rest_framework import permissions, viewsets
+from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 
 # read-only surface
 _REQUIRED = {"linkage_rules": "emr.read", "recommend": "emr.read"}
@@ -85,7 +86,7 @@ def _learned_targets(from_dept=None, dx_code=None, code_system="icd10"):
         return cur.fetchall()
 
 
-class ReferralViewSet(viewsets.ViewSet):
+class ReferralViewSet(ServiceViewSet):
     """Systematic linkage recommendations (read-only)."""
 
     permission_classes = [permissions.IsAuthenticated, HasRolePermission]

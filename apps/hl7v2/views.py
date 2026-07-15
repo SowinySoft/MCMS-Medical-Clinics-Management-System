@@ -13,13 +13,13 @@ from django.db import connection
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
 
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 from apps.hl7v2 import parser
 
 
-class HL7V2ViewSet(ViewSet):
+class HL7V2ViewSet(ServiceViewSet):
     permission_classes = [HasRolePermission]
     required_perms = {"ingest": "admin.all", "messages": "admin.all"}
 

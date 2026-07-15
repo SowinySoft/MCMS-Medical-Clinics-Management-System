@@ -28,6 +28,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from apps.core.permissions import HasRolePermission
+from apps.core.service_viewset import ServiceViewSet
 from apps.fhir import exports, imports
 
 
@@ -35,7 +36,7 @@ def _q(param, default):
     return param or default
 
 
-class FhirViewSet(ViewSet):
+class FhirViewSet(ServiceViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
     required_perms = {"import": "admin.all", "resolve": "admin.all"}
 

@@ -21,16 +21,32 @@ export function SchemaBrowser() {
     mcmsApi.get("/").then(({ data }) => {
       if (!active) return;
       const prefix = `${schema}/`;
-      const list = Object.keys(data)
+      let list = Object.keys(data)
         .filter((k) => k.startsWith(prefix))
         .map((k) => {
           const slug = k.slice(prefix.length);
           return { slug, label: MODEL_LABELS[k]?.en || slug };
         })
         .sort((a, b) => a.label.localeCompare(b.label));
+
+      // Action-only service schemas (terminology, telemed, payer, identity,
+      // fhir, hl7v2, ai, referral) are not enumerated by the DRF API root.
+      // Fall back to GET /api/<schema>/ which ServiceViewSet.list exposes as
+      // an action inventory, so they remain navigable ("no backend w/o page").
+      if (list.length === 0) {
+        return mcmsApi.get(`/${schema}/`).then(({ data: svc }) => {
+          if (!active) return;
+          const acts = (svc?.actions || []).map((a: any) => ({
+            slug: a.name,
+            label: a.name,
+          }));
+          setModels(acts);
+          setLoading(false);
+        }).catch(() => { if (active) { setModels([]); setLoading(false); } });
+      }
       setModels(list);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => { if (active) { setModels([]); setLoading(false); } });
     return () => { active = false; };
   }, [schema]);
 
