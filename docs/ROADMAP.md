@@ -125,10 +125,11 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 9 — Payer integration | `c564ccf` | ✅ payer registry + eligibility check + claim submit/simulated EOB (approved/partial/rejected) over insurance_claim, idempotent, deterministic offline |
 | 10 — Regulatory/exec analytics | `9c1faf0` | ✅ los + 30-day readmissions + HAI/safety proxy KPIs + consolidated MOH/NHA report, deterministic/RBAC-gated over real data |
 | 11 — Telemedicine + eRX/formulary | `350492c` | ✅ telemed.visit (virtual consult) + rx.prescription (eRX) with drug-interaction check + formulary search, deterministic offline |
-| 12 — Scale/infra | *this commit* | ✅ read-replica router (opt-in, zero-regression fallback) + CONN_MAX_AGE pooling + health/readiness probes + scale_status + Dockerfile/compose |
+| 12 — Scale/infra | `33f611a` | ✅ read-replica router (opt-in, zero-regression fallback) + CONN_MAX_AGE pooling + health/readiness probes + scale_status + Dockerfile/compose |
+| 13 — Identity federation | *this commit* | ✅ identity_provider + federated_identity registry, federate (subject→local user + JWT issuance) with data-residency consent gating, OIDC/SAML ready |
 
 **Verification (real, not claimed):**
-- `pytest` (apps/core/tests): **85 passed, 0 failed** — deterministic, offline, CI-testable.
+- `pytest` (apps/core/tests): **90 passed, 0 failed** — deterministic, offline, CI-testable.
 - `ruff` clean · `tsc -b` clean · `manage.py check` clean.
 - GitHub Actions CI green (backend pytest + frontend tsc).
 
@@ -162,4 +163,8 @@ dependency order:
 | 10 | **Regulatory/exec analytics** (LOS, readmission, HAI KPIs + MOH/NHA reports) | 6, 8 | ✅ |
 | 11 | **Telemedicine + eRX/formulary** | 6, 8 | ✅ |
 | 12 | **Scale/infra** (read replicas, horizontal workers, multi-region) | 6 | ✅ |
-| 13 | **Identity federation** (OIDC/SAML SSO + data-residency consent) | 6, 12 | ⬜ |
+| 13 | **Identity federation** (OIDC/SAML SSO + data-residency consent) | 6, 12 | ✅ |
+
+> **Phoenix national-scale program: COMPLETE (Phases 0–13).** All 8
+> national-scale gaps (multi-tenancy → identity federation) shipped,
+> CI-green, deterministic/offline-verifiable.

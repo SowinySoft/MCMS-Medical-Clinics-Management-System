@@ -58,6 +58,7 @@ DOMAIN_APPS = [
     "apps.terminology",
     "apps.payer",
     "apps.telemed",
+    "apps.identity",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS + ["channels"]
 
