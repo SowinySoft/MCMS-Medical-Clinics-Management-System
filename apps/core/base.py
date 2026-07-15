@@ -163,6 +163,11 @@ class BaseModelViewSet(AuditContextMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         model = qs.model
+        # deterministic ordering for pagination (silences UnorderedObjectListWarning
+        # and avoids unstable page boundaries on large tables)
+        if not qs.ordered:
+            pk_name = model._meta.pk.name
+            qs = qs.order_by(pk_name)
         if _has_facility_col(model):
             fid = self._caller_facility()
             if fid is not None:

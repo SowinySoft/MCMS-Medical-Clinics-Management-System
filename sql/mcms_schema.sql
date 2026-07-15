@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ej2IfdZNIhZT9E7vsd8jt1dLiQzX7UqQh4T7RAxqkMkGKXFzb8bieE0ZhqbUHvW
+\restrict A4vVxarfRPDCCUm1GLZ8X180phZeFmSZtiQHVqiSMCBfOn7hv5IfOkbfIMlLbUB
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -9228,6 +9228,13 @@ CREATE INDEX ix_claim_resp_claim ON mcms_billing.claim_response USING btree (cla
 
 
 --
+-- Name: ix_claim_response_facility; Type: INDEX; Schema: mcms_billing; Owner: -
+--
+
+CREATE INDEX ix_claim_response_facility ON mcms_billing.claim_response USING btree (facility_id);
+
+
+--
 -- Name: ix_elig_patient; Type: INDEX; Schema: mcms_billing; Owner: -
 --
 
@@ -9235,10 +9242,38 @@ CREATE INDEX ix_elig_patient ON mcms_billing.eligibility_check USING btree (pati
 
 
 --
+-- Name: ix_eligibility_check_facility; Type: INDEX; Schema: mcms_billing; Owner: -
+--
+
+CREATE INDEX ix_eligibility_check_facility ON mcms_billing.eligibility_check USING btree (facility_id);
+
+
+--
+-- Name: ix_insurance_claim_facility; Type: INDEX; Schema: mcms_billing; Owner: -
+--
+
+CREATE INDEX ix_insurance_claim_facility ON mcms_billing.insurance_claim USING btree (facility_id);
+
+
+--
 -- Name: ix_invoice_facility; Type: INDEX; Schema: mcms_billing; Owner: -
 --
 
 CREATE INDEX ix_invoice_facility ON mcms_billing.invoice USING btree (facility_id);
+
+
+--
+-- Name: ix_invoice_line_facility; Type: INDEX; Schema: mcms_billing; Owner: -
+--
+
+CREATE INDEX ix_invoice_line_facility ON mcms_billing.invoice_line USING btree (facility_id);
+
+
+--
+-- Name: ix_invoice_mrn; Type: INDEX; Schema: mcms_billing; Owner: -
+--
+
+CREATE INDEX ix_invoice_mrn ON mcms_billing.invoice USING btree (mrn);
 
 
 --
@@ -9417,6 +9452,13 @@ CREATE INDEX ix_mcms_clinic_patient_queue_room_id ON mcms_clinic.patient_queue U
 
 
 --
+-- Name: ix_patient_queue_facility; Type: INDEX; Schema: mcms_clinic; Owner: -
+--
+
+CREATE INDEX ix_patient_queue_facility ON mcms_clinic.patient_queue USING btree (facility_id);
+
+
+--
 -- Name: patient_queue_department_id_status_priority_checked_in_at_idx; Type: INDEX; Schema: mcms_clinic; Owner: -
 --
 
@@ -9533,6 +9575,13 @@ CREATE INDEX ix_access_log_party ON mcms_core.access_log USING btree (subject_pa
 --
 
 CREATE INDEX ix_access_log_table ON mcms_core.access_log USING btree (table_schema, table_name, row_id);
+
+
+--
+-- Name: ix_app_user_facility; Type: INDEX; Schema: mcms_core; Owner: -
+--
+
+CREATE INDEX ix_app_user_facility ON mcms_core.app_user USING btree (facility_id);
 
 
 --
@@ -9711,6 +9760,13 @@ CREATE INDEX ed_bed_triage_id_idx ON mcms_emergency.ed_bed USING btree (triage_i
 
 
 --
+-- Name: ix_ed_bed_facility; Type: INDEX; Schema: mcms_emergency; Owner: -
+--
+
+CREATE INDEX ix_ed_bed_facility ON mcms_emergency.ed_bed USING btree (facility_id);
+
+
+--
 -- Name: ix_mcms_emergency_resuscitation_encounter_id; Type: INDEX; Schema: mcms_emergency; Owner: -
 --
 
@@ -9872,6 +9928,20 @@ CREATE INDEX immunization_patient_id_given_at_idx ON mcms_emr.immunization USING
 
 
 --
+-- Name: ix_clinical_note_facility; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_clinical_note_facility ON mcms_emr.clinical_note USING btree (facility_id);
+
+
+--
+-- Name: ix_diagnosis_facility; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_diagnosis_facility ON mcms_emr.diagnosis USING btree (facility_id);
+
+
+--
 -- Name: ix_encounter_facility; Type: INDEX; Schema: mcms_emr; Owner: -
 --
 
@@ -9956,10 +10026,31 @@ CREATE INDEX ix_mcms_emr_vitals_taken_by ON mcms_emr.vitals USING btree (taken_b
 
 
 --
+-- Name: ix_medication_order_drug_item; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_medication_order_drug_item ON mcms_emr.medication_order USING btree (drug_item_id);
+
+
+--
+-- Name: ix_medication_order_facility; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_medication_order_facility ON mcms_emr.medication_order USING btree (facility_id);
+
+
+--
 -- Name: ix_patient_facility; Type: INDEX; Schema: mcms_emr; Owner: -
 --
 
 CREATE INDEX ix_patient_facility ON mcms_emr.patient USING btree (facility_id);
+
+
+--
+-- Name: ix_referral_facility; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_referral_facility ON mcms_emr.referral USING btree (facility_id);
 
 
 --
@@ -9981,6 +10072,13 @@ CREATE INDEX ix_referral_status ON mcms_emr.referral USING btree (status);
 --
 
 CREATE INDEX ix_referral_to_user ON mcms_emr.referral USING btree (to_user_id);
+
+
+--
+-- Name: ix_vitals_facility; Type: INDEX; Schema: mcms_emr; Owner: -
+--
+
+CREATE INDEX ix_vitals_facility ON mcms_emr.vitals USING btree (facility_id);
 
 
 --
@@ -10149,6 +10247,20 @@ CREATE INDEX ix_mcms_erp_stock_movement_performed_by ON mcms_erp.stock_movement 
 --
 
 CREATE INDEX ix_mcms_erp_supplier_contact_user_id ON mcms_erp.supplier USING btree (contact_user_id);
+
+
+--
+-- Name: ix_purchase_order_facility; Type: INDEX; Schema: mcms_erp; Owner: -
+--
+
+CREATE INDEX ix_purchase_order_facility ON mcms_erp.purchase_order USING btree (facility_id);
+
+
+--
+-- Name: ix_purchase_order_line_facility; Type: INDEX; Schema: mcms_erp; Owner: -
+--
+
+CREATE INDEX ix_purchase_order_line_facility ON mcms_erp.purchase_order_line USING btree (facility_id);
 
 
 --
@@ -10362,6 +10474,34 @@ CREATE INDEX bed_stay_bed_id_assigned_at_idx ON mcms_icu.bed_stay USING btree (b
 
 
 --
+-- Name: ix_admission_facility; Type: INDEX; Schema: mcms_icu; Owner: -
+--
+
+CREATE INDEX ix_admission_facility ON mcms_icu.admission USING btree (facility_id);
+
+
+--
+-- Name: ix_admission_mrn; Type: INDEX; Schema: mcms_icu; Owner: -
+--
+
+CREATE INDEX ix_admission_mrn ON mcms_icu.admission USING btree (mrn);
+
+
+--
+-- Name: ix_bed_facility; Type: INDEX; Schema: mcms_icu; Owner: -
+--
+
+CREATE INDEX ix_bed_facility ON mcms_icu.bed USING btree (facility_id);
+
+
+--
+-- Name: ix_bed_stay_facility; Type: INDEX; Schema: mcms_icu; Owner: -
+--
+
+CREATE INDEX ix_bed_stay_facility ON mcms_icu.bed_stay USING btree (facility_id);
+
+
+--
 -- Name: ix_mcms_icu_admission_attending_nurse_id; Type: INDEX; Schema: mcms_icu; Owner: -
 --
 
@@ -10404,6 +10544,13 @@ CREATE INDEX ix_mcms_icu_vitals_stream_patient_id ON mcms_icu.vitals_stream USIN
 
 
 --
+-- Name: ix_vitals_stream_facility; Type: INDEX; Schema: mcms_icu; Owner: -
+--
+
+CREATE INDEX ix_vitals_stream_facility ON mcms_icu.vitals_stream USING btree (facility_id);
+
+
+--
 -- Name: score_admission_id_type_assessed_at_idx; Type: INDEX; Schema: mcms_icu; Owner: -
 --
 
@@ -10422,6 +10569,20 @@ CREATE INDEX support_session_admission_id_idx ON mcms_icu.support_session USING 
 --
 
 CREATE INDEX vitals_stream_admission_id_recorded_at_idx ON mcms_icu.vitals_stream USING btree (admission_id, recorded_at);
+
+
+--
+-- Name: ix_lab_order_facility; Type: INDEX; Schema: mcms_lab; Owner: -
+--
+
+CREATE INDEX ix_lab_order_facility ON mcms_lab.lab_order USING btree (facility_id);
+
+
+--
+-- Name: ix_lab_order_mrn; Type: INDEX; Schema: mcms_lab; Owner: -
+--
+
+CREATE INDEX ix_lab_order_mrn ON mcms_lab.lab_order USING btree (mrn);
 
 
 --
@@ -10485,6 +10646,13 @@ CREATE INDEX ix_mcms_lab_test_panel_item_test_id ON mcms_lab.test_panel_item USI
 --
 
 CREATE INDEX ix_result_facility ON mcms_lab.result USING btree (facility_id);
+
+
+--
+-- Name: ix_sample_facility; Type: INDEX; Schema: mcms_lab; Owner: -
+--
+
+CREATE INDEX ix_sample_facility ON mcms_lab.sample USING btree (facility_id);
 
 
 --
@@ -10719,6 +10887,13 @@ CREATE INDEX ix_mcms_rad_study_request_verified_by ON mcms_rad.study_request USI
 
 
 --
+-- Name: ix_study_request_mrn; Type: INDEX; Schema: mcms_rad; Owner: -
+--
+
+CREATE INDEX ix_study_request_mrn ON mcms_rad.study_request USING btree (mrn);
+
+
+--
 -- Name: modality_suite_modality_idx; Type: INDEX; Schema: mcms_rad; Owner: -
 --
 
@@ -10929,6 +11104,27 @@ CREATE INDEX ix_mcms_rx_stock_movement_related_movement_id ON mcms_rx.stock_move
 
 
 --
+-- Name: ix_prescription_facility; Type: INDEX; Schema: mcms_rx; Owner: -
+--
+
+CREATE INDEX ix_prescription_facility ON mcms_rx.prescription USING btree (facility_id);
+
+
+--
+-- Name: ix_prescription_mrn; Type: INDEX; Schema: mcms_rx; Owner: -
+--
+
+CREATE INDEX ix_prescription_mrn ON mcms_rx.prescription USING btree (mrn);
+
+
+--
+-- Name: ix_prescription_prescriber; Type: INDEX; Schema: mcms_rx; Owner: -
+--
+
+CREATE INDEX ix_prescription_prescriber ON mcms_rx.prescription USING btree (prescriber_user_id);
+
+
+--
 -- Name: ix_rx_prescription_drug; Type: INDEX; Schema: mcms_rx; Owner: -
 --
 
@@ -10961,6 +11157,13 @@ CREATE INDEX stock_movement_movement_type_idx ON mcms_rx.stock_movement USING bt
 --
 
 CREATE INDEX intra_op_vitals_surgery_id_recorded_at_idx ON mcms_surgical.intra_op_vitals USING btree (surgery_id, recorded_at);
+
+
+--
+-- Name: ix_intra_op_vitals_facility; Type: INDEX; Schema: mcms_surgical; Owner: -
+--
+
+CREATE INDEX ix_intra_op_vitals_facility ON mcms_surgical.intra_op_vitals USING btree (facility_id);
 
 
 --
@@ -11010,6 +11213,13 @@ CREATE INDEX ix_mcms_surgical_surgery_primary_dept_id ON mcms_surgical.surgery U
 --
 
 CREATE INDEX ix_mcms_surgical_surgery_procedure_id ON mcms_surgical.surgery USING btree (procedure_id);
+
+
+--
+-- Name: ix_post_op_note_facility; Type: INDEX; Schema: mcms_surgical; Owner: -
+--
+
+CREATE INDEX ix_post_op_note_facility ON mcms_surgical.post_op_note USING btree (facility_id);
 
 
 --
@@ -11083,10 +11293,31 @@ CREATE INDEX ix_telemed_visit_patient ON mcms_telemed.visit USING btree (patient
 
 
 --
+-- Name: ix_visit_facility; Type: INDEX; Schema: mcms_telemed; Owner: -
+--
+
+CREATE INDEX ix_visit_facility ON mcms_telemed.visit USING btree (facility_id);
+
+
+--
+-- Name: ix_visit_mrn; Type: INDEX; Schema: mcms_telemed; Owner: -
+--
+
+CREATE INDEX ix_visit_mrn ON mcms_telemed.visit USING btree (mrn);
+
+
+--
 -- Name: ix_concept_display; Type: INDEX; Schema: mcms_terminology; Owner: -
 --
 
 CREATE INDEX ix_concept_display ON mcms_terminology.concept USING btree (code_system, display text_pattern_ops);
+
+
+--
+-- Name: ix_concept_facility; Type: INDEX; Schema: mcms_terminology; Owner: -
+--
+
+CREATE INDEX ix_concept_facility ON mcms_terminology.concept USING btree (facility_id);
 
 
 --
@@ -14104,5 +14335,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ej2IfdZNIhZT9E7vsd8jt1dLiQzX7UqQh4T7RAxqkMkGKXFzb8bieE0ZhqbUHvW
+\unrestrict A4vVxarfRPDCCUm1GLZ8X180phZeFmSZtiQHVqiSMCBfOn7hv5IfOkbfIMlLbUB
 

@@ -229,6 +229,35 @@ class Consent(models.Model):
         unique_together = (('party', 'consent_type'),)
 
 
+class Facility(models.Model):
+    facility_id = models.BigAutoField(primary_key=True)
+    organization_id = models.BigIntegerField()
+    code = models.TextField()
+    name_en = models.TextField()
+    name_ar = models.TextField(blank=True, null=True)
+    parent_facility_id = models.BigIntegerField(blank=True, null=True)
+    is_active = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_core"."facility'
+
+
+class Organization(models.Model):
+    organization_id = models.BigAutoField(primary_key=True)
+    code = models.TextField()
+    name_en = models.TextField()
+    name_ar = models.TextField(blank=True, null=True)
+    parent_org_id = models.BigIntegerField(blank=True, null=True)
+    is_active = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_core"."organization'
+
+
 class AccessLog(models.Model):
     """Per-record read-access log for sensitive tables (HIPAA/GDPR access tracing)."""
     access_id = models.BigAutoField(primary_key=True)

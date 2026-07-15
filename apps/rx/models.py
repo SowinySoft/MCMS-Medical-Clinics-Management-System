@@ -135,3 +135,31 @@ class StockMovement(models.Model):
     class Meta:
         managed = False
         db_table = 'mcms_rx"."stock_movement'
+
+
+class Prescription(models.Model):
+    prescription_id = models.BigAutoField(primary_key=True)
+    encounter_id = models.BigIntegerField(blank=True, null=True)
+    visit_id = models.BigIntegerField(blank=True, null=True)
+    patient_id = models.BigIntegerField()
+    mrn = models.TextField()
+    prescriber_user_id = models.BigIntegerField()
+    drug_item = models.ForeignKey(DrugItem, models.DO_NOTHING)
+    dose = models.TextField(blank=True, null=True)
+    route = models.TextField(blank=True, null=True)
+    frequency = models.TextField(blank=True, null=True)
+    duration_days = models.IntegerField(blank=True, null=True)
+    quantity = models.DecimalField(max_digits=12, decimal_places=3, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    status = models.TextField()
+    interaction_severity = models.TextField(blank=True, null=True)
+    controlled = models.BooleanField()
+    signed_at = models.DateTimeField(blank=True, null=True)
+    dispensed_at = models.DateTimeField(blank=True, null=True)
+    facility_id = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True, )
+    updated_at = models.DateTimeField(auto_now=True, )
+
+    class Meta:
+        managed = False
+        db_table = 'mcms_rx"."prescription'
