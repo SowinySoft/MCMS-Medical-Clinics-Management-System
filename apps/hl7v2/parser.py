@@ -252,19 +252,42 @@ def handle_oru(msg, facility_id):
     if not obx_rows:
         raise HL7Error("ORU has no OBX result segments")
     lines = []
+    captured = []  # (system, code, display) for terminology capture
     for obx in obx_rows:
-        label = obx.get(3, comp=2) or obx.get(3, comp=1) or "Result"
+        # OBX-3 is a CE: comp1=code, comp2=text, comp3=coding system (LN=LOINC)
+        code, text, csys = obx.get(3, comp=1), obx.get(3, comp=2), obx.get(3, comp=3)
         value = obx.get(5)
         unit = obx.get(6)
         flag = obx.get(8)
-        piece = f"{label}: {value}{(' ' + unit) if unit else ''}"
+        piece = f"{text or code or 'Result'}: {value}{(' ' + unit) if unit else ''}"
         if flag:
             piece += f" [{flag}]"
         lines.append(piece)
+        # capture standardized codes (LOINC via HL7 system 'LN', etc.)
+        if code and csys:
+            sysmap = {"LN": "loinc", "SCT": "snomed", "RXNORM": "rxnorm",
+                      "ATC": "atc", "CPT": "cpt", "ICD-10": "icd10", "ICD10": "icd10"}
+            system = sysmap.get(csys.upper())
+            if system:
+                captured.append((system, code, text))
     enc = Encounter.objects.filter(patient_id=patient.patient_id).order_by("-started_at").first()
     obr = msg.seg("OBR")
     header = (obr.get(4, comp=2) if obr else "") or "Lab/Observation results"
+    # Validate captured codes against the terminology service (Phase 8); unknown
+    # codes are still recorded but flagged so a downstream user can review.
+    valid_map = {}
+    if captured:
+        from apps.terminology import resolver
+        by_sys = {}
+        for system, code, _ in captured:
+            by_sys.setdefault(system, []).append(code)
+        for system, codes in by_sys.items():
+            valid_map.update(resolver.validate(system, codes))
     body = header + "\n" + "\n".join(lines)
+    if captured:
+        body += "\n\nCodes:\n" + "\n".join(
+            f"- {system}:{code} ({'ok' if valid_map.get(code) else 'UNKNOWN'})"
+            for system, code, _ in captured)
     # Raw INSERT: the inspectdb ClinicalNote model mis-types coauthor_ids
     # (bigint[]) as TextField, so the ORM sends '' and Postgres errors. Insert
     # directly and stamp facility_id in the same statement.
@@ -279,8 +302,13 @@ def handle_oru(msg, facility_id):
             [enc_id, patient.patient_id, "lab_result", body[:4000], _min_user(),
              facility_id or 1])
         note_id = cur.fetchone()[0]
+    captured_codes = [
+        {"system": s, "code": c, "valid": bool(valid_map.get(c))}
+        for s, c, _ in captured
+    ]
     return {"clinical_note_id": note_id,
-            "patient_id": patient.patient_id, "obx_count": len(obx_rows)}
+            "patient_id": patient.patient_id, "obx_count": len(obx_rows),
+            "codes": captured_codes}
 
 
 # --------------------------------------------------------------------------- router
