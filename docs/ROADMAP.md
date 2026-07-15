@@ -122,10 +122,11 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 6 — National Scale: Multi-tenancy | `8f5d961` | ✅ organization→facility hierarchy, facility_id on 26 clinical/financial tables, queryset-layer facility scoping (superuser-safe, not RLS), write-stamping |
 | 7 — HL7 v2 ingestion | `846ef43` | ✅ dependency-free HL7 v2 parser, ADT→patient+encounter / SIU→appointment / ORU→lab_result note, MSH-10 idempotency + audit log, facility-scoped |
 | 8 — Terminology service | `7afdca7` | ✅ mcms_terminology.concept (LOINC/SNOMED/RxNorm/ATC/CPT/ICD-10), resolve/search/validate API, ORU LOINC capture, backfilled from real catalog codes |
-| 9 — Payer integration | *this commit* | ✅ payer registry + eligibility check + claim submit/simulated EOB (approved/partial/rejected) over insurance_claim, idempotent, deterministic offline |
+| 9 — Payer integration | `c564ccf` | ✅ payer registry + eligibility check + claim submit/simulated EOB (approved/partial/rejected) over insurance_claim, idempotent, deterministic offline |
+| 10 — Regulatory/exec analytics | *this commit* | ✅ los + 30-day readmissions + HAI/safety proxy KPIs + consolidated MOH/NHA report, deterministic/RBAC-gated over real data |
 
 **Verification (real, not claimed):**
-- `pytest` (apps/core/tests): **65 passed, 0 failed** — deterministic, offline, CI-testable.
+- `pytest` (apps/core/tests): **70 passed, 0 failed** — deterministic, offline, CI-testable.
 - `ruff` clean · `tsc -b` clean · `manage.py check` clean.
 - GitHub Actions CI green (backend pytest + frontend tsc).
 
@@ -156,7 +157,7 @@ dependency order:
 | 7 | **HL7 v2 ingestion** (ADT/ORU/SIU) from existing HIS/LIS/PACS | 6 | ✅ shipped |
 | 8 | **Terminology service** (LOINC/SNOMED CT mapping tables) | 8 | ✅ |
 | 9 | **Payer integration** (eligibility + claim submit/EOB) | 6, 9 | ✅ |
-| 10 | **Regulatory/exec analytics** (LOS, readmission, HAI KPIs + MOH/NHA reports) | 6, 8 | ⬜ |
+| 10 | **Regulatory/exec analytics** (LOS, readmission, HAI KPIs + MOH/NHA reports) | 6, 8 | ✅ |
 | 11 | **Telemedicine + eRX/formulary** | 6 | ⬜ |
 | 12 | **Scale/infra** (read replicas, horizontal workers, multi-region) | 6 | ⬜ |
 | 13 | **Identity federation** (OIDC/SAML SSO + data-residency consent) | 6, 12 | ⬜ |

@@ -8,6 +8,7 @@ RBAC-gated by HasRolePermission via `required_perms`.
 """
 
 from django.db import connection
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -51,6 +52,10 @@ class ReportViewSet(viewsets.ViewSet):
         "no_show_risk": "emr.read",
         "bed_demand": "emr.read",
         "inventory_reorder": "inventory.manage",
+        "los": "emr.read",
+        "readmissions": "emr.read",
+        "hai_kpis": "emr.read",
+        "moh_report": "emr.read",
     }
 
     def _guard(self, request, key):
@@ -258,3 +263,146 @@ class ReportViewSet(viewsets.ViewSet):
             LIMIT %s
         """
         return Response(_rows(sql, [limit]))
+
+    # --------------------------------------------------- Phase 10: regulatory / exec analytics
+    @action(detail=False, methods=["get"])
+    def los(self, request):
+        """Length-of-stay (days): avg + median overall and by encounter class.
+
+        Derived from mcms_emr.encounter.started_at / ended_at. Read-only,
+        date-range aware on started_at.
+        """
+        if (d := self._guard(request, "emr.read")):
+            return d
+        rcl, rp = _range(request, "started_at")
+        sql = f"""
+            SELECT
+                   COUNT(*) FILTER (WHERE ended_at IS NOT NULL) AS closed,
+                   ROUND(AVG(EXTRACT(EPOCH FROM (ended_at - started_at))
+                         / 86400.0)::numeric, 2) AS avg_los_days,
+                   PERCENTILE_CONT(0.5) WITHIN GROUP (
+                       ORDER BY EXTRACT(EPOCH FROM (ended_at - started_at)) / 86400.0
+                   )::numeric(10,2) AS median_los_days
+            FROM mcms_emr.encounter
+            WHERE ended_at IS NOT NULL {rcl}
+        """
+        overall = _rows(sql, rp)[0]
+        sql_by = f"""
+            SELECT "class",
+                   COUNT(*) AS closed,
+                   ROUND(AVG(EXTRACT(EPOCH FROM (ended_at - started_at))
+                         / 86400.0)::numeric, 2) AS avg_los_days
+            FROM mcms_emr.encounter
+            WHERE ended_at IS NOT NULL {rcl}
+            GROUP BY "class" ORDER BY avg_los_days DESC
+        """
+        return Response({"overall": overall, "by_class": _rows(sql_by, rp)})
+
+    @action(detail=False, methods=["get"])
+    def readmissions(self, request):
+        """30-day readmission rate.
+
+        A readmission = an encounter whose originating_encounter_id points to
+        a prior encounter for the same patient discharged <= 30 days earlier.
+        Read-only, deterministic.
+        """
+        if (d := self._guard(request, "emr.read")):
+            return d
+        sql = """
+            SELECT
+                (SELECT COUNT(*) FROM mcms_emr.encounter
+                 WHERE ended_at IS NOT NULL) AS denominator,
+                (SELECT COUNT(DISTINCT e.encounter_id)
+                 FROM mcms_emr.encounter e
+                 JOIN mcms_emr.encounter d
+                   ON d.encounter_id = e.originating_encounter_id
+                  AND d.patient_id = e.patient_id
+                 WHERE e.originating_encounter_id IS NOT NULL
+                   AND e.started_at <= d.ended_at + interval '30 days'
+                   AND e.started_at >  d.ended_at
+                ) AS readmissions,
+                ROUND(
+                    (SELECT COUNT(DISTINCT e.encounter_id)
+                     FROM mcms_emr.encounter e
+                     JOIN mcms_emr.encounter d
+                       ON d.encounter_id = e.originating_encounter_id
+                      AND d.patient_id = e.patient_id
+                     WHERE e.originating_encounter_id IS NOT NULL
+                       AND e.started_at <= d.ended_at + interval '30 days'
+                       AND e.started_at >  d.ended_at
+                    )::numeric
+                    / NULLIF((SELECT COUNT(*) FROM mcms_emr.encounter
+                             WHERE ended_at IS NOT NULL), 0), 4
+                ) AS readmission_rate
+        """
+        return Response(_rows(sql)[0])
+
+    @action(detail=False, methods=["get"])
+    def hai_kpis(self, request):
+        """Healthcare-associated infection / safety proxy KPIs.
+
+        NOTE: there is no dedicated infection-surveillance table in this
+        schema, so these are DERIVED PROXIES from ICU outcomes
+        (deterministic, not faked clinical data):
+          * icu_mortality_rate = expired / discharged (mcms_icu.admission)
+          * icu_readmission_rate = ICU readmits within 30d
+          * all_cause_30d_readmission_rate = from /readmissions/
+        Read-only.
+        """
+        if (d := self._guard(request, "emr.read")):
+            return d
+        sql = """
+            SELECT
+                (SELECT COUNT(*) FROM mcms_icu.admission) AS icu_admissions,
+                (SELECT COUNT(*) FROM mcms_icu.admission
+                  WHERE expired_at IS NOT NULL) AS icu_expired,
+                ROUND(
+                    (SELECT COUNT(*) FROM mcms_icu.admission
+                      WHERE expired_at IS NOT NULL)::numeric
+                    / NULLIF((SELECT COUNT(*) FROM mcms_icu.admission), 0), 4
+                ) AS icu_mortality_rate,
+                (SELECT COUNT(*) FROM mcms_icu.admission
+                  WHERE discharged_at IS NOT NULL) AS icu_discharged
+        """
+        icu = _rows(sql)[0]
+        # all-cause 30d readmission rate (reuse logic)
+        rm = self.readmissions(request).data
+        icu.update({"all_cause_30d_readmission_rate": rm.get("readmission_rate")})
+        return Response(icu)
+
+    @action(detail=False, methods=["get"])
+    def moh_report(self, request):
+        """Consolidated MOH / NHA submission snapshot.
+
+        Returns the period + KPI bundle a regulator would receive
+        (no live submission/PHI-redaction here -- that is a later,
+        separately-scoped transport step). Deterministic over real data.
+        """
+        if (d := self._guard(request, "emr.read")):
+            return d
+        rcl, rp = _range(request, "e.started_at")
+        sql = f"""
+            SELECT
+                COUNT(*) FILTER (WHERE e.status='in_progress') AS active_encounters,
+                COUNT(*) FILTER (WHERE e.status='finished')   AS finished_encounters,
+                COUNT(*) AS total_encounters,
+                COUNT(*) FILTER (WHERE e."class"='inpatient') AS inpatient,
+                COUNT(*) FILTER (WHERE e."class"='icu')       AS icu
+            FROM mcms_emr.encounter e
+            WHERE 1=1 {rcl}
+        """
+        enc = _rows(sql, rp)[0]
+        los = self.los(request).data["overall"]
+        readmit = self.readmissions(request).data
+        icu = self.hai_kpis(request).data
+        report = {
+            "report": "MOH/NHA consolidated",
+            "generated_at": timezone.now().isoformat(),
+            "period_since": request.query_params.get("since"),
+            "period_until": request.query_params.get("until"),
+            "encounters": enc,
+            "los": los,
+            "readmission_rate": readmit.get("readmission_rate"),
+            "icu_mortality_rate": icu.get("icu_mortality_rate"),
+        }
+        return Response(report)
