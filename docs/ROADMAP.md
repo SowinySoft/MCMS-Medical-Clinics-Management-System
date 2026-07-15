@@ -129,7 +129,7 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 13 — Identity federation | `1da94d2` | ✅ identity_provider + federated_identity registry, federate (subject→local user + JWT issuance) with data-residency consent gating, OIDC/SAML ready |
 | 14 — Dept/section coverage | `17dff33` | ✅ +26 clinical departments/sections (national list) as new rows (ids 27–52), no renames, reuse kind vocabulary, idempotent |
 | 15 — Systematic linkage recommendations | `c616419` | ✅ referral_linkage_rule (diagnosis/dept → target dept) + /api/referral/recommend + linkage_rules map, deterministic/offline |
-| 16 — Cross-facility + learned linkage | *this commit* | ✅ to_facility_id on rule + 3 seeded facilities (TERT/DIST/CANC) + cross-facility rule (district IM → tertiary cardiology); /api/referral/recommend gains to_facility; `?learned=true` ranks targets by accepted/completed historical-referral frequency (surfaces learned targets not in rule base) |
+| 16 — Cross-facility + learned linkage | `aa888e7` | ✅ to_facility_id on rule + 3 seeded facilities (TERT/DIST/CANC) + cross-facility rule (district IM → tertiary cardiology); /api/referral/recommend gains to_facility; `?learned=true` ranks targets by accepted/completed historical-referral frequency (surfaces learned targets not in rule base) |
 
 **Verification (real, not claimed):**
 - `pytest` (apps/core/tests): **108 passed, 0 failed** — deterministic, offline, CI-testable.
