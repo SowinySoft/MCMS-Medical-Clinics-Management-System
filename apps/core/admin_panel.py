@@ -220,6 +220,67 @@ class SystemViewSet(viewsets.ViewSet):
             "note": "Standalone instance — no replication slots configured." if not rows else "",
         })
 
+    # ----------------------------------------------------- Phase 12: scale / health
+    @action(detail=False, methods=["get"])
+    def health(self, request):
+        """Liveness probe. Returns 200 when the DB is reachable.
+
+        Intentionally unprivileged beyond authentication so an orchestrator
+        liveness check can call it with a service token.
+        """
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT 1")
+            return Response({"status": "ok", "db": "up",
+                             "at": datetime.now().isoformat()})
+        except Exception as e:  # noqa
+            return Response({"status": "error", "db": "down", "detail": str(e)[:200]},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    @action(detail=False, methods=["get"])
+    def readiness(self, request):
+        """Readiness probe. 200 only when primary DB + channel layer are up.
+
+        Replica is reported but not required (standalone is a valid state).
+        """
+        checks = {}
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT 1")
+            checks["db_primary"] = "up"
+        except Exception as e:  # noqa
+            checks["db_primary"] = f"down:{str(e)[:120]}"
+        # channel layer: report the configured backend
+        layer = getattr(settings, "CHANNEL_LAYERS", {}).get("default", {})
+        backend = (layer.get("BACKEND") or "unknown").split(".")[-1]
+        checks["channel_backend"] = backend
+        replica_cfg = "replica" in getattr(settings, "DATABASES", {})
+        checks["replica_configured"] = replica_cfg
+        ready = checks["db_primary"] == "up"
+        code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+        return Response({"ready": ready, "checks": checks,
+                         "at": datetime.now().isoformat()}, status=code)
+
+    @action(detail=False, methods=["get"])
+    def scale_status(self, request):
+        """Scale/readiness introspection — deterministic, no infra side effects."""
+        if (d := _guard(request)):
+            return d
+        dbs = getattr(settings, "DATABASES", {})
+        repl = _rows("SELECT count(*) AS n FROM pg_stat_replication")
+        replication = "active" if (repl and repl[0]["n"] > 0) else "standalone"
+        layer = getattr(settings, "CHANNEL_LAYERS", {}).get("default", {})
+        backend = (layer.get("BACKEND") or "unknown").split(".")[-1]
+        return Response({
+            "replication_role": replication,
+            "replica_configured": "replica" in dbs,
+            "databases": list(dbs.keys()),
+            "conn_max_age": dbs.get("default", {}).get("CONN_MAX_AGE", 0),
+            "channel_layer": backend.split(".")[-1],
+            "routers": [r.split(".")[-1] for r in getattr(settings, "DATABASE_ROUTERS", [])],
+            "at": datetime.now().isoformat(),
+        })
+
     # ------------------------------------------------------------------ sync
     @action(detail=False, methods=["get", "post"])
     def sync(self, request):

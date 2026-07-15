@@ -109,9 +109,26 @@ DATABASES = {
         "PASSWORD": _os.environ.get("MCMS_DB_PASSWORD", "postgres"),
         "HOST": _os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
         "PORT": _os.environ.get("MCMS_DB_PORT", "5432"),
+        "CONN_MAX_AGE": int(_os.environ.get("MCMS_CONN_MAX_AGE", "60")),
         "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
     }
 }
+# Phase 12: optional read replica. When MCMS_DB_REPLICA_HOST is set we register a
+# `replica` connection + a ReplicaRouter that routes reads to it (writes still go
+# to the primary). With no replica configured the app is single-node as before.
+if _os.environ.get("MCMS_DB_REPLICA_HOST"):
+    DATABASES["replica"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": _os.environ.get("MCMS_DB_REPLICA_NAME", DATABASES["default"]["NAME"]),
+        "USER": _os.environ.get("MCMS_DB_REPLICA_USER", DATABASES["default"]["USER"]),
+        "PASSWORD": _os.environ.get("MCMS_DB_REPLICA_PASSWORD", DATABASES["default"]["PASSWORD"]),
+        "HOST": _os.environ.get("MCMS_DB_REPLICA_HOST"),
+        "PORT": _os.environ.get("MCMS_DB_REPLICA_PORT", "5432"),
+        "CONN_MAX_AGE": int(_os.environ.get("MCMS_CONN_MAX_AGE", "60")),
+        "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
+    }
+    DATABASE_ROUTERS = ["config.db_routers.ReplicaRouter"]  # type: ignore[assignment]
+
 # ---------------------------------------------------------------- auth
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",  # brute-force aware; records + resets on success

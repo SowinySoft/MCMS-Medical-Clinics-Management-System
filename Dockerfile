@@ -1,30 +1,24 @@
-# Backend image: Django 5 + DRF + Channels/Daphne, served over HTTP+WS.
-FROM python:3.11-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
+# syntax=docker/dockerfile:1
+# Phase 12: multi-stage image for MCMS (Daphne ASGI server).
+FROM python:3.11-slim AS builder
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
-
-# System deps (postgres client for setup_db.sh + wait-for-it style checks)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Python deps first (layer cache)
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+    libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# App source
+FROM python:3.11-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    MCMS_DB_HOST=postgres MCMS_REDIS_URL=redis://redis:6379/0 \
+    MCMS_CONN_MAX_AGE=60 DJANGO_SETTINGS_MODULE=config.settings
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends libpq5 \
+    curl && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
-
-# Static files (admin / drf-spectacular) collected for nginx to serve
-RUN python -m manage.py collectstatic --noinput || true
-
-EXPOSE 8010
-
-# Entrypoint: wait for postgres, build/verify DB, then run Daphne (HTTP+WS)
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+# Readiness/liveness are served by the API itself (/api/system/health|readiness).
+EXPOSE 8000
+# Daphne ASGI — handles HTTP + WebSocket (Channels) on one port.
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
