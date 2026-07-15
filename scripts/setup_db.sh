@@ -44,7 +44,7 @@ if [ "${TABLES:-0}" -ge 80 ]; then
 else
   echo ">> Building schema + seed + test users from committed sql/"
   $PSQL -d "$LIVE_DB" -f "$(winpath "$REPO_ROOT/sql/mcms_schema.sql")" >/dev/null
-  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql; do
+  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql; do
     echo "   applying $s"
     $PSQL -d "$LIVE_DB" -f "$(winpath "$REPO_ROOT/sql/$s")" >/dev/null
   done

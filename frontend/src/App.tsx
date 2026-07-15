@@ -9,6 +9,7 @@ import { TableBrowser } from "./components/TableBrowser";
 import { SchemaBrowser } from "./components/SchemaBrowser";
 import { SysAdmin } from "./components/SysAdmin";
 import { Reports } from "./components/Reports";
+import { PatientPortal } from "./components/PatientPortal";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { toggleLanguage } from "./i18n";
 import { useTranslation } from "react-i18next";
@@ -38,11 +39,15 @@ function Shell() {
           {hasPerm("admin.all") && (
             <button style={btnAccent} onClick={() => navigate("/sysadmin")}>System</button>
           )}
+          {hasPerm("patient.portal") && (
+            <button style={btnAccent} onClick={() => navigate("/portal")}>{t("patientPortal")}</button>
+          )}
         </div>
         <Routes>
           <Route path="/" element={<Dashboard onOpen={open} />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/sysadmin" element={<SysAdmin />} />
+          <Route path="/portal" element={<PatientPortal />} />
           <Route path="/browse/:schema" element={<SchemaBrowser />} />
           <Route path="/browse/:schema/:model" element={<TableBrowser schema={view.schema} model={view.model} />} />
         </Routes>

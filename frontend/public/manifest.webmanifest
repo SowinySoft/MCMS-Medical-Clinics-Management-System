@@ -1,0 +1,29 @@
+{
+  "name": "MCMS — Medical Clinics Management System",
+  "short_name": "MCMS",
+  "description": "Medical Clinics Management System — clinical, admin & patient portal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "categories": ["medical", "productivity", "health"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/" },
+    { "name": "Patient Portal", "url": "/portal" }
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "ar": {
+    "name": "نظام إدارة العيادات الطبية",
+    "short_name": "MCMS",
+    "description": "نظام إدارة العيادات الطبية — سريري وإداري وبوابة المريض",
+    "dir": "rtl",
+    "lang": "ar"
+  }
+}
