@@ -17,8 +17,11 @@ import sys
 
 import psycopg
 
-DB = dict(host="127.0.0.1", port=5432, user="postgres", password="postgres",
-          dbname=os.environ.get("AUDIT_DB", "mcms"))
+DB = dict(host=os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
+          port=int(os.environ.get("MCMS_DB_PORT", "5432")),
+          user=os.environ.get("MCMS_DB_USER", "postgres"),
+          password=os.environ.get("MCMS_DB_PASSWORD", os.environ.get("PGPASSWORD", "postgres")),
+          dbname=os.environ.get("MCMS_DB_NAME") or os.environ.get("AUDIT_DB", "mcms"))
 conn = psycopg.connect(**DB)
 cur = conn.cursor()
 violations = []

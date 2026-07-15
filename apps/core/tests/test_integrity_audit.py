@@ -10,9 +10,15 @@ import os
 
 import psycopg
 
-AUDIT_DB = os.environ.get("AUDIT_DB", "mcms_test")
-DB = dict(host="127.0.0.1", port=5432, user="postgres",
-          password=os.environ.get("PGPASSWORD", "postgres"), dbname=AUDIT_DB)
+# Target the same database Django uses (MCMS_DB_NAME); locally this is usually
+# mcms_test, in CI it is "mcms" (built from committed sql/). Falls back to
+# mcms_test for manual local runs.
+AUDIT_DB = os.environ.get("MCMS_DB_NAME") or os.environ.get("AUDIT_DB", "mcms_test")
+DB = dict(host=os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
+          port=int(os.environ.get("MCMS_DB_PORT", "5432")),
+          user=os.environ.get("MCMS_DB_USER", "postgres"),
+          password=os.environ.get("MCMS_DB_PASSWORD", os.environ.get("PGPASSWORD", "postgres")),
+          dbname=AUDIT_DB)
 
 
 def _run(cur, sql, params=()):
