@@ -26,6 +26,7 @@ from apps.hl7v2.views import HL7V2ViewSet
 from apps.identity.views import IdentityViewSet
 from apps.patient.views import PatientPortalViewSet
 from apps.payer.views import PayerViewSet
+from apps.referral.views import ReferralViewSet
 from apps.telemed.views import TelemedViewSet
 from apps.terminology.views import TerminologyViewSet
 
@@ -40,6 +41,7 @@ router.register("terminology", TerminologyViewSet, basename="terminology")
 router.register("payer", PayerViewSet, basename="payer")
 router.register("telemed", TelemedViewSet, basename="telemed")
 router.register("identity", IdentityViewSet, basename="identity")
+router.register("referral", ReferralViewSet, basename="referral")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

@@ -127,10 +127,11 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 11 — Telemedicine + eRX/formulary | `350492c` | ✅ telemed.visit (virtual consult) + rx.prescription (eRX) with drug-interaction check + formulary search, deterministic offline |
 | 12 — Scale/infra | `33f611a` | ✅ read-replica router (opt-in, zero-regression fallback) + CONN_MAX_AGE pooling + health/readiness probes + scale_status + Dockerfile/compose |
 | 13 — Identity federation | `1da94d2` | ✅ identity_provider + federated_identity registry, federate (subject→local user + JWT issuance) with data-residency consent gating, OIDC/SAML ready |
-| 14 — Dept/section coverage | *this commit* | ✅ +26 clinical departments/sections (national list) as new rows (ids 27–52), no renames, reuse kind vocabulary, idempotent |
+| 14 — Dept/section coverage | `17dff33` | ✅ +26 clinical departments/sections (national list) as new rows (ids 27–52), no renames, reuse kind vocabulary, idempotent |
+| 15 — Systematic linkage recommendations | *this commit* | ✅ referral_linkage_rule (diagnosis/dept → target dept) + /api/referral/recommend + linkage_rules map, deterministic/offline |
 
 **Verification (real, not claimed):**
-- `pytest` (apps/core/tests): **95 passed, 0 failed** — deterministic, offline, CI-testable.
+- `pytest` (apps/core/tests): **103 passed, 0 failed** — deterministic, offline, CI-testable.
 - `ruff` clean · `tsc -b` clean · `manage.py check` clean.
 - GitHub Actions CI green (backend pytest + frontend tsc).
 

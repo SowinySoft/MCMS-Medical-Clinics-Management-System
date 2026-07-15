@@ -89,7 +89,7 @@ else
   # schema-only dump instead, then apply reference seed + test identity.
   echo ">> Building from committed schema dump + seed (deterministic)"
   $PSQL -d "$TEST_DB" -f "$(winpath "$REPO_ROOT/sql/mcms_schema.sql")" >/dev/null
-  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql; do
+  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql 31_phase15_linkage.sql; do
     echo "   applying $s"
     $PSQL -d "$TEST_DB" -f "$(winpath "$REPO_ROOT/sql/$s")" >/dev/null
   done
