@@ -16,6 +16,7 @@ from drf_spectacular.views import (
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from apps.ai.views import AiViewSet
 from apps.core.admin_panel import SystemViewSet
 from apps.core.auth import MCMSTokenObtainPairView
 from apps.core.reports import ReportViewSet
@@ -26,6 +27,7 @@ router = build_router()
 router.register("reports", ReportViewSet, basename="reports")
 router.register("system", SystemViewSet, basename="system")
 router.register("fhir", FhirViewSet, basename="fhir")
+router.register("ai", AiViewSet, basename="ai")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

@@ -136,6 +136,17 @@ BEGIN
     NULL, v_party,
     'mcms_lab', 'result', NEW.result_id);
 
+  -- anomaly alert -> event_log (severity critical/warning) so it surfaces
+  -- automatically in the LiveFeed WebSocket stream.
+  PERFORM mcms_core.emit_event(
+    'abnormal_result_alert'::mcms_core.event_kind,
+    CASE WHEN NEW.flag = 'critical' THEN 'critical'::mcms_core.event_severity
+         ELSE 'warning'::mcms_core.event_severity END,
+    NULL, v_party,
+    'mcms_lab', 'result', NEW.result_id,
+    jsonb_build_object('flag', NEW.flag, 'test', v_test,
+                       'value', COALESCE(NEW.value_text, NEW.value_numeric::text)));
+
   -- auto-route: attach a clinical note to the encounter (if any)
   IF v_encounter IS NOT NULL THEN
     INSERT INTO mcms_emr.clinical_note
@@ -145,7 +156,8 @@ BEGIN
             'Auto-routed from mcms_lab.result #' || NEW.result_id ||
             ' | flag=' || NEW.flag ||
             ' | value=' || COALESCE(NEW.value_text, NEW.value_numeric::text),
-            COALESCE(NEW.verified_by, NEW.analysed_by),
+            COALESCE(NEW.verified_by, NEW.analysed_by,
+                     (SELECT MIN(user_id) FROM mcms_core.app_user)),
             false, now(), now());
   END IF;
   RETURN NEW;
@@ -175,13 +187,19 @@ CREATE TRIGGER trg_claim_notify
   AFTER INSERT OR UPDATE OF status ON mcms_billing.insurance_claim
   FOR EACH ROW EXECUTE FUNCTION mcms_billing.fn_claim_notify();
 
--- extend event_kind enum to cover no-show appointments
+-- extend event_kind enum (no-show + abnormal result anomaly alert)
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
     WHERE t.typname='event_kind' AND e.enumlabel='appointment_noshow'
   ) THEN
     ALTER TYPE mcms_core.event_kind ADD VALUE IF NOT EXISTS 'appointment_noshow';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
+    WHERE t.typname='event_kind' AND e.enumlabel='abnormal_result_alert'
+  ) THEN
+    ALTER TYPE mcms_core.event_kind ADD VALUE IF NOT EXISTS 'abnormal_result_alert';
   END IF;
 END $$;
 

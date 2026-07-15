@@ -48,6 +48,9 @@ class ReportViewSet(viewsets.ViewSet):
         "top_diagnoses": "emr.read",
         "inventory_valuation": "inventory.manage",
         "event_activity": "patient.read",
+        "no_show_risk": "emr.read",
+        "bed_demand": "emr.read",
+        "inventory_reorder": "inventory.manage",
     }
 
     def _guard(self, request, key):
@@ -169,3 +172,89 @@ class ReportViewSet(viewsets.ViewSet):
         if (d := self._guard(request, "patient.read")): return d
         sql = "SELECT kind, COUNT(*) AS events FROM mcms_core.event_log GROUP BY kind ORDER BY events DESC"
         return Response(_rows(sql))
+
+    @action(detail=False, methods=["get"])
+    def no_show_risk(self, request):
+        """Per-upcoming-appointment no-show risk.
+
+        Historical no-show rate for the patient, modulated by confirmation
+        status and lead time. Offline/deterministic, fed by real appointment
+        history (status='noshow').
+        """
+        if (d := self._guard(request, "emr.read")): return d
+        limit = int(request.query_params.get("limit", 25))
+        sql = """
+            WITH hist AS (
+                SELECT a.patient_id,
+                       COUNT(*) FILTER (WHERE a.status='noshow') AS n_noshow,
+                       COUNT(*) FILTER (WHERE a.status='completed') AS n_kept,
+                       COUNT(*) AS n_total
+                FROM mcms_clinic.appointment a
+                WHERE a.status IN ('noshow','completed')
+                GROUP BY a.patient_id
+            )
+            SELECT a.appointment_id,
+                   a.patient_id,
+                   a.starts_at,
+                   a.status,
+                   a.patient_confirmed,
+                   COALESCE(h.n_noshow::numeric / NULLIF(h.n_total,0), 0) AS historical_noshow_rate,
+                   CASE WHEN a.patient_confirmed THEN 0.0
+                        ELSE COALESCE(h.n_noshow::numeric / NULLIF(h.n_total,0), 0) END
+                         + CASE WHEN a.starts_at - now() < interval '24 hours' THEN 0.05 ELSE 0.0 END
+                         AS risk
+            FROM mcms_clinic.appointment a
+            LEFT JOIN hist h ON h.patient_id = a.patient_id
+            WHERE a.starts_at > now()
+              AND a.status IN ('booked','held')
+            ORDER BY risk DESC, a.starts_at
+            LIMIT %s
+        """
+        return Response(_rows(sql, [limit]))
+
+    @action(detail=False, methods=["get"])
+    def bed_demand(self, request):
+        """ICU bed demand: current occupancy + projected from scheduled encounters.
+
+        'projected_occupied' = currently occupied + inpatient/icu encounters
+        scheduled to start within the horizon (default 24h). Surfaces capacity
+        risk before it materialises.
+        """
+        if (d := self._guard(request, "emr.read")): return d
+        horizon = int(request.query_params.get("hours", 24))
+        sql = """
+            SELECT
+              (SELECT COUNT(*) FROM mcms_icu.bed) AS total_beds,
+              (SELECT COUNT(*) FROM mcms_icu.bed WHERE status='occupied') AS occupied_now,
+              (SELECT COUNT(*) FROM mcms_emr.encounter
+                 WHERE "class" IN ('icu','inpatient')
+                   AND status IN ('planned','arrived')
+                   AND started_at BETWEEN now() AND now() + (%s || ' hours')::interval
+              ) AS projected_admissions,
+              (SELECT COUNT(*) FROM mcms_icu.bed WHERE status='available') AS available_now
+        """
+        return Response(_rows(sql, [horizon])[0])
+
+    @action(detail=False, methods=["get"])
+    def inventory_reorder(self, request):
+        """Items at or below their reorder level across all departments.
+
+        Offline reorder signal from mcms_erp.inventory_stock vs inventory_item
+        reorder_level/reorder_qty. Returns the suggested top-up quantity.
+        """
+        if (d := self._guard(request, "inventory.manage")): return d
+        limit = int(request.query_params.get("limit", 50))
+        sql = """
+            SELECT ii.code, ii.name, s.department_id,
+                   s.qty_on_hand,
+                   ii.reorder_level,
+                   ii.reorder_qty,
+                   GREATEST(ii.reorder_level - s.qty_on_hand, 0) AS deficit,
+                   ii.reorder_qty AS suggested_order_qty
+            FROM mcms_erp.inventory_stock s
+            JOIN mcms_erp.inventory_item ii ON ii.item_id = s.item_id
+            WHERE s.qty_on_hand <= ii.reorder_level
+            ORDER BY deficit DESC, ii.code
+            LIMIT %s
+        """
+        return Response(_rows(sql, [limit]))
