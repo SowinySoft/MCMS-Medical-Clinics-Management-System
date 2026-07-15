@@ -119,12 +119,13 @@ Linux runner (not just local). The Phoenix baseline has *risen*.
 | 3 — Fly: Interoperability | `2260dee` | ✅ FHIR/HL7 export+import, MPI, real sync engine |
 | 4 — Fly: Intelligence | `9fe4413` | ✅ deterministic ICD/SNOMED assist, no-show/bed/inventory predictions, anomaly alerts |
 | 5 — Reach | `92e4f2c` | ✅ patient portal (own-record + consent), PWA (installable/offline), locale i18n |
-| 6 — National Scale: Multi-tenancy | *this commit* | ✅ organization→facility hierarchy, facility_id on 26 clinical/financial tables, queryset-layer facility scoping (superuser-safe, not RLS), write-stamping |
+| 6 — National Scale: Multi-tenancy | `8f5d961` | ✅ organization→facility hierarchy, facility_id on 26 clinical/financial tables, queryset-layer facility scoping (superuser-safe, not RLS), write-stamping |
+| 7 — HL7 v2 ingestion | *this commit* | ✅ dependency-free HL7 v2 parser, ADT→patient+encounter / SIU→appointment / ORU→lab_result note, MSH-10 idempotency + audit log, facility-scoped |
 
 **Verification (real, not claimed):**
-- `pytest` (apps/core/tests): **38 passed, 0 failed** — deterministic, offline, CI-testable.
+- `pytest` (apps/core/tests): **48 passed, 0 failed** — deterministic, offline, CI-testable.
 - `ruff` clean · `tsc -b` clean · `manage.py check` clean.
-- GitHub Actions `CI` workflow: backend + frontend jobs **green** on every phase push.
+- GitHub Actions CI green (backend pytest + frontend tsc).
 
 **Follow-up (post-roadmap, in this branch):**
 - Dedicated **Monitors page** (`/monitors`, admin-only) expands the compact

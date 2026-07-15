@@ -25,7 +25,7 @@ BEGIN
     FROM mcms_core.event_log e
    ORDER BY e.seq DESC LIMIT 1;
   NEW.prev_hash := ph;
-  calc := encode(sha256(concat(
+  calc := encode(sha256(convert_to(concat(
       COALESCE(ph, ''), '|',
       NEW.seq, '|',
       NEW.kind::text, '|',
@@ -35,7 +35,7 @@ BEGIN
       NEW.payload::text, '|',
       COALESCE(NEW.actor_user_id::text, ''), '|',
       COALESCE(NEW.subject_party_id::text, '')
-    )::bytea), 'hex');
+    ), 'UTF8')), 'hex');
   NEW.hash := calc;
   ch := COALESCE(NEW.channel, 'mcms');
   PERFORM pg_notify(ch, json_build_object(
@@ -61,7 +61,7 @@ BEGIN
   FOR r IN SELECT event_id, seq, kind, source_schema, source_table, source_id,
                   payload, actor_user_id, subject_party_id, hash
              FROM mcms_core.event_log ORDER BY seq LOOP
-    calc := encode(sha256(concat(
+    calc := encode(sha256(convert_to(concat(
         COALESCE(prev, ''), '|',
         r.seq, '|', r.kind::text, '|',
         COALESCE(r.source_schema, ''), '|',
@@ -70,7 +70,7 @@ BEGIN
         r.payload::text, '|',
         COALESCE(r.actor_user_id::text, ''), '|',
         COALESCE(r.subject_party_id::text, '')
-      )::bytea), 'hex');
+      ), 'UTF8')), 'hex');
     UPDATE mcms_core.event_log
        SET prev_hash = prev, hash = calc
      WHERE event_id = r.event_id;
@@ -89,7 +89,7 @@ BEGIN
   FOR r IN SELECT event_id, seq, kind, source_schema, source_table, source_id,
                   payload, actor_user_id, subject_party_id, prev_hash, hash
              FROM mcms_core.event_log ORDER BY seq LOOP
-    calc := encode(sha256(concat(
+    calc := encode(sha256(convert_to(concat(
         COALESCE(prev, ''), '|',
         r.seq, '|', r.kind::text, '|',
         COALESCE(r.source_schema, ''), '|',
@@ -98,7 +98,7 @@ BEGIN
         r.payload::text, '|',
         COALESCE(r.actor_user_id::text, ''), '|',
         COALESCE(r.subject_party_id::text, '')
-      )::bytea), 'hex');
+      ), 'UTF8')), 'hex');
     IF calc <> r.hash OR prev IS DISTINCT FROM r.prev_hash THEN
       broken_at := r.seq; RETURN NEXT;
     END IF;

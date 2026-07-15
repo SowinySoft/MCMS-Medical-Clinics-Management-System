@@ -30,15 +30,22 @@ def _ensure_facility(fid):
 
 
 def _make_user(username, facility_id, role_code="doctor", role_enum="physician"):
+    from django.db import connection
+
     from apps.core.models import AppUser
     if facility_id is not None:
         _ensure_facility(facility_id)
+    # ensure a party exists for the app_user FK (reuse party 3 if present)
+    with connection.cursor() as cur:
+        cur.execute("SELECT 1 FROM mcms_core.party WHERE party_id=3")
+        if not cur.fetchone():
+            cur.execute("INSERT INTO mcms_core.party (party_id, party_type, display_name, "
+                        "is_active, preferred_language) VALUES (3,'person','Test Party',true,'en')")
     auth_user = User.objects.create(username=username, is_active=True)
     au = AppUser.objects.create(
         user_id=90000 + int(_tag()[:6], 16) % 9000, party_id=3,
         username=username, password_hash="x", role=role_enum,
         is_active=True, failed_logins=0, facility_id=facility_id)
-    from django.db import connection
     with connection.cursor() as cur:
         cur.execute("INSERT INTO mcms_core.user_role_map (user_id, role_id) "
                     "SELECT %s, r.role_id FROM mcms_core.role r WHERE r.code=%s "

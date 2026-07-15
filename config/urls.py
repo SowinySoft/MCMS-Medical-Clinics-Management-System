@@ -22,6 +22,7 @@ from apps.core.auth import MCMSTokenObtainPairView
 from apps.core.reports import ReportViewSet
 from apps.core.routers import build_router
 from apps.fhir.views import FhirViewSet, SyncViewSet
+from apps.hl7v2.views import HL7V2ViewSet
 from apps.patient.views import PatientPortalViewSet
 
 router = build_router()
@@ -30,6 +31,7 @@ router.register("system", SystemViewSet, basename="system")
 router.register("fhir", FhirViewSet, basename="fhir")
 router.register("ai", AiViewSet, basename="ai")
 router.register("patient", PatientPortalViewSet, basename="patient")
+router.register("hl7v2", HL7V2ViewSet, basename="hl7v2")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
