@@ -43,10 +43,33 @@ export function SysAdmin() {
     } finally { setBusy(false); }
   };
 
-  const runSync = async () => {
+  const [syncInfo, setSyncInfo] = useState<any>(null);
+  const runSyncExport = async () => {
     setBusy(true);
-    try { const { data } = await mcmsApi.post("/system/sync/", {}); toast.show(data.detail || "Synced"); }
-    catch (e: any) { toast.show(e?.response?.data?.detail || "Sync failed", "err"); }
+    try {
+      const { data } = await mcmsApi.get("/api/sync/");
+      setSyncInfo(data);
+      // offer the bundle as a downloadable file for transport to the peer clinic
+      const blob = new Blob([JSON.stringify(data.bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `mcms_sync_${Date.now()}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      toast.show(`Exported ${data.bundle.entry?.length || 0} resources`);
+    } catch (e: any) { toast.show(e?.response?.data?.detail || "Export failed", "err"); }
+    finally { setBusy(false); }
+  };
+  const runSyncApply = async (file?: File) => {
+    setBusy(true);
+    try {
+      let bundle;
+      if (file) bundle = JSON.parse(await file.text());
+      else bundle = syncInfo?.bundle;
+      if (!bundle) { toast.show("No bundle to apply", "err"); return; }
+      const { data } = await mcmsApi.post("/api/sync/", { bundle });
+      setSyncInfo((s: any) => ({ ...s, ...data, last_sync: data.last_sync }));
+      toast.show(`Applied: ${data.created} created, ${data.skipped} skipped`);
+    } catch (e: any) { toast.show(e?.response?.data?.detail || "Apply failed", "err"); }
     finally { setBusy(false); }
   };
 
@@ -109,11 +132,22 @@ export function SysAdmin() {
 
       {tab === "sync" && (
         <div style={{ maxWidth: 520 }}>
-          <button className="mcms-btn-accent" disabled={busy} onClick={runSync}
-            style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer", marginBottom: 12 }}>
-            {busy ? "Running…" : "Re-apply Migrations (Sync)"}
-          </button>
-          <p style={{ color: "var(--text-dim)", fontSize: 12 }}>Re-applies Django migrations to keep the reflection layer consistent with models. Last sync is recorded in mcms_core.system_flag.</p>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <button className="mcms-btn-accent" disabled={busy} onClick={runSyncExport}
+              style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer" }}>
+              {busy ? "Working…" : "Export sync bundle"}
+            </button>
+            <label className="mcms-btn-accent" style={{ background: "var(--panel-2)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 6, padding: "8px 16px", cursor: "pointer" }}>
+              Apply incoming bundle…
+              <input type="file" accept="application/json" style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) runSyncApply(f); }} />
+            </label>
+          </div>
+          <p style={{ color: "var(--text-dim)", fontSize: 12 }}>
+            Exports a FHIR R4 Bundle of Patients / Encounters / Observations / MedicationRequests,
+            or applies an incoming bundle from a peer clinic (idempotent on resource id).
+            Last sync: {syncInfo?.last_sync || "never"}.
+          </p>
         </div>
       )}
     </div>

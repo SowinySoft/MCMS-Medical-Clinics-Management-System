@@ -239,7 +239,6 @@ class Vitals(models.Model):
     spo2_pct = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     height_cm = models.DecimalField(max_digits=5, decimal_places=1, blank=True, null=True)
-    bmi = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     pain_score = models.IntegerField(blank=True, null=True)
     glucose_mgdl = models.IntegerField(blank=True, null=True)
 

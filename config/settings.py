@@ -51,6 +51,7 @@ DOMAIN_APPS = [
     "apps.nursery",
     "apps.billing",
     "apps.erp",
+    "apps.fhir",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS + ["channels"]
 

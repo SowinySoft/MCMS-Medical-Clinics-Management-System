@@ -20,13 +20,16 @@ from apps.core.admin_panel import SystemViewSet
 from apps.core.auth import MCMSTokenObtainPairView
 from apps.core.reports import ReportViewSet
 from apps.core.routers import build_router
+from apps.fhir.views import FhirViewSet, SyncViewSet
 
 router = build_router()
 router.register("reports", ReportViewSet, basename="reports")
 router.register("system", SystemViewSet, basename="system")
+router.register("fhir", FhirViewSet, basename="fhir")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/sync/", SyncViewSet.as_view({"get": "sync", "post": "sync"})),
     path("api/", include(router.urls)),
     path("api/auth/token/", MCMSTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
