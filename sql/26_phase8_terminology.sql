@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS mcms_terminology.concept (
     created_at   timestamptz NOT NULL DEFAULT now(),
     UNIQUE (code_system, code)
 );
-CREATE INDEX IF NOT EXISTS ix_concept_sys_code ON mcms_terminology.concept (code_system, code);
 CREATE INDEX IF NOT EXISTS ix_concept_display ON mcms_terminology.concept (code_system, display text_pattern_ops);
 
 -- Backfill from existing catalog columns (only where a code is present).
