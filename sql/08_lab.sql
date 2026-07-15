@@ -107,8 +107,11 @@ CREATE INDEX ON mcms_lab.result (flag);
 -- ---------- Events ----------
 CREATE OR REPLACE FUNCTION mcms_lab.fn_lab_order_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
-   PERFORM mcms_core.emit_event('lab_order_placed','info', NEW.requested_by, NEW.patient_id,
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
+   PERFORM mcms_core.emit_event('lab_order_placed','info', NEW.requested_by, v_party,
       'mcms_lab','lab_order', NEW.order_id,
       jsonb_build_object('order_no', NEW.order_no, 'priority', NEW.order_priority::text, 'panel_id', NEW.panel_id));
    RETURN NEW;
@@ -138,13 +141,15 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
    samp mcms_lab.sample%ROWTYPE;
    pid BIGINT;
+   v_party BIGINT;
    sev mcms_core.event_severity;
 BEGIN
    SELECT * INTO samp FROM mcms_lab.sample WHERE sample_id = NEW.sample_id;
    SELECT patient_id INTO pid FROM mcms_lab.lab_order WHERE order_id = samp.lab_order_id;
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = pid;
    sev := CASE WHEN NEW.flag='critical' THEN 'critical' ELSE 'info' END;
    IF (TG_OP='UPDATE' AND NEW.verified_at IS NOT NULL) THEN
-      PERFORM mcms_core.emit_event('result_verified', sev, NEW.verified_by, pid,
+      PERFORM mcms_core.emit_event('result_verified', sev, NEW.verified_by, v_party,
          'mcms_lab','result', NEW.result_id,
          jsonb_build_object('test_id', NEW.test_id, 'flag', NEW.flag::text,
                             'value_text', NEW.value_text, 'value_numeric', NEW.value_numeric,

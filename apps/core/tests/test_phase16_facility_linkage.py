@@ -65,10 +65,9 @@ def test_learned_mode_orders_by_acceptance(admin_client):
     tgt_dept = _dept_id("ONC-UNIT")
     fac = _fac_id("TERT")
     with connection.cursor() as cur:
-        # encounter insert fires trg_encounter_event which has a latent FK
-        # quirk (passes patient_id as subject_party_id); disable triggers for
-        # this seed insert so the learned-mode logic can be exercised cleanly.
-        cur.execute("ALTER TABLE mcms_emr.encounter DISABLE TRIGGER ALL;")
+        # encounter insert fires trg_encounter_event; the trigger now correctly
+        # resolves the patient's party_id (fixed in 33_fix_event_subject_party.sql),
+        # so no trigger-disable workaround is needed.
         cur.execute(
             "INSERT INTO mcms_core.party (party_type, display_name) "
             "VALUES ('person', %s) RETURNING party_id", [f"Learner-{uid}"])
@@ -88,7 +87,6 @@ def test_learned_mode_orders_by_acceptance(admin_client):
             "to_department_id, urgency, status, facility_id, created_at, updated_at) "
             "VALUES (%s, 1, %s, 'routine', 'accepted', %s, now(), now())",
             [enc, tgt_dept, fac])
-        cur.execute("ALTER TABLE mcms_emr.encounter ENABLE TRIGGER ALL;")
 
     r = admin_client.get(
         f"/api/referral/recommend/?from_department_id={src_dept}&learned=true")
@@ -107,3 +105,37 @@ def test_learned_false_is_rule_only(admin_client):
     assert r.json()["learned"] is False
     for rec in r.json()["recommendations"]:
         assert "learned_acceptances" not in rec
+
+
+def test_encounter_trigger_records_correct_party(admin_client):
+    # regression: trg_encounter_event must attribute the event to the
+    # patient's PARTY (mcms_core.party), not the patient_id. This is the
+    # fix in 33_fix_event_subject_party.sql (root-cause was patient_id
+    # passed as subject_party_id, a FK to party).
+    uid = uuid.uuid4().hex[:12]
+    fac = _fac_id("TERT")
+    with connection.cursor() as cur:
+        cur.execute(
+            "INSERT INTO mcms_core.party (party_type, display_name) "
+            "VALUES ('person', %s) RETURNING party_id", [f"Evt-{uid}"])
+        party_id = cur.fetchone()[0]
+        cur.execute(
+            "INSERT INTO mcms_emr.patient (mrn, facility_id, party_id) "
+            "VALUES (%s, %s, %s) RETURNING patient_id", [f"EVT-{uid}", fac, party_id])
+        pid = cur.fetchone()[0]
+        cur.execute(
+            "INSERT INTO mcms_emr.encounter (patient_id, facility_id, department_id, "
+            "mrn, status, class, created_at, updated_at) "
+            "VALUES (%s, %s, %s, %s, 'planned', 'ambulatory', now(), now()) RETURNING encounter_id",
+            [pid, fac, _dept_id("CARD-DIS"), f"EVT-{uid}"])
+        enc = cur.fetchone()[0]
+        # the trigger fires on INSERT; read the emitted event
+        cur.execute(
+            "SELECT subject_party_id FROM mcms_core.event_log "
+            "WHERE source_table='encounter' AND source_id=%s ORDER BY event_id DESC LIMIT 1",
+            [enc])
+        row = cur.fetchone()
+    assert row is not None, "encounter trigger did not emit an event"
+    assert row[0] == party_id, (
+        f"event attributed to wrong subject: got {row[0]}, expected party {party_id}")
+    assert row[0] != pid, "event subject is patient_id, not party_id (root cause not fixed)"

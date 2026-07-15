@@ -117,6 +117,7 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
    bal INT;
    drugrow mcms_rx.drug_item%ROWTYPE;
+   v_party BIGINT;
 BEGIN
    -- decrement lot on_hand (assumed new lot_id is set)
    IF NEW.lot_id IS NOT NULL THEN
@@ -136,7 +137,8 @@ BEGIN
               'dispense to patient ' || NEW.mrn);
    END IF;
 
-   PERFORM mcms_core.emit_event('medication_dispensed','info', NEW.dispensed_by, NEW.patient_id,
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
+   PERFORM mcms_core.emit_event('medication_dispensed','info', NEW.dispensed_by, v_party,
       'mcms_rx','dispensation', NEW.dispensation_id,
       jsonb_build_object('drug_item_id', NEW.drug_item_id, 'qty', NEW.quantity, 'mrn', NEW.mrn));
 
@@ -157,8 +159,11 @@ FOR EACH ROW EXECUTE FUNCTION mcms_rx.fn_dispense_event_and_stock();
 -- Administration event
 CREATE OR REPLACE FUNCTION mcms_rx.fn_administer_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
-   PERFORM mcms_core.emit_event('medication_administered','info', NEW.administered_by, NEW.patient_id,
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
+   PERFORM mcms_core.emit_event('medication_administered','info', NEW.administered_by, v_party,
       'mcms_rx','administration', NEW.administer_id,
       jsonb_build_object('drug_item_id', NEW.drug_item_id, 'dose', NEW.dose_given));
    RETURN NEW;

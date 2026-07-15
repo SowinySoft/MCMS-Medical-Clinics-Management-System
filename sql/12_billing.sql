@@ -120,9 +120,12 @@ CREATE INDEX ON mcms_billing.insurance_claim (status);
 -- ---------- Events ----------
 CREATE OR REPLACE FUNCTION mcms_billing.fn_invoice_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    IF (TG_OP='INSERT' AND NEW.status IN ('issued','partial','paid')) THEN
-      PERFORM mcms_core.emit_event('invoice_issued','info', NEW.issued_by, NEW.patient_id,
+      PERFORM mcms_core.emit_event('invoice_issued','info', NEW.issued_by, v_party,
          'mcms_billing','invoice', NEW.invoice_id,
          jsonb_build_object('invoice_no', NEW.invoice_no, 'total', NEW.total));
    END IF;

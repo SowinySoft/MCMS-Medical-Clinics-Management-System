@@ -83,9 +83,12 @@ CREATE INDEX ON mcms_physio.session (status);
 -- ---------- Event ----------
 CREATE OR REPLACE FUNCTION mcms_physio.fn_session_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    IF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='completed') THEN
-      PERFORM mcms_core.emit_event('physio_session_completed','info', NEW.therapist_user_id, NEW.patient_id,
+      PERFORM mcms_core.emit_event('physio_session_completed','info', NEW.therapist_user_id, v_party,
          'mcms_physio','session', NEW.session_id,
          jsonb_build_object('plan_id', NEW.plan_id, 'therapy_id', NEW.therapy_id,
                             'session_no', NEW.sessions_in_seq));

@@ -60,21 +60,21 @@ CREATE INDEX ON mcms_emr.encounter (class, status);
 CREATE OR REPLACE FUNCTION mcms_emr.fn_encounter_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
-   v_pid BIGINT;
+   v_party BIGINT;
    v_mrn TEXT;
    v_uid BIGINT;
 BEGIN
-   SELECT p.patient_id, p.mrn INTO v_pid, v_mrn FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
+   SELECT p.party_id, p.mrn INTO v_party, v_mrn FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
    SELECT a.party_id INTO v_uid FROM mcms_core.app_user a WHERE a.user_id = NEW.attending_user_id;
    IF (TG_OP = 'INSERT') THEN
       PERFORM mcms_core.emit_event(
-         'encounter_opened','info', NEW.attending_user_id, v_pid,
+         'encounter_opened','info', NEW.attending_user_id, v_party,
          'mcms_emr','encounter', NEW.encounter_id,
          jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text, 'reason', NEW.reason_for_visit)
       );
    ELSIF (TG_OP = 'UPDATE' AND OLD.status <> NEW.status) THEN
       IF NEW.status = 'finished' THEN
-        PERFORM mcms_core.emit_event('encounter_closed','info', NEW.attending_user_id, v_pid,
+        PERFORM mcms_core.emit_event('encounter_closed','info', NEW.attending_user_id, v_party,
             'mcms_emr','encounter', NEW.encounter_id,
             jsonb_build_object('mrn', v_mrn, 'class', NEW.class::text));
       END IF;

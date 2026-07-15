@@ -82,19 +82,22 @@ CREATE INDEX ON mcms_emergency.ed_bed (triage_id);
 -- ---------- Events ----------
 CREATE OR REPLACE FUNCTION mcms_emergency.fn_triage_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    IF (TG_OP='INSERT') THEN
-      PERFORM mcms_core.emit_event('triage_recorded','info', NEW.triage_nurse_user_id, NEW.patient_id,
+      PERFORM mcms_core.emit_event('triage_recorded','info', NEW.triage_nurse_user_id, v_party,
          'mcms_emergency','triage', NEW.triage_id,
          jsonb_build_object('ed_visit_no', NEW.ed_visit_no,'esi_level', NEW.esi_level,
                             'trauma_alert', NEW.trauma_alert));
       IF NEW.trauma_alert THEN
-         PERFORM mcms_core.emit_event('ed_admitted','warning', NULL, NEW.patient_id,
+         PERFORM mcms_core.emit_event('ed_admitted','warning', NULL, v_party,
             'mcms_emergency','triage', NEW.triage_id,
             jsonb_build_object('esi_level', NEW.esi_level,'trauma', true));
       END IF;
    ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status AND NEW.status='discharged') THEN
-      PERFORM mcms_core.emit_event('ed_discharged','info', NULL, NEW.patient_id,
+      PERFORM mcms_core.emit_event('ed_discharged','info', NULL, v_party,
          'mcms_emergency','triage', NEW.triage_id,
          jsonb_build_object('disposition', NEW.disposition));
    END IF;
@@ -105,8 +108,11 @@ FOR EACH ROW EXECUTE FUNCTION mcms_emergency.fn_triage_event();
 
 CREATE OR REPLACE FUNCTION mcms_emergency.fn_resus_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
-   PERFORM mcms_core.emit_event('resuscitation_initiated','critical', NEW.team_leader_id, NEW.patient_id,
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
+   PERFORM mcms_core.emit_event('resuscitation_initiated','critical', NEW.team_leader_id, v_party,
       'mcms_emergency','resuscitation', NEW.resus_id,
       jsonb_build_object('code_type', NEW.code_type, 'code_initiated_at', NEW.code_initiated_at));
    RETURN NEW;
