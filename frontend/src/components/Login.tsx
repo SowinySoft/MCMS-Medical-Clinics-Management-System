@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toggleLanguage } from "../i18n";

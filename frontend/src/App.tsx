@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./auth";
+import { AuthProvider } from "./auth";
+import { useAuth } from "./useAuth";
 import { ToastProvider } from "./toast";
 import { Sidebar } from "./components/Sidebar";
 import { Login } from "./components/Login";

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { mcmsApi } from "../api";
 import { useTranslation } from "react-i18next";
 import { BarChart } from "./BarChart";
-import { useToast } from "../toast";
+import { useToast } from "../useToast";
 
 // Reports hub — RBAC-gated sections with shared date-range filter,
 // SVG charts for aggregations, CSV export and print.

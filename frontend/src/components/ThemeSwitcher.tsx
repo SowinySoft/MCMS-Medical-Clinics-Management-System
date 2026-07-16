@@ -1,4 +1,4 @@
-import { useTheme } from "../theme";
+import { useTheme } from "../useTheme";
 import { useTranslation } from "react-i18next";
 
 // Theme switcher — cycles the 3 medical palettes (Clinical / Light / Contrast).

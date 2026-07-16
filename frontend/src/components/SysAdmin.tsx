@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { mcmsApi } from "../api";
 import { BarChart } from "./BarChart";
-import { useToast } from "../toast";
+import { useToast } from "../useToast";
 
 type Tab = "metrics" | "maintenance" | "backups" | "replication" | "sync";
 const TABS: { key: Tab; en: string }[] = [

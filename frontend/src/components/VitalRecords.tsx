@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mcmsApi } from "../api";
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 
 function Field({ label, name, value, onChange, type = "text" }: any) {
   return (

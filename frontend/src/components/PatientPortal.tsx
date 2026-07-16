@@ -3,7 +3,7 @@
 // data_sharing consent. Only renders for holders of `patient.portal`.
 import { useEffect, useState } from "react";
 import api from "../api";
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 import { useTranslation } from "react-i18next";
 
 interface Row { [k: string]: any }

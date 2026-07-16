@@ -3,7 +3,7 @@
 // Pulls /system/monitors/ (admin.all only) and shows every signal.
 import { useEffect, useState } from "react";
 import { mcmsApi } from "../api";
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 import { useTranslation } from "react-i18next";
 
 function fmtUptime(s: number) {

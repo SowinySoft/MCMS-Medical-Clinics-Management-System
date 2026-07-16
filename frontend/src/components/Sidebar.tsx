@@ -1,4 +1,4 @@
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 import { SCHEMA_GROUPS } from "../schemas";
 import { useTranslation } from "react-i18next";
 

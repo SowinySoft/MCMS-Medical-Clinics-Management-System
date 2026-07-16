@@ -1,4 +1,4 @@
-import { useAuth } from "../auth";
+import { useAuth } from "../useAuth";
 import { mcmsApi } from "../api";
 import { useEffect, useState } from "react";
 import { LiveFeed } from "./LiveFeed";

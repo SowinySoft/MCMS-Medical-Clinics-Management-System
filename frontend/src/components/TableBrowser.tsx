@@ -2,7 +2,7 @@ import { mcmsApi } from "../api";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MODEL_LABELS } from "../schemas";
-import { useToast } from "../toast";
+import { useToast } from "../useToast";
 
 // Generic data browser with richer CRUD:
 //  - dynamic form from DRF OPTIONS metadata

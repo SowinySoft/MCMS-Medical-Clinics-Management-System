@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.audit_emit_event import check_sql_files, SQL_DIR  # noqa: E402
+from scripts.audit_emit_event import SQL_DIR, check_sql_files  # noqa: E402
 
 
 def test_emit_event_subject_is_party():

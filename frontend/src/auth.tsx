@@ -1,20 +1,7 @@
 // Auth context: holds JWT + RBAC roles/perms, drives route guards & menus.
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { authApi } from "./api";
-
-interface AuthState {
-  access: string | null;
-  refresh: string | null;
-  roles: string[];
-  perms: string[];
-  login: (u: string, p: string) => Promise<void>;
-  logout: () => void;
-  hasPerm: (p: string) => boolean;
-}
-
-const Ctx = createContext<AuthState>(null as any);
-
-export const useAuth = () => useContext(Ctx);
+import { AuthCtx } from "./useAuth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [access, setAccess] = useState<string | null>(localStorage.getItem("access"));
@@ -46,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasPerm = (p: string) => perms.includes("admin.all") || perms.includes(p);
 
   return (
-    <Ctx.Provider value={{ access, refresh, roles, perms, login, logout, hasPerm }}>
+    <AuthCtx.Provider value={{ access, refresh, roles, perms, login, logout, hasPerm }}>
       {children}
-    </Ctx.Provider>
+    </AuthCtx.Provider>
   );
 }
