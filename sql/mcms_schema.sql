@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eubshJYOB7oSfrKeWwXeljMhCuuLv7RwTkYAbttsMwJ6eJm8PMTnowzc3fzYi7g
+\restrict n7kDJ1RJ8hqOCJ340bMGzmcDiVRVUsOnusGkLtfinJRiP0hcoWWRRwzFABkyP0A
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -1640,7 +1640,8 @@ CREATE FUNCTION mcms_emr.fn_diag_event() RETURNS trigger
     AS $$
 DECLARE v_pid BIGINT;
 BEGIN
-   SELECT e.patient_id INTO v_pid FROM mcms_emr.encounter e WHERE e.encounter_id = NEW.encounter_id;
+   SELECT p.party_id INTO v_pid
+     FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
    PERFORM mcms_core.emit_event(
       'diagnosis_recorded','info', NEW.recorded_by, v_pid,
       'mcms_emr','diagnosis', NEW.diagnosis_id,
@@ -14650,5 +14651,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eubshJYOB7oSfrKeWwXeljMhCuuLv7RwTkYAbttsMwJ6eJm8PMTnowzc3fzYi7g
+\unrestrict n7kDJ1RJ8hqOCJ340bMGzmcDiVRVUsOnusGkLtfinJRiP0hcoWWRRwzFABkyP0A
 

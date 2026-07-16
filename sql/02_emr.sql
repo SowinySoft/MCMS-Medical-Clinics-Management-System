@@ -111,7 +111,9 @@ CREATE OR REPLACE FUNCTION mcms_emr.fn_diag_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE v_pid BIGINT;
 BEGIN
-   SELECT e.patient_id INTO v_pid FROM mcms_emr.encounter e WHERE e.encounter_id = NEW.encounter_id;
+   -- subject must be the PARTY id, not the patient id
+   SELECT p.party_id INTO v_pid
+     FROM mcms_emr.patient p WHERE p.patient_id = NEW.patient_id;
    PERFORM mcms_core.emit_event(
       'diagnosis_recorded','info', NEW.recorded_by, v_pid,
       'mcms_emr','diagnosis', NEW.diagnosis_id,
