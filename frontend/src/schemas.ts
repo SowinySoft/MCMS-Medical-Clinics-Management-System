@@ -20,7 +20,7 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
   { key: "mgmt", label: { en: "Management & Support", ar: "الإدارة والدعم" }, icon: "⚙️",
     schemas: ["billing", "erp", "hr", "payer"], perm: "billing.read" },
   { key: "reporting", label: { en: "Reporting & Localization", ar: "التقارير والتعريب" }, icon: "📊",
-    schemas: ["core", "identity", "fhir", "hl7v2"], perm: "admin.all" },
+    schemas: ["core", "identity", "fhir", "hl7v2", "vital_records"], perm: "admin.all" },
 ];
 
 // Friendly labels for every domain table (used by the table browser title).

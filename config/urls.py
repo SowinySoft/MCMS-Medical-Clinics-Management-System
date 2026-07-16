@@ -29,6 +29,7 @@ from apps.payer.views import PayerViewSet
 from apps.referral.views import ReferralViewSet
 from apps.telemed.views import TelemedViewSet
 from apps.terminology.views import TerminologyViewSet
+from apps.vital_records.views import VitalRecordsViewSet
 
 router = build_router()
 router.register("reports", ReportViewSet, basename="reports")
@@ -42,6 +43,7 @@ router.register("payer", PayerViewSet, basename="payer")
 router.register("telemed", TelemedViewSet, basename="telemed")
 router.register("identity", IdentityViewSet, basename="identity")
 router.register("referral", ReferralViewSet, basename="referral")
+router.register("vital_records", VitalRecordsViewSet, basename="vital_records")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

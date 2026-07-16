@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict A4vVxarfRPDCCUm1GLZ8X180phZeFmSZtiQHVqiSMCBfOn7hv5IfOkbfIMlLbUB
+\restrict XtIJdlFyTIVZHwJPEQDUk4NQdj3Ek2MfhX0T1hmhYs3eaZEuTgqq0jBO8fXczt8
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -230,6 +230,13 @@ CREATE SCHEMA mcms_terminology;
 
 
 --
+-- Name: mcms_vital_records; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA mcms_vital_records;
+
+
+--
 -- Name: claim_status; Type: TYPE; Schema: mcms_billing; Owner: -
 --
 
@@ -428,7 +435,8 @@ CREATE TYPE mcms_core.event_kind AS ENUM (
     'update',
     'delete',
     'appointment_noshow',
-    'abnormal_result_alert'
+    'abnormal_result_alert',
+    'patient_deceased'
 );
 
 
@@ -2182,6 +2190,29 @@ BEGIN
 END$$;
 
 
+--
+-- Name: fn_patient_deceased_guard(); Type: FUNCTION; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE FUNCTION mcms_vital_records.fn_patient_deceased_guard() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF NEW.is_deceased IS TRUE AND OLD.is_deceased IS NOT TRUE THEN
+    -- immutable: never allow flipping a deceased patient back to alive
+    PERFORM mcms_core.emit_event(
+      'patient_deceased', 'info', NULL, NEW.party_id,
+      'mcms_emr', 'patient', NEW.patient_id, '{}'::jsonb);
+  END IF;
+  -- reject any attempt to un-decease (defensive; also enforced in app layer)
+  IF OLD.is_deceased IS TRUE AND NEW.is_deceased IS NOT TRUE THEN
+    RAISE EXCEPTION 'patient % is deceased and cannot be reactivated', OLD.patient_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -2551,8 +2582,16 @@ CREATE TABLE mcms_emr.patient (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     fhir_id text,
     hl7_mpi text,
-    facility_id bigint DEFAULT 1 NOT NULL
+    facility_id bigint DEFAULT 1 NOT NULL,
+    is_deceased boolean DEFAULT false NOT NULL
 );
+
+
+--
+-- Name: COLUMN patient.is_deceased; Type: COMMENT; Schema: mcms_emr; Owner: -
+--
+
+COMMENT ON COLUMN mcms_emr.patient.is_deceased IS 'Lifecycle flag set true when a death certificate is issued (immutable once set).';
 
 
 --
@@ -6675,6 +6714,110 @@ ALTER SEQUENCE mcms_terminology.concept_concept_id_seq OWNED BY mcms_terminology
 
 
 --
+-- Name: birth_certificate; Type: TABLE; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE TABLE mcms_vital_records.birth_certificate (
+    birth_cert_id bigint NOT NULL,
+    registration_no text NOT NULL,
+    newborn_patient_id bigint NOT NULL,
+    mother_patient_id bigint,
+    father_party_id bigint,
+    delivery_encounter_id bigint,
+    facility_id bigint NOT NULL,
+    birth_datetime timestamp with time zone NOT NULL,
+    birth_weight_g numeric(7,1),
+    gestation_weeks numeric(4,1),
+    place_of_birth text,
+    attendant_user_id bigint,
+    registrar_user_id bigint,
+    certifier_user_id bigint,
+    status text DEFAULT 'draft'::text NOT NULL,
+    signed_at timestamp with time zone,
+    amended_from bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT birth_certificate_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'issued'::text, 'amended'::text])))
+);
+
+
+--
+-- Name: birth_certificate_birth_cert_id_seq; Type: SEQUENCE; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE mcms_vital_records.birth_certificate ALTER COLUMN birth_cert_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME mcms_vital_records.birth_certificate_birth_cert_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: birth_reg_no_seq; Type: SEQUENCE; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE SEQUENCE mcms_vital_records.birth_reg_no_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: death_certificate; Type: TABLE; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE TABLE mcms_vital_records.death_certificate (
+    death_cert_id bigint NOT NULL,
+    registration_no text NOT NULL,
+    patient_id bigint NOT NULL,
+    facility_id bigint NOT NULL,
+    death_datetime timestamp with time zone NOT NULL,
+    cause_icd10 text,
+    cause_text text,
+    certifying_clinician_user_id bigint,
+    coroner_case boolean DEFAULT false NOT NULL,
+    registrar_user_id bigint,
+    status text DEFAULT 'draft'::text NOT NULL,
+    signed_at timestamp with time zone,
+    amended_from bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT death_certificate_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'issued'::text, 'amended'::text])))
+);
+
+
+--
+-- Name: death_certificate_death_cert_id_seq; Type: SEQUENCE; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE mcms_vital_records.death_certificate ALTER COLUMN death_cert_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME mcms_vital_records.death_certificate_death_cert_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: death_reg_no_seq; Type: SEQUENCE; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE SEQUENCE mcms_vital_records.death_reg_no_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: auth_group; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -8993,6 +9136,38 @@ ALTER TABLE ONLY mcms_terminology.concept
 
 ALTER TABLE ONLY mcms_terminology.concept
     ADD CONSTRAINT concept_pkey PRIMARY KEY (concept_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_pkey; Type: CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_pkey PRIMARY KEY (birth_cert_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_registration_no_facility_id_key; Type: CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_registration_no_facility_id_key UNIQUE (registration_no, facility_id);
+
+
+--
+-- Name: death_certificate death_certificate_pkey; Type: CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.death_certificate
+    ADD CONSTRAINT death_certificate_pkey PRIMARY KEY (death_cert_id);
+
+
+--
+-- Name: death_certificate death_certificate_registration_no_facility_id_key; Type: CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.death_certificate
+    ADD CONSTRAINT death_certificate_registration_no_facility_id_key UNIQUE (registration_no, facility_id);
 
 
 --
@@ -11321,6 +11496,62 @@ CREATE INDEX ix_concept_facility ON mcms_terminology.concept USING btree (facili
 
 
 --
+-- Name: ix_birth_facility; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_birth_facility ON mcms_vital_records.birth_certificate USING btree (facility_id);
+
+
+--
+-- Name: ix_birth_mother; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_birth_mother ON mcms_vital_records.birth_certificate USING btree (mother_patient_id);
+
+
+--
+-- Name: ix_birth_newborn; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_birth_newborn ON mcms_vital_records.birth_certificate USING btree (newborn_patient_id);
+
+
+--
+-- Name: ix_birth_status; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_birth_status ON mcms_vital_records.birth_certificate USING btree (status);
+
+
+--
+-- Name: ix_death_cause; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_death_cause ON mcms_vital_records.death_certificate USING btree (cause_icd10);
+
+
+--
+-- Name: ix_death_facility; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_death_facility ON mcms_vital_records.death_certificate USING btree (facility_id);
+
+
+--
+-- Name: ix_death_patient; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_death_patient ON mcms_vital_records.death_certificate USING btree (patient_id);
+
+
+--
+-- Name: ix_death_status; Type: INDEX; Schema: mcms_vital_records; Owner: -
+--
+
+CREATE INDEX ix_death_status ON mcms_vital_records.death_certificate USING btree (status);
+
+
+--
 -- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -11857,6 +12088,13 @@ CREATE TRIGGER trg_med_order_touch BEFORE UPDATE ON mcms_emr.medication_order FO
 --
 
 CREATE TRIGGER trg_note_touch BEFORE UPDATE ON mcms_emr.clinical_note FOR EACH ROW EXECUTE FUNCTION mcms_core.fn_touch();
+
+
+--
+-- Name: patient trg_patient_deceased_guard; Type: TRIGGER; Schema: mcms_emr; Owner: -
+--
+
+CREATE TRIGGER trg_patient_deceased_guard BEFORE UPDATE ON mcms_emr.patient FOR EACH ROW WHEN ((old.is_deceased IS DISTINCT FROM new.is_deceased)) EXECUTE FUNCTION mcms_vital_records.fn_patient_deceased_guard();
 
 
 --
@@ -14252,6 +14490,78 @@ ALTER TABLE ONLY mcms_surgical.surgical_team
 
 
 --
+-- Name: birth_certificate birth_certificate_amended_from_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_amended_from_fkey FOREIGN KEY (amended_from) REFERENCES mcms_vital_records.birth_certificate(birth_cert_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_delivery_encounter_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_delivery_encounter_id_fkey FOREIGN KEY (delivery_encounter_id) REFERENCES mcms_emr.encounter(encounter_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_facility_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_facility_id_fkey FOREIGN KEY (facility_id) REFERENCES mcms_core.facility(facility_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_father_party_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_father_party_id_fkey FOREIGN KEY (father_party_id) REFERENCES mcms_core.party(party_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_mother_patient_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_mother_patient_id_fkey FOREIGN KEY (mother_patient_id) REFERENCES mcms_emr.patient(patient_id);
+
+
+--
+-- Name: birth_certificate birth_certificate_newborn_patient_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.birth_certificate
+    ADD CONSTRAINT birth_certificate_newborn_patient_id_fkey FOREIGN KEY (newborn_patient_id) REFERENCES mcms_emr.patient(patient_id);
+
+
+--
+-- Name: death_certificate death_certificate_amended_from_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.death_certificate
+    ADD CONSTRAINT death_certificate_amended_from_fkey FOREIGN KEY (amended_from) REFERENCES mcms_vital_records.death_certificate(death_cert_id);
+
+
+--
+-- Name: death_certificate death_certificate_facility_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.death_certificate
+    ADD CONSTRAINT death_certificate_facility_id_fkey FOREIGN KEY (facility_id) REFERENCES mcms_core.facility(facility_id);
+
+
+--
+-- Name: death_certificate death_certificate_patient_id_fkey; Type: FK CONSTRAINT; Schema: mcms_vital_records; Owner: -
+--
+
+ALTER TABLE ONLY mcms_vital_records.death_certificate
+    ADD CONSTRAINT death_certificate_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES mcms_emr.patient(patient_id);
+
+
+--
 -- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -14335,5 +14645,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict A4vVxarfRPDCCUm1GLZ8X180phZeFmSZtiQHVqiSMCBfOn7hv5IfOkbfIMlLbUB
+\unrestrict XtIJdlFyTIVZHwJPEQDUk4NQdj3Ek2MfhX0T1hmhYs3eaZEuTgqq0jBO8fXczt8
 
