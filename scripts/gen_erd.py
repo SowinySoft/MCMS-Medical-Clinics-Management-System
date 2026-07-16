@@ -97,6 +97,7 @@ JOIN information_schema.key_column_usage kcu
  AND kcu.table_schema = tc.table_schema AND kcu.table_name = tc.table_name
 WHERE tc.constraint_type = 'PRIMARY KEY'
   AND tc.table_schema LIKE 'mcms_%' AND tc.table_schema <> 'mcms_audit'
+ORDER BY tc.table_schema, tc.table_name, kcu.ordinal_position
 """
 FK_SQL = """
 SELECT kcu.table_schema, kcu.table_name, kcu.column_name,
@@ -112,6 +113,7 @@ JOIN information_schema.constraint_column_usage ccu
 WHERE tc.constraint_type = 'FOREIGN KEY'
   AND tc.table_schema LIKE 'mcms_%' AND tc.table_schema <> 'mcms_audit'
   AND ccu.table_schema LIKE 'mcms_%' AND ccu.table_schema <> 'mcms_audit'
+ORDER BY kcu.table_schema, kcu.table_name, kcu.ordinal_position
 """
 
 

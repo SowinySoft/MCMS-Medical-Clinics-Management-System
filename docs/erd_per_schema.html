@@ -249,15 +249,15 @@ erDiagram
     text actor_role
     text subject_name
   }
-  core__access_log ||--o{ core__app_user : "reader_user_id"
   core__access_log ||--o{ core__party : "subject_party_id"
+  core__access_log ||--o{ core__app_user : "reader_user_id"
   core__address ||--o{ core__party : "party_id"
   core__app_user ||--o{ core__facility : "facility_id"
   core__app_user ||--o{ core__party : "party_id"
   core__audit_trail ||--o{ core__app_user : "changed_by"
   core__audit_trail ||--o{ core__event_log : "event_id"
-  core__consent ||--o{ core__app_user : "granted_by"
   core__consent ||--o{ core__party : "party_id"
+  core__consent ||--o{ core__app_user : "granted_by"
   core__contact ||--o{ core__party : "party_id"
   core__event_log ||--o{ core__app_user : "actor_user_id"
   core__event_log ||--o{ core__party : "subject_party_id"
@@ -265,15 +265,15 @@ erDiagram
   core__facility ||--o| core__facility : "self"
   core__federated_identity ||--o{ core__identity_provider : "provider_code"
   core__federated_identity ||--o{ core__app_user : "user_id"
-  core__hl7_message ||--o{ core__facility : "facility_id"
   core__hl7_message ||--o{ core__app_user : "received_by"
-  core__notification ||--o{ core__party : "recipient_party_id"
+  core__hl7_message ||--o{ core__facility : "facility_id"
   core__notification ||--o{ core__app_user : "recipient_user_id"
+  core__notification ||--o{ core__party : "recipient_party_id"
   core__organization ||--o| core__organization : "self"
   core__role_permission ||--o{ core__permission : "permission_id"
   core__role_permission ||--o{ core__role : "role_id"
-  core__user_role_map ||--o{ core__role : "role_id"
   core__user_role_map ||--o{ core__app_user : "user_id"
+  core__user_role_map ||--o{ core__role : "role_id"
 </pre></div><div class="sec" id="sec_mcms_emr" style="display:none"><h2>🩺 mcms_emr — EMR <span class="cnt">(15 tables)</span></h2><pre class="mermaid">
 erDiagram
   emr__allergy {
@@ -516,19 +516,19 @@ erDiagram
   emr__clinical_note ||--o{ emr__patient : "patient_id"
   emr__diagnosis ||--o{ emr__encounter : "encounter_id"
   emr__diagnosis ||--o{ emr__patient : "patient_id"
-  emr__encounter ||--o{ emr__patient : "mrn"
   emr__encounter ||--o| emr__encounter : "self"
+  emr__encounter ||--o{ emr__patient : "mrn"
   emr__encounter ||--o{ emr__patient : "patient_id"
   emr__family_history ||--o{ emr__patient : "patient_id"
   emr__immunization ||--o{ emr__patient : "patient_id"
   emr__medication_order ||--o{ emr__encounter : "encounter_id"
   emr__medication_order ||--o{ emr__patient : "patient_id"
+  emr__referral ||--o{ emr__encounter : "to_encounter_id"
   emr__referral ||--o{ emr__diagnosis : "diagnosis_id"
   emr__referral ||--o{ emr__encounter : "from_encounter_id"
-  emr__referral ||--o{ emr__encounter : "to_encounter_id"
   emr__social_history ||--o{ emr__patient : "patient_id"
-  emr__vitals ||--o{ emr__encounter : "encounter_id"
   emr__vitals ||--o{ emr__patient : "patient_id"
+  emr__vitals ||--o{ emr__encounter : "encounter_id"
 </pre></div><div class="sec" id="sec_mcms_clinic" style="display:none"><h2>📅 mcms_clinic — Clinics &amp; Appointments <span class="cnt">(4 tables)</span></h2><pre class="mermaid">
 erDiagram
   clinic__appointment {
@@ -601,9 +601,9 @@ erDiagram
     timestamp updated_at
   }
   clinic__appointment ||--o{ clinic__room : "room_id"
+  clinic__consultation ||--o{ clinic__room : "room_id"
   clinic__consultation ||--o{ clinic__appointment : "appointment_id"
   clinic__consultation ||--o{ clinic__patient_queue : "queue_id"
-  clinic__consultation ||--o{ clinic__room : "room_id"
   clinic__patient_queue ||--o{ clinic__room : "room_id"
 </pre></div><div class="sec" id="sec_mcms_hr" style="display:none"><h2>👥 mcms_hr — HR &amp; Payroll <span class="cnt">(9 tables)</span></h2><pre class="mermaid">
 erDiagram
@@ -718,9 +718,9 @@ erDiagram
     decimal total_net
     bigint paid_count
   }
-  hr__department ||--o| hr__department : "self"
   hr__attendance ||--o{ hr__employee : "employee_id"
   hr__attendance ||--o{ hr__shift : "shift_id"
+  hr__department ||--o| hr__department : "self"
   hr__employee ||--o{ hr__department : "primary_department_id"
   hr__employee_department ||--o{ hr__department : "department_id"
   hr__employee_department ||--o{ hr__employee : "employee_id"
@@ -1778,8 +1778,8 @@ erDiagram
   erp__goods_receipt_line ||--o{ erp__purchase_order_line : "po_line_id"
   erp__inventory_stock ||--o{ erp__inventory_item : "item_id"
   erp__purchase_order ||--o{ erp__supplier : "supplier_id"
-  erp__purchase_order_line ||--o{ erp__inventory_item : "item_id"
   erp__purchase_order_line ||--o{ erp__purchase_order : "po_id"
+  erp__purchase_order_line ||--o{ erp__inventory_item : "item_id"
   erp__stock_movement ||--o{ erp__inventory_item : "item_id"
 </pre></div><div class="sec" id="sec_mcms_telemed" style="display:none"><h2>📞 mcms_telemed — Telemedicine <span class="cnt">(1 tables)</span></h2><pre class="mermaid">
 erDiagram
