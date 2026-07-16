@@ -56,6 +56,13 @@ class ReportViewSet(viewsets.ViewSet):
         "readmissions": "emr.read",
         "hai_kpis": "emr.read",
         "moh_report": "emr.read",
+        # Phase 17.1 - HR/payroll + vital records + high-demand ops reports
+        "monthly_payroll": "payroll.read",
+        "birth_certificates": "vital_records.read",
+        "death_certificates": "vital_records.read",
+        "claims_status": "billing.read",
+        "lab_turnaround": "lab_rad.result",
+        "appointment_utilization": "emr.read",
     }
 
     def _guard(self, request, key):
@@ -406,3 +413,181 @@ class ReportViewSet(viewsets.ViewSet):
             "icu_mortality_rate": icu.get("icu_mortality_rate"),
         }
         return Response(report)
+
+    # --------------------------------------------------- Phase 17.1: HR / Payroll
+    @action(detail=False, methods=["get"])
+    def monthly_payroll(self, request):
+        """Monthly payroll accounting report for a payroll period.
+
+        Returns the period header, the per-department roll-up (from the
+        prebuilt mcms_hr.v_payroll_summary view) and the per-employee
+        payroll lines with gross/net and paid status. Date-range on the
+        period is optional via ?period_id= (defaults to the most recent
+        closed/paid period).
+        """
+        if (d := self._guard(request, "payroll.read")):
+            return d
+        period_id = request.query_params.get("period_id")
+        params = []
+        where = ""
+        if period_id:
+            where = "WHERE pp.period_id=%s"
+            params = [period_id]
+        else:
+            where = ("WHERE pp.period_id = (SELECT MAX(period_id) FROM "
+                     "mcms_hr.payroll_period)")
+        head = _rows(f"""
+            SELECT pp.period_id, pp.code, pp.start_date, pp.end_date,
+                   pp.status, pp.closed_at
+            FROM mcms_hr.payroll_period pp {where}
+        """, params)
+        if not head:
+            return Response({"detail": "no payroll period found"},
+                            status=status.HTTP_404_NOT_FOUND)
+        pid = head[0]["period_id"]
+        code = head[0]["code"]
+        summary = _rows("""
+            SELECT period, start_date, end_date, dept_code, dept_name,
+                   employees_in_period, total_base, total_overtime,
+                   total_bonus, total_deductions, total_net, paid_count
+            FROM mcms_hr.v_payroll_summary
+            WHERE period = %s
+            ORDER BY dept_name
+        """, [code])
+        lines = _rows("""
+            SELECT e.employee_no, e.job_title,
+                   d.code AS department_code, d.name AS department_name,
+                   pi.base_amount, pi.overtime_amount, pi.bonus_amount,
+                   pi.deduction_amount, pi.net_amount, pi.is_paid, pi.paid_at
+            FROM mcms_hr.payroll_item pi
+            JOIN mcms_hr.employee e ON e.employee_id = pi.employee_id
+            LEFT JOIN mcms_hr.department d ON d.department_id = e.primary_department_id
+            WHERE pi.period_id = %s
+            ORDER BY d.name, e.employee_no
+        """, [pid])
+        return Response({
+            "period": head[0],
+            "department_summary": summary,
+            "lines": lines,
+            "totals": {
+                "employees": len(lines),
+                "gross": sum((r["base_amount"] or 0) + (r["overtime_amount"] or 0)
+                             + (r["bonus_amount"] or 0) for r in lines),
+                "deductions": sum((r["deduction_amount"] or 0) for r in lines),
+                "net": sum((r["net_amount"] or 0) for r in lines),
+                "paid": sum(1 for r in lines if r["is_paid"]),
+            },
+        })
+
+    # --------------------------------------------------- Phase 17.1: Vital Records
+    @action(detail=False, methods=["get"])
+    def birth_certificates(self, request):
+        """Issued birth certificates in a date range (newborn cases)."""
+        if (d := self._guard(request, "vital_records.read")):
+            return d
+        rcl, rp = _range(request, "bc.birth_datetime")
+        sql = f"""
+            SELECT bc.registration_no, bc.birth_datetime, bc.birth_weight_g,
+                   bc.gestation_weeks, bc.status,
+                   nb.mrn AS newborn_mrn,
+                   p.display_name AS mother_name,
+                   f.code AS facility_code
+            FROM mcms_vital_records.birth_certificate bc
+            JOIN mcms_emr.patient nb ON nb.patient_id = bc.newborn_patient_id
+            LEFT JOIN mcms_emr.patient mo ON mo.patient_id = bc.mother_patient_id
+            LEFT JOIN mcms_core.party p ON p.party_id = mo.party_id
+            JOIN mcms_core.facility f ON f.facility_id = bc.facility_id
+            WHERE bc.status IN ('issued','amended') {rcl}
+            ORDER BY bc.birth_datetime DESC
+        """
+        return Response(_rows(sql, rp))
+
+    @action(detail=False, methods=["get"])
+    def death_certificates(self, request):
+        """Issued death certificates in a date range (recent deaths)."""
+        if (d := self._guard(request, "vital_records.read")):
+            return d
+        rcl, rp = _range(request, "dc.death_datetime")
+        sql = f"""
+            SELECT dc.registration_no, dc.death_datetime, dc.cause_icd10,
+                   dc.cause_text, dc.coroner_case, dc.status,
+                   pt.mrn AS patient_mrn,
+                   p.display_name AS patient_name,
+                   f.code AS facility_code
+            FROM mcms_vital_records.death_certificate dc
+            JOIN mcms_emr.patient pt ON pt.patient_id = dc.patient_id
+            JOIN mcms_core.party p ON p.party_id = pt.party_id
+            JOIN mcms_core.facility f ON f.facility_id = dc.facility_id
+            WHERE dc.status IN ('issued','amended') {rcl}
+            ORDER BY dc.death_datetime DESC
+        """
+        return Response(_rows(sql, rp))
+
+    # --------------------------------------------------- Phase 17.1: Claims status + TAT
+    @action(detail=False, methods=["get"])
+    def claims_status(self, request):
+        """Insurance claim status breakdown + turnaround (submitted->adjudicated->paid)."""
+        if (d := self._guard(request, "billing.read")):
+            return d
+        rcl, rp = _range(request, "c.submitted_at")
+        breakdown = _rows(f"""
+            SELECT status, COUNT(*) AS claims,
+                   COALESCE(SUM(billed_amount),0)::numeric(12,2) AS billed,
+                   COALESCE(SUM(approved_amount),0)::numeric(12,2) AS approved,
+                   COALESCE(SUM(rejected_amount),0)::numeric(12,2) AS rejected
+            FROM mcms_billing.insurance_claim c
+            WHERE 1=1 {rcl}
+            GROUP BY status ORDER BY claims DESC
+        """, rp)
+        tat = _rows(f"""
+            SELECT
+              ROUND(AVG(EXTRACT(EPOCH FROM (adjudicated_at - submitted_at))/86400.0)::numeric,2) AS avg_submit_to_adjudicate_days,
+              ROUND(AVG(EXTRACT(EPOCH FROM (paid_at - submitted_at))/86400.0)::numeric,2) AS avg_submit_to_pay_days
+            FROM mcms_billing.insurance_claim c
+            WHERE adjudicated_at IS NOT NULL AND submitted_at IS NOT NULL {rcl}
+        """, rp)
+        return Response({"by_status": breakdown, "turnaround": tat[0]})
+
+    # --------------------------------------------------- Phase 17.1: Lab demand / TAT proxy
+    @action(detail=False, methods=["get"])
+    def lab_turnaround(self, request):
+        """Lab order demand: volume by priority and by facility (TAT proxy).
+
+        The lab_order table records requested_at but not a result timestamp,
+        so this reports order volume + avg age-since-request per priority and
+        facility (a demand/backlog proxy, not fabricated result latency).
+        """
+        if (d := self._guard(request, "lab_rad.result")):
+            return d
+        rcl, rp = _range(request, "lo.requested_at")
+        by_priority = _rows(f"""
+            SELECT lo.order_priority AS priority, COUNT(*) AS orders,
+                   ROUND(AVG(EXTRACT(EPOCH FROM (now() - lo.requested_at))/86400.0)::numeric,1) AS avg_age_days
+            FROM mcms_lab.lab_order lo WHERE 1=1 {rcl}
+            GROUP BY lo.order_priority ORDER BY orders DESC
+        """, rp)
+        by_facility = _rows(f"""
+            SELECT f.code AS facility, COUNT(*) AS orders
+            FROM mcms_lab.lab_order lo
+            JOIN mcms_core.facility f ON f.facility_id = lo.facility_id
+            WHERE 1=1 {rcl}
+            GROUP BY f.code ORDER BY orders DESC
+        """, rp)
+        return Response({"by_priority": by_priority, "by_facility": by_facility})
+
+    # --------------------------------------------------- Phase 17.1: Appointment utilization
+    @action(detail=False, methods=["get"])
+    def appointment_utilization(self, request):
+        """Clinic appointment utilization: total, completed, no-show, cancelled, rate."""
+        if (d := self._guard(request, "emr.read")):
+            return d
+        sql = """
+            SELECT
+                COUNT(*) AS total_appointments,
+                COUNT(*) FILTER (WHERE status='completed') AS completed,
+                COUNT(*) FILTER (WHERE status='noshow') AS no_shows,
+                ROUND((COUNT(*) FILTER (WHERE status='noshow'))::numeric
+                      / NULLIF(COUNT(*),0), 4) AS no_show_rate
+            FROM mcms_clinic.appointment
+        """
+        return Response(_rows(sql)[0])

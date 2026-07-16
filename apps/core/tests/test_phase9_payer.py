@@ -15,7 +15,9 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 def _patient_with_policy(payer_code="MOH"):
     with connection.cursor() as cur:
-        pid = 9000000 + int(uuid.uuid4().hex[:5], 16) % 90000
+        # full 32-bit uuid in a clearly-empty high band -> effectively
+        # collision-free across the Phase 9 suite (kills the flaky pkey clashes)
+        pid = 9000000 + (int(uuid.uuid4().hex[:8], 16) % 9000000)
         cur.execute(
             "INSERT INTO mcms_core.party (party_id, party_type, display_name, "
             "is_active, preferred_language) VALUES (%s,'person','Payer Test',true,'en')",

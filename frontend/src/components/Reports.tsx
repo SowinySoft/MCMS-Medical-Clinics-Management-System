@@ -17,6 +17,13 @@ const SECTIONS = [
   { key: "top_diagnoses", title: "Top Diagnoses", type: "bar", labelKey: "condition_desc", valueKey: "count" },
   { key: "inventory_valuation", title: "Inventory Valuation", type: "table" },
   { key: "event_activity", title: "Event-Store Activity", type: "bar", labelKey: "kind", valueKey: "events" },
+  // Phase 17.1 - HR/payroll + vital records + high-demand ops reports
+  { key: "monthly_payroll", title: "Monthly Payroll Accounting", type: "object" },
+  { key: "birth_certificates", title: "Birth Certificates (Newborn)", type: "table" },
+  { key: "death_certificates", title: "Death Certificates (Recent)", type: "table" },
+  { key: "claims_status", title: "Insurance Claims Status / TAT", type: "object" },
+  { key: "lab_turnaround", title: "Lab Order Demand", type: "object" },
+  { key: "appointment_utilization", title: "Appointment Utilization", type: "kv" },
 ] as const;
 
 export function Reports() {
@@ -84,6 +91,8 @@ export function Reports() {
                 </div>)
               : s.type === "bar" ? (
                 <BarChart data={(data[s.key] as any[]).map((r: any) => ({ label: String(r[(s as any).labelKey]), value: r[(s as any).valueKey] }))} />)
+              : s.type === "object" ? (
+                <ObjectView value={data[s.key]} />)
               : (
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                   <thead><tr>{Object.keys((data[s.key][0] || {})).map((c) => <th key={c} style={th}>{c}</th>)}</tr></thead>
@@ -99,3 +108,36 @@ export function Reports() {
 }
 
 const th: any = { textAlign: "start", color: "var(--text-dim)", padding: "4px 6px", borderBottom: "1px solid var(--border)" };
+
+// Generic renderer for object-shaped reports: scalar keys -> KV, array keys -> table.
+function ObjectView({ value }: { value: any }) {
+  if (!value) return <div className="mcms-empty">{t("loading")}</div>;
+  const entries = Object.entries(value) as [string, any][];
+  const kv = entries.filter(([, v]) => v === null || typeof v !== "object");
+  const arrays = entries.filter(([, v]) => Array.isArray(v));
+  return (
+    <div>
+      {kv.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          {kv.map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
+              <span style={{ color: "var(--text-dim)" }}>{k}</span>
+              <span style={{ color: "var(--text)", fontWeight: 600 }}>{String(v)}</span>
+            </div>))}
+        </div>
+      )}
+      {arrays.map(([k, rows]) => (
+        <div key={k} style={{ marginTop: 8 }}>
+          <div style={{ color: "var(--text-dim)", fontSize: 12, marginBottom: 4, textTransform: "capitalize" }}>{k.replace(/_/g, " ")}</div>
+          {Array.isArray(rows) && rows.length > 0 ? (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead><tr>{Object.keys(rows[0]).map((c) => <th key={c} style={th}>{c}</th>)}</tr></thead>
+              <tbody>{rows.map((r: any, i: number) => (
+                <tr key={i}>{Object.values(r).map((v: any, j: number) => <td key={j} style={{ padding: "4px 6px", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>{String(v)}</td>)}</tr>))}</tbody>
+            </table>
+          ) : <div className="mcms-empty">—</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
