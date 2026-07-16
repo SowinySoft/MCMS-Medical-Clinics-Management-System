@@ -34,6 +34,11 @@ VALUES
   (990005,'person','Payroll Test E'),(990006,'person','Payroll Test F')
 ON CONFLICT (party_id) DO NOTHING;
 
+-- keep the party sequence ahead of the explicit IDs we just inserted
+-- (otherwise the deep-integrity audit flags the sequence as out-of-sync)
+SELECT setval('mcms_core.party_party_id_seq',
+              GREATEST(990006, (SELECT COALESCE(max(party_id),0) FROM mcms_core.party)));
+
 INSERT INTO mcms_hr.employee
   (party_id, employee_no, primary_department_id, job_title, role,
    contract_type, status, base_salary_monthly, hired_at)

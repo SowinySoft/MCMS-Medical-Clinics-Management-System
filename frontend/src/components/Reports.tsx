@@ -111,6 +111,7 @@ const th: any = { textAlign: "start", color: "var(--text-dim)", padding: "4px 6p
 
 // Generic renderer for object-shaped reports: scalar keys -> KV, array keys -> table.
 function ObjectView({ value }: { value: any }) {
+  const { t } = useTranslation();
   if (!value) return <div className="mcms-empty">{t("loading")}</div>;
   const entries = Object.entries(value) as [string, any][];
   const kv = entries.filter(([, v]) => v === null || typeof v !== "object");
