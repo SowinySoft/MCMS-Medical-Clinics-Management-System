@@ -138,6 +138,11 @@ jobs:
       - name: Build test database (from committed sql/)
         run: MODE=from-sql bash scripts/rebuild_test_db.sh
 
+      - name: Provision real login users (97_test_users.sql sets an invalid hash)
+        run: |
+          python manage.py provision_user --username admin --password admin123 --role sysadmin --party-name "System Administrator" --superuser
+          python manage.py provision_user --username acc1 --password acc1123 --role accountant --party-name "Acc1 Clerk"
+
       - name: Start Django API on :8010
         run: |
           python manage.py runserver 127.0.0.1:8010 --noreload > /tmp/django.log 2>&1 &
