@@ -89,13 +89,20 @@ else
   # schema-only dump instead, then apply reference seed + test identity.
   echo ">> Building from committed schema dump + seed (deterministic)"
   $PSQL -d "$TEST_DB" -f "$(winpath "$REPO_ROOT/sql/mcms_schema.sql")" >/dev/null
-  # Apply the generic audit trigger FIRST so the fixed fn_generic_audit is live
-  # before any seed insert runs (sql/39 payroll_item otherwise hits the old,
-  # boolean-cast-broken function and its insert rolls back silently).
-  for s in 95_generic_audit_triggers.sql 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql 31_phase15_linkage.sql 32_phase16_facility_linkage.sql 33_fix_event_subject_party.sql 34_integrity_cleanup.sql 35_fix_sequences.sql 36_perf_indexes.sql 37_patient_deceased.sql 38_vital_records.sql 39_report_seed.sql 40_fix_prescription_event.sql 41_fix_event_subject_party_p2.sql 42_fix_diag_event_subject.sql; do
+  # 1) Fix fn_generic_audit + attach generic audit triggers FIRST so the
+  #    corrected function is the live definition for runtime writes.
+  echo "   applying 95_generic_audit_triggers.sql"
+  $PSQL -d "$TEST_DB" -f "$(winpath "$REPO_ROOT/sql/95_generic_audit_triggers.sql")" >/dev/null
+  # 2) Apply seeds with session_replication_role='replica' so the audit triggers
+  #    do NOT fire during seeding. Seeds are not real domain events and must not
+  #    pollute event_log (nor roll back on boolean-column tables). This replaces
+  #    the old per-table DISABLE/ENABLE hack that lived in sql/39.
+  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql 31_phase15_linkage.sql 32_phase16_facility_linkage.sql 33_fix_event_subject_party.sql 34_integrity_cleanup.sql 35_fix_sequences.sql 36_perf_indexes.sql 37_patient_deceased.sql 38_vital_records.sql 39_report_seed.sql 40_fix_prescription_event.sql 41_fix_event_subject_party_p2.sql 42_fix_diag_event_subject.sql; do
     echo "   applying $s"
-    $PSQL -d "$TEST_DB" -f "$(winpath "$REPO_ROOT/sql/$s")" >/dev/null
+    $PSQL -d "$TEST_DB" -c "SET session_replication_role = 'replica';" -f "$(winpath "$REPO_ROOT/sql/$s")" >/dev/null
   done
+  # 3) Re-enable triggers for runtime writes (tests, app).
+  $PSQL -d "$TEST_DB" -c "SET session_replication_role = 'origin';" >/dev/null
 fi
 
 # ---- verify ----------------------------------------------------------------

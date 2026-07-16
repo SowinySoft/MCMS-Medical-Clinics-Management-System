@@ -50,10 +50,11 @@ DO $$ BEGIN
     INSERT INTO mcms_core.user_role_map (user_id, role_id)
     SELECT 99, r.role_id FROM mcms_core.role r WHERE r.code = 'patient'
     ON CONFLICT DO NOTHING;
+
+    -- seed explicit consent for the demo patient (references the rows we just
+    -- created above, so it only runs when they exist).
+    INSERT INTO mcms_core.consent (party_id, consent_type, granted, granted_at, granted_by, note)
+    VALUES (99003, 'data_sharing', true, now(), 99, 'Demo consent')
+    ON CONFLICT DO NOTHING;
   END IF;
 END $$;
-
--- 6) seed explicit consents for the demo patient (party_id 99003)
-INSERT INTO mcms_core.consent (party_id, consent_type, granted, granted_at, granted_by, note)
-VALUES (99003, 'data_sharing', true, now(), 99, 'Demo consent')
-ON CONFLICT DO NOTHING;

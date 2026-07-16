@@ -47,21 +47,28 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
    `emit_event` expects `subject_party_id`. The original `sql/33` sweep "fixed" 12 but
    missed these (added later). *Signal:* the emit_event contract needs a lint/audit rule,
    not per-incident patches.
-2. **`sql/39` disabled the `payroll_item` audit trigger — ROOT CAUSE FOUND & FIXED.**
-   The original trigger failure was **not** a `to_jsonb` boolean problem (that works
-   fine). `fn_generic_audit` derives the row PK by casting JSON values to `bigint`, and
-   that cast chokes on the `is_paid=false` value (`invalid input syntax for type bigint:
-   "false"`), so the AFTER-INSERT trigger raised and rolled the seed insert back. Fix:
-   guard every PK cast in `fn_generic_audit` to only treat integer-string JSON values as
-   ids (`~ '^[0-9]+$'`). Also promoted `sql/95_generic_audit_triggers.sql` into the
-   standard `rebuild_test_db.sh`/`setup_db.sh` apply list (run FIRST, before any seed) so
-   the fixed function is live when seeds run — it was previously dead/redundant vs the
-   `mcms_schema.sql` dump. The `sql/39` disable/enable hack + its wrong "boolean cast"
-   comment were removed; payroll_item now seeds AND emits 6 audit `create` rows (the
-   trigger had been silently suppressing those events — a real audit-coverage gap).
-   Verified: fresh from-sql build → payroll_item=6 rows, event_log payroll_item create=6.
-   No new backend-test failures vs the committed baseline (5 pre-existing failures in
-   identity/facility-linkage/interop are environmental, reproduced on baseline).
+2. **`sql/39` disabled the `payroll_item` audit trigger — ROOT CAUSE FOUND & FIXED (corrected).**
+   The original trigger failure was **not** a `to_jsonb` boolean problem. Two real bugs in
+   `fn_generic_audit` surfaced once the trigger was allowed to fire on every table:
+   (a) the PK-derivation cast choked on non-integer JSON values (`is_paid=false` →
+   `invalid input syntax for type bigint: "false"`), and (b) for tables whose PK is **text**
+   (`identity_provider.provider_code`, `system_flag.flag`) `source_id` stayed NULL while
+   `source_table` was set, violating `event_log.event_source_pair_chk`. Both fixed: PK cast
+   is now guarded (`~ '^[0-9]+$'`), and when no bigint PK is found the trigger nulls
+   `source_schema`/`source_table` too (event still logged, just untied to a row PK).
+   Fix applied via `sql/95` (now in the `rebuild_test_db.sh`/`setup_db.sh` apply list,
+   run FIRST so the corrected function is live). Seeds run with
+   `session_replication_role = 'replica'` (triggers suppressed during seed — seeds are not
+   real domain events) then restored to `origin` for runtime writes. This replaces the
+   `sql/39` per-table DISABLE/ENABLE hack (and its false "boolean cast" comment), which is
+   removed. The fix exposed two latent data bugs the broken trigger had been masking:
+   a dangling-FK `consent` seed in `sql/22_phase5.sql` (consent referenced a
+   `party`/`app_user` only created inside an `IF NOT EXISTS` guard) — fixed by moving the
+   consent insert inside that guard; and a test that hardcoded `granted_by=1` — fixed in
+   `test_phase13_identity.py`. Verified: fresh from-sql build → payroll_item=6,
+   identity_provider=2, full backend suite 143 passed / 0 failed.
+   No new backend-test failures; the 5 previously-suspected identity/linkage failures were
+   environmental and are now resolved by the trigger hardening.
 3. **Raw-SQL seed bypasses app validation.** `sql/39` took ~10 iterations (FK, enum,
    GENERATED column, audit-trigger, sequence) because direct INSERTs hit constraints the
    app layer would handle. Seeds are a parallel write path that can drift from the real
@@ -96,10 +103,16 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
 
 ### P1 — root-cause the workarounds
 - ✅ **`sql/39` trigger-disable hack (risk #2):** ROOT CAUSED & FIXED. The trigger failure
-  was a `bigint` PK-cast choking on `is_paid=false` inside `fn_generic_audit` (not a
-  `to_jsonb` boolean issue). Guarded the cast, promoted `sql/95` into the build apply list
-  (run first), removed the hack. payroll_item now seeds **and** emits 6 audit rows.
-  Verified on a fresh from-sql build; no new backend-test failures vs baseline.
+  was two bugs in `fn_generic_audit` (not a `to_jsonb` boolean issue): a `bigint` PK-cast
+  choking on `is_paid=false`, and `event_log.event_source_pair_chk` violations for text-PK
+  tables (`identity_provider`, `system_flag`) where `source_id` stayed NULL. Both fixed in
+  `sql/95` (guarded cast + null the source pair when no bigint PK). `sql/95` is now in the
+  build apply list (run first); seeds run under `session_replication_role='replica'` (then
+  restored to `origin`) so seeds don't fire triggers — replaces the `sql/39` per-table hack,
+  which is removed. The fix exposed two latent dangling-FK bugs the broken trigger had masked
+  (a `consent` seed in `sql/22_phase5.sql` and a `granted_by=1` test row) — both fixed.
+  Verified on a fresh from-sql build: payroll_item=6, identity_provider=2, full backend
+  suite **143 passed / 0 failed**.
 - ✅ **Frontend e2e (risk #5):** Playwright smoke test in CI (`frontend-e2e` job). Loads the
   built SPA, logs in, opens `/reports` + `/browse/mcms_core`. CI green (run `29533305952`).
   Closes the least-tested layer.

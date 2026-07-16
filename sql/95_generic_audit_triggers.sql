@@ -59,6 +59,16 @@ BEGIN
     END LOOP;
   END IF;
 
+  -- event_log enforces event_source_pair_chk: (source_schema, source_table,
+  -- source_id) must all be NULL or all be non-NULL. For tables whose PK is NOT
+  -- a bigint (e.g. identity_provider.provider_code, system_flag.flag are text
+  -- keys), v_id stays NULL — so null the schema/table too. The event is still
+  -- logged (channel='db-trigger') and streamed; it just isn't tied to a row PK.
+  IF v_id IS NULL THEN
+    v_schema := NULL;
+    v_table  := NULL;
+  END IF;
+
   INSERT INTO mcms_core.event_log
     (seq, occurred_at, kind, severity, source_schema, source_table, source_id, payload, channel)
   VALUES (

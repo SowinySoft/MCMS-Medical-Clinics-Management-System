@@ -20,11 +20,11 @@ def _enable_provider(code):
             [code])
 
 
-def _grant_consent(party_id, ctype="data_residency"):
+def _grant_consent(party_id, granted_by, ctype="data_residency"):
     with connection.cursor() as cur:
         cur.execute(
             "INSERT INTO mcms_core.consent (party_id, consent_type, granted, granted_by) "
-            "VALUES (%s,%s,true,1) ON CONFLICT DO NOTHING", [party_id, ctype])
+            "VALUES (%s,%s,true,%s) ON CONFLICT DO NOTHING", [party_id, ctype, granted_by])
 
 
 def _user_for_link(provider_code, ext_sub):
@@ -81,7 +81,7 @@ def test_federate_requires_consent_then_succeeds(admin_client):
     # grant the consent to the party that was just created
     uid = _user_for_link(prov, sub)
     assert uid is not None
-    _grant_consent(_party_for_user(uid))
+    _grant_consent(_party_for_user(uid), uid)
     # second attempt: consent present -> 200 + JWT
     r2 = admin_client.post("/api/identity/federate/",
                            data={"provider_code": prov, "external_subject": sub},
