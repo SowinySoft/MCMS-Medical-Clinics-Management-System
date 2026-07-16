@@ -142,12 +142,14 @@ jobs:
         run: |
           python manage.py runserver 127.0.0.1:8010 --noreload > /tmp/django.log 2>&1 &
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8010/api/ >/dev/null 2>&1; then
+            # Any HTTP response (incl. 401) means the server is up; -s -o /dev/null
+            # exits 0 on a successful TCP/HTTP exchange regardless of status code.
+            if curl -s -o /dev/null http://127.0.0.1:8010/api/; then
               echo "API up"; break
             fi
             sleep 2
           done
-          curl -fsS http://127.0.0.1:8010/api/ >/dev/null || { echo "API failed to start"; tail -30 /tmp/django.log; exit 1; }
+          curl -s -o /dev/null http://127.0.0.1:8010/api/ || { echo "API failed to start"; tail -30 /tmp/django.log; exit 1; }
 
       - name: Set up Node
         uses: actions/setup-node@v4
