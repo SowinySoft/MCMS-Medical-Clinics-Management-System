@@ -50,12 +50,17 @@ else
   # 2) Seeds with session_replication_role='replica' so audit triggers do NOT
   #    fire during seeding (seeds are not real domain events). Replaces the old
   #    per-table DISABLE/ENABLE hack that lived in sql/39.
-  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql 31_phase15_linkage.sql 32_phase16_facility_linkage.sql 33_fix_event_subject_party.sql 34_integrity_cleanup.sql 35_fix_sequences.sql 36_perf_indexes.sql 37_patient_deceased.sql 38_vital_records.sql 39_report_seed.sql 40_fix_prescription_event.sql 41_fix_event_subject_party_p2.sql 42_fix_diag_event_subject.sql; do
+  for s in 90_seed.sql 91_merge_seed.sql 97_test_users.sql 98_trust.sql 99_cds_seed.sql 21_phase2.sql 22_phase5.sql 23_multitenancy.sql 24_phase7_hl7.sql 25_phase7_hash_fix.sql 26_phase8_terminology.sql 27_phase9_payer.sql 28_phase11_telemed.sql 29_phase13_identity.sql 30_phase14_departments.sql 31_phase15_linkage.sql 32_phase16_facility_linkage.sql 33_fix_event_subject_party.sql 34_integrity_cleanup.sql 35_fix_sequences.sql 36_perf_indexes.sql 37_patient_deceased.sql 38_vital_records.sql 40_fix_prescription_event.sql 41_fix_event_subject_party_p2.sql 42_fix_diag_event_subject.sql; do
     echo "   applying $s"
     $PSQL -d "$LIVE_DB" -c "SET session_replication_role = 'replica';" -f "$(winpath "$REPO_ROOT/sql/$s")" >/dev/null
   done
   # 3) Re-enable triggers for runtime writes.
   $PSQL -d "$LIVE_DB" -c "SET session_replication_role = 'origin';" >/dev/null
+  # 4) Reports-layer demo data via the Django ORM write path (supersedes the
+  #    old raw-SQL seed sql/39_report_seed.sql).
+  echo "   seeding reports demo data (ORM: seed_reports_demo)"
+  ( cd "$REPO_ROOT" && MCMS_DB_NAME="$LIVE_DB" MCMS_TEST_DB="$LIVE_DB" \
+      python manage.py seed_reports_demo ) >/dev/null
 fi
 
 # Provision real users from env (idempotent via provision_user's ON CONFLICT).

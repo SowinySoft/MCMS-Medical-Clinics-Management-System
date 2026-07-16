@@ -118,16 +118,30 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
   Closes the least-tested layer.
 
 ### P2 — hardening
-- 🔲 **Seeds via app layer (risk #3):** Route seed data through the ORM/validated fixture
-  instead of raw INSERTs. Large refactor; risky — **confirm before starting.**
+- ✅ **Seeds via app layer (risk #3 / P2 #3):** DONE. `sql/39_report_seed.sql` (raw
+  INSERTs) is deprecated and removed from both build scripts; the Reports-layer demo
+  data now goes through `apps/core/management/commands/seed_reports_demo.py`, invoked
+  from `rebuild_test_db.sh`/`setup_db.sh` (step 4) against the freshly-built DB. The
+  command uses the ORM models (`Permission`/`RolePermission`, `Party`/`Employee`/
+  `PayrollPeriod`, `InsuranceClaim`/`Invoice`/`Patient`/`Facility`) with idempotent
+  `get_or_create`/exists-checks, and looks dependencies up dynamically instead of
+  hardcoding FK ids. The one DB-GENERATED column (`payroll_item.net_amount`) is written
+  via a parameterized cursor that omits it (the DB computes it) — Django's ORM cannot
+  omit a model field from an INSERT. Verified: fresh from-sql build → payroll_item=6
+  with net_amount computed, permission `payroll.read` present; full backend suite
+  **143 passed / 0 failed** (identical to the pre-refactor baseline). Note:
+  `insurance_claim` and the `payroll.read` role maps are 0 in a from-sql build — but
+  that matches the OLD `sql/39` exactly (the referenced role codes `admin`/`hr_clerk`/
+  `billing_clerk` don't exist, and `mcms_billing.invoice` is empty until a runtime
+  write), so it is not a regression.
 - ✅ **Local fast gate (risk #4):** `scripts/local_test_fast.sh` gives a <2-min
   lint + emit_event-guard + 27-test smoke slice (vs the ~25-min full hang). You are no
   longer CI-only for pre-push signal.
 - ✅ **Report SQL parameterization (risk #7):** RE-CHECKED — false alarm; `reports.py` is
   fully parameterized. No action.
 
-### Remaining open items (await your go-ahead)
-1. Refactor seeds to the app write path (P2 #3).
+### Remaining open items
+- (none outstanding from the eval list; all P0/P1/P2 items closed)
 
 ---
 
