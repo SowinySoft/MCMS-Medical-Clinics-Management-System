@@ -47,10 +47,14 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
    `emit_event` expects `subject_party_id`. The original `sql/33` sweep "fixed" 12 but
    missed these (added later). *Signal:* the emit_event contract needs a lint/audit rule,
    not per-incident patches.
-2. **`fn_generic_audit` cannot cast boolean columns.** We hit this seeding
-   `payroll_item.is_paid` — worked around it by disabling the trigger around the insert
-   rather than fixing the trigger. *Latent:* any app-layer boolean write to an audited
-   table will fail the same way.
+2. **`sql/39` disables the `payroll_item` audit trigger around its INSERTs** — a
+   workaround. Verified: `fn_generic_audit` uses `to_jsonb(NEW)` (serializes `boolean`
+   fine) and `event_log.subject_party_id` is nullable+FK, so the trigger does NOT fail on
+   a boolean column or a NULL subject. The disable/enable is therefore masking nothing
+   obvious — BUT the generic audit triggers (`sql/95`) are **not** in the standard
+   `rebuild_test_db.sh`/`setup_db.sh` apply list (both stop at `42`), so the hack's real
+   effect is unclear. Leave as-is until the audit-trigger attach path is mapped; do NOT
+   blindly remove it.
 3. **Raw-SQL seed bypasses app validation.** `sql/39` took ~10 iterations (FK, enum,
    GENERATED column, audit-trigger, sequence) because direct INSERTs hit constraints the
    app layer would handle. Seeds are a parallel write path that can drift from the real
@@ -65,35 +69,48 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
 6. **Generated ERD HTML is committed but unguarded.** `scripts/gen_erd.py` exists, but
    nothing in CI fails if someone changes the schema and forgets to regenerate
    `docs/*.html`. Docs can silently drift from the DB.
-7. **Reports use hand-built SQL strings.** Several queries are inline SQL (some via
-   parameterized `_rows()`, but `monthly_payroll` interpolates the period `code` into a
-   query). Worthy of a central parameterization review for injection safety.
+7. **~~Reports use hand-built SQL strings~~ — RE-CHECKED: false alarm.** `apps/core/reports.py`
+   parameterizes every query via `%s` placeholders + a `params` list (`_rows(sql, params)`,
+   `WHERE pp.period_id=%s` with `params=[period_id]`, etc.). No string interpolation of
+   user input into SQL. No injection risk; no change needed.
 8. **Stale counts in memory/docs.** Memory says "21 schemas / 268 tables"; the live `mcms`
    DB is 18 schemas / 124 tables. The SFAS figure is a different DB — but the stale number
    in memory is itself a small documentation-risk signal.
 
 ---
 
-## 4. Prioritized recommendations
+## 4. Prioritized recommendations (status as of this update)
 
-### P0 — correctness, cheap
-- Add a CI step that runs `scripts/gen_erd.py` and fails if `docs/*.html` differ from the
-  committed version (kills doc drift). ~10 lines in `ci.yml`.
-- Add a one-off audit/lint that scans every `emit_event(` call and asserts the 4th arg is
-  sourced from a `party_id` resolution (catches the class of bug #1 permanently).
+### P0 — correctness, cheap ✅ DONE
+- ✅ CI step runs `scripts/gen_erd.py` and fails on `docs/*.html` drift (`ci.yml`,
+  "ERD docs must match live schema").
+- ✅ `scripts/audit_emit_event.py` + `apps/core/tests/test_emit_event_subject.py` enforce
+  the emit_event subject-party invariant. Committed; CI green.
 
 ### P1 — root-cause the workarounds
-- Fix `fn_generic_audit` to handle boolean/array columns (the real fix for risk #2), then
-  re-enable it on `payroll_item` and drop the seed's trigger-disable hack.
-- Stand up a Playwright/Cypress smoke test that loads the built React app, logs in, and
-  opens `/reports` + one schema — closes the frontend-e2e gap (#5).
+- ⚠️ **`sql/39` trigger-disable hack (risk #2):** RE-CHECKED — `fn_generic_audit` handles
+  `boolean` (`to_jsonb`) and `event_log.subject_party_id` is nullable, so the trigger does
+  NOT fail. The hack is masking nothing obvious, but the generic audit triggers (`sql/95`)
+  are outside the standard `rebuild_test_db.sh`/`setup_db.sh` apply path (both stop at
+  `42`). **Needs the attach path mapped before touching it** — defer.
+- 🔲 **Frontend e2e (risk #5):** Stand up a Playwright/Cypress smoke test that loads the
+  built React app, logs in, opens `/reports` + one schema. Closes the least-tested layer.
+  **Structural/infra (adds a browser runner to CI) — needs your sign-off.**
 
 ### P2 — hardening
-- Route seed data through the app/ORM layer (or a validated fixture) instead of raw
-  INSERTs, so seeds cannot diverge from real writes (#3).
-- Replace the local full-suite reliance with a faster, sharded run (e.g. pytest per-app)
-  so you are not CI-only (#4).
-- Schedule a one-time review of all report SQL for parameterization (#7).
+- 🔲 **Seeds via app layer (risk #3):** Route seed data through the ORM/validated fixture
+  instead of raw INSERTs. Large refactor; risky — **confirm before starting.**
+- ✅ **Local fast gate (risk #4):** `scripts/local_test_fast.sh` gives a <2-min
+  lint + emit_event-guard + 27-test smoke slice (vs the ~25-min full hang). You are no
+  longer CI-only for pre-push signal.
+- ✅ **Report SQL parameterization (risk #7):** RE-CHECKED — false alarm; `reports.py` is
+  fully parameterized. No action.
+
+### Remaining open items (await your go-ahead)
+1. Map the generic audit-trigger attach path (`sql/95` vs rebuild/setup scripts) and decide
+   on the `sql/39` hack.
+2. Add frontend e2e (Playwright) to CI.
+3. Refactor seeds to the app write path.
 
 ---
 
@@ -101,14 +118,14 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
 
 The project is in **good, shippable shape**: a coherent domain model, a real RBAC +
 event-store backbone, an enforced API↔UI contract, and a green CI pipeline — delivered
-with disciplined phase-gated hygiene. The weaknesses are not in *what* was built but in
-*verification coverage and a few un-finished root-cause fixes*: the local environment isn't
-trustworthy, the React frontend isn't e2e-tested, and two latent bugs were worked around
-rather than fixed.
+with disciplined phase-gated hygiene. P0 closed two whole classes of drift/bug. The
+remaining weaknesses are scoped and deliberate: the React frontend isn't e2e-tested, and
+one audit-trigger/seed workaround is intentionally left pending a path-map (not blindly
+churned). Local verification is now trustworthy via `scripts/local_test_fast.sh`.
 
-**Net: architecture A, engineering B+, verification B−.** The highest-leverage next move
-is **P0** (ERD-regeneration CI guard + emit_event lint) — both are small, eliminate whole
-classes of drift/bug, and fit the "verify against reality" standard.
+**Net: architecture A, engineering B+, verification B** (was B−; lifted by the fast local
+gate + P0 CI guards). Highest-leverage next moves are the three open items above — all
+structural, so they await your confirmation.
 
 ---
 
