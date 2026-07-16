@@ -252,8 +252,8 @@ erDiagram
   core__access_log ||--o{ core__app_user : "reader_user_id"
   core__access_log ||--o{ core__party : "subject_party_id"
   core__address ||--o{ core__party : "party_id"
-  core__app_user ||--o{ core__party : "party_id"
   core__app_user ||--o{ core__facility : "facility_id"
+  core__app_user ||--o{ core__party : "party_id"
   core__audit_trail ||--o{ core__app_user : "changed_by"
   core__audit_trail ||--o{ core__event_log : "event_id"
   core__consent ||--o{ core__app_user : "granted_by"
@@ -261,19 +261,19 @@ erDiagram
   core__contact ||--o{ core__party : "party_id"
   core__event_log ||--o{ core__app_user : "actor_user_id"
   core__event_log ||--o{ core__party : "subject_party_id"
-  core__facility ||--o{ core__organization : "organization_id"
   core__facility ||--o| core__facility : "self"
-  core__federated_identity ||--o{ core__identity_provider : "provider_code"
+  core__facility ||--o{ core__organization : "organization_id"
   core__federated_identity ||--o{ core__app_user : "user_id"
-  core__hl7_message ||--o{ core__facility : "facility_id"
+  core__federated_identity ||--o{ core__identity_provider : "provider_code"
   core__hl7_message ||--o{ core__app_user : "received_by"
+  core__hl7_message ||--o{ core__facility : "facility_id"
   core__notification ||--o{ core__app_user : "recipient_user_id"
   core__notification ||--o{ core__party : "recipient_party_id"
   core__organization ||--o| core__organization : "self"
   core__role_permission ||--o{ core__permission : "permission_id"
   core__role_permission ||--o{ core__role : "role_id"
-  core__user_role_map ||--o{ core__role : "role_id"
   core__user_role_map ||--o{ core__app_user : "user_id"
+  core__user_role_map ||--o{ core__role : "role_id"
 </pre></div><div class="sec" id="sec_mcms_emr" style="display:none"><h2>🩺 mcms_emr — EMR <span class="cnt">(15 tables)</span></h2><pre class="mermaid">
 erDiagram
   emr__allergy {
@@ -516,8 +516,8 @@ erDiagram
   emr__clinical_note ||--o{ emr__patient : "patient_id"
   emr__diagnosis ||--o{ emr__encounter : "encounter_id"
   emr__diagnosis ||--o{ emr__patient : "patient_id"
-  emr__encounter ||--o{ emr__patient : "mrn"
   emr__encounter ||--o| emr__encounter : "self"
+  emr__encounter ||--o{ emr__patient : "mrn"
   emr__encounter ||--o{ emr__patient : "patient_id"
   emr__family_history ||--o{ emr__patient : "patient_id"
   emr__immunization ||--o{ emr__patient : "patient_id"
@@ -718,15 +718,15 @@ erDiagram
     decimal total_net
     bigint paid_count
   }
-  hr__attendance ||--o{ hr__shift : "shift_id"
   hr__attendance ||--o{ hr__employee : "employee_id"
+  hr__attendance ||--o{ hr__shift : "shift_id"
   hr__department ||--o| hr__department : "self"
   hr__employee ||--o{ hr__department : "primary_department_id"
   hr__employee_department ||--o{ hr__department : "department_id"
   hr__employee_department ||--o{ hr__employee : "employee_id"
   hr__leave_request ||--o{ hr__employee : "employee_id"
-  hr__payroll_item ||--o{ hr__payroll_period : "period_id"
   hr__payroll_item ||--o{ hr__employee : "employee_id"
+  hr__payroll_item ||--o{ hr__payroll_period : "period_id"
   hr__shift ||--o{ hr__department : "department_id"
   hr__shift ||--o{ hr__employee : "employee_id"
 </pre></div><div class="sec" id="sec_mcms_surgical" style="display:none"><h2>🔪 mcms_surgical — Surgical <span class="cnt">(8 tables)</span></h2><pre class="mermaid">
@@ -1410,8 +1410,8 @@ erDiagram
     bigint completed_sessions_count
     bigint no_shows
   }
-  physio__session ||--o{ physio__treatment_plan : "plan_id"
   physio__session ||--o{ physio__therapy_catalog : "therapy_id"
+  physio__session ||--o{ physio__treatment_plan : "plan_id"
 </pre></div><div class="sec" id="sec_mcms_dialysis" style="display:none"><h2>💉 mcms_dialysis — Dialysis <span class="cnt">(2 tables)</span></h2><pre class="mermaid">
 erDiagram
   dialysis__session {
@@ -1771,10 +1771,10 @@ erDiagram
     text stock_state
   }
   erp__gl_account ||--o| erp__gl_account : "self"
-  erp__goods_receipt ||--o{ erp__supplier : "supplier_id"
   erp__goods_receipt ||--o{ erp__purchase_order : "po_id"
-  erp__goods_receipt_line ||--o{ erp__inventory_item : "item_id"
+  erp__goods_receipt ||--o{ erp__supplier : "supplier_id"
   erp__goods_receipt_line ||--o{ erp__goods_receipt : "grn_id"
+  erp__goods_receipt_line ||--o{ erp__inventory_item : "item_id"
   erp__goods_receipt_line ||--o{ erp__purchase_order_line : "po_line_id"
   erp__inventory_stock ||--o{ erp__inventory_item : "item_id"
   erp__purchase_order ||--o{ erp__supplier : "supplier_id"

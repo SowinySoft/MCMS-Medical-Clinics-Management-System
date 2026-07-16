@@ -167,6 +167,11 @@ def build_rels(fks):
             continue
         seen.add(key)
         edges.append((fe, te, card, lbl))
+    # Deterministic output: sort by (from, to, label) so generated docs are
+    # byte-stable regardless of the DB's FK-row iteration order (which is not
+    # fully controlled by ORDER BY on constraint_column_usage for multi-col /
+    # self/join FKs).
+    edges.sort(key=lambda e: (e[0], e[1], str(e[3])))
     return edges
 
 
