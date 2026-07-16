@@ -121,6 +121,7 @@ jobs:
       MCMS_TEST_DB: mcms
       PGPASSWORD: postgres
       DJANGO_SETTINGS_MODULE: config.settings
+      AXES_ENABLED: "false"
     steps:
       - uses: actions/checkout@v4
 
