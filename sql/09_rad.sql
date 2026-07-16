@@ -97,8 +97,9 @@ CREATE INDEX ON mcms_rad.image_instance (study_id);
 -- ---------- Events ----------
 CREATE OR REPLACE FUNCTION mcms_rad.fn_study_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE ev mcms_core.event_kind;
+DECLARE ev mcms_core.event_kind; v_party BIGINT;
 BEGIN
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    IF (TG_OP = 'INSERT') THEN ev := 'study_requested';
    ELSIF (TG_OP='UPDATE' AND OLD.status <> NEW.status) THEN
       ev := CASE NEW.status
@@ -108,7 +109,7 @@ BEGIN
    ELSE ev := NULL;
    END IF;
    IF ev IS NOT NULL THEN
-      PERFORM mcms_core.emit_event(ev, 'info', NEW.requested_by, NEW.patient_id,
+      PERFORM mcms_core.emit_event(ev, 'info', NEW.requested_by, v_party,
          'mcms_rad','study_request', NEW.study_id,
          jsonb_build_object('accession_no', NEW.accession_no,
                             'status', NEW.status::text,
