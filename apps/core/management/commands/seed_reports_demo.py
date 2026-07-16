@@ -63,11 +63,24 @@ class Command(BaseCommand):
     help = "Seed demo data for the Reports layer via the Django ORM."
 
     def handle(self, *args, **options):
-        with transaction.atomic():
-            self._seed_rbac()
-            period = self._seed_payroll()
-            self._seed_claims()
-            self._bump_party_sequence()
+        # Seeds are reference/demo data, not real domain events — they must not
+        # pollute event_log (consistent with the other sql/ seeds, which run
+        # under session_replication_role='replica' in the build scripts). Wrap
+        # the writes in a replica-role session so the generic audit triggers are
+        # disabled for the duration; restoring to 'origin' re-enables them so
+        # runtime writes ARE audited.
+        with connection.cursor() as cur:
+            cur.execute("SET session_replication_role = 'replica';")
+        try:
+            with transaction.atomic():
+                self._seed_rbac()
+                period = self._seed_payroll()
+                self._seed_claims()
+        finally:
+            with connection.cursor() as cur:
+                cur.execute("SET session_replication_role = 'origin';")
+        # Sequence bump is a housekeeping no-op for audit; run outside replica.
+        self._bump_party_sequence()
         self.stdout.write(self.style.SUCCESS(
             "Reports demo seed complete (period=%s, items=%d, claims=%d)."
             % (period.code if period else "-",

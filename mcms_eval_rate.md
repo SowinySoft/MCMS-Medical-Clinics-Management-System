@@ -149,10 +149,19 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
 
 The project is in **good, shippable shape**: a coherent domain model, a real RBAC +
 event-store backbone, an enforced API↔UI contract, and a green CI pipeline — delivered
-with disciplined phase-gated hygiene. P0 closed two whole classes of drift/bug. The
-remaining weaknesses are scoped and deliberate: the React frontend isn't e2e-tested, and
-one audit-trigger/seed workaround is intentionally left pending a path-map (not blindly
-churned). Local verification is now trustworthy via `scripts/local_test_fast.sh`.
+with disciplined phase-gated hygiene. P0 closed two whole classes of drift/bug; P1 #2
+and P2 #3 are fully closed and CI-green. The remaining weaknesses are scoped and
+deliberate: the React frontend isn't e2e-tested, and the seed-vs-runtime audit split is
+an intentional design choice (see below), not a defect.
+
+> **Audit scope (intentional, verified):** Reference/demo seed data (all `sql/` seeds
+> AND the ORM `seed_reports_demo` command) runs under `session_replication_role='replica'`,
+> so seed rows do **not** appear in `event_log` — seeds are not real domain events and
+> must not pollute the audit trail. Runtime writes run under `'origin'`, so they **are**
+> fully audited (verified: a runtime `payroll_item` insert produced its `create` event,
+> while the 6 seeded `payroll_item` rows produced none). This is by design, not a gap.
+
+Local verification is now trustworthy via `scripts/local_test_fast.sh`.
 
 **Net: architecture A, engineering B+, verification B** (was B−; lifted by the fast local
 gate + P0 CI guards). Highest-leverage next moves are the three open items above — all
