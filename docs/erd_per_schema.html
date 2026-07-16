@@ -252,8 +252,8 @@ erDiagram
   core__access_log ||--o{ core__app_user : "reader_user_id"
   core__access_log ||--o{ core__party : "subject_party_id"
   core__address ||--o{ core__party : "party_id"
-  core__app_user ||--o{ core__party : "party_id"
   core__app_user ||--o{ core__facility : "facility_id"
+  core__app_user ||--o{ core__party : "party_id"
   core__audit_trail ||--o{ core__app_user : "changed_by"
   core__audit_trail ||--o{ core__event_log : "event_id"
   core__consent ||--o{ core__app_user : "granted_by"
@@ -261,19 +261,19 @@ erDiagram
   core__contact ||--o{ core__party : "party_id"
   core__event_log ||--o{ core__app_user : "actor_user_id"
   core__event_log ||--o{ core__party : "subject_party_id"
+  core__facility ||--o{ core__organization : "organization_id"
+  core__facility ||--o| core__facility : "self"
+  core__federated_identity ||--o{ core__identity_provider : "provider_code"
+  core__federated_identity ||--o{ core__app_user : "user_id"
+  core__hl7_message ||--o{ core__facility : "facility_id"
+  core__hl7_message ||--o{ core__app_user : "received_by"
   core__notification ||--o{ core__party : "recipient_party_id"
   core__notification ||--o{ core__app_user : "recipient_user_id"
+  core__organization ||--o| core__organization : "self"
   core__role_permission ||--o{ core__permission : "permission_id"
   core__role_permission ||--o{ core__role : "role_id"
   core__user_role_map ||--o{ core__role : "role_id"
   core__user_role_map ||--o{ core__app_user : "user_id"
-  core__organization ||--o| core__organization : "self"
-  core__facility ||--o{ core__organization : "organization_id"
-  core__facility ||--o| core__facility : "self"
-  core__hl7_message ||--o{ core__facility : "facility_id"
-  core__hl7_message ||--o{ core__app_user : "received_by"
-  core__federated_identity ||--o{ core__identity_provider : "provider_code"
-  core__federated_identity ||--o{ core__app_user : "user_id"
 </pre></div><div class="sec" id="sec_mcms_emr" style="display:none"><h2>🩺 mcms_emr — EMR <span class="cnt">(15 tables)</span></h2><pre class="mermaid">
 erDiagram
   emr__allergy {
@@ -523,12 +523,12 @@ erDiagram
   emr__immunization ||--o{ emr__patient : "patient_id"
   emr__medication_order ||--o{ emr__encounter : "encounter_id"
   emr__medication_order ||--o{ emr__patient : "patient_id"
+  emr__referral ||--o{ emr__diagnosis : "diagnosis_id"
+  emr__referral ||--o{ emr__encounter : "from_encounter_id"
+  emr__referral ||--o{ emr__encounter : "to_encounter_id"
   emr__social_history ||--o{ emr__patient : "patient_id"
   emr__vitals ||--o{ emr__encounter : "encounter_id"
   emr__vitals ||--o{ emr__patient : "patient_id"
-  emr__referral ||--o{ emr__encounter : "from_encounter_id"
-  emr__referral ||--o{ emr__encounter : "to_encounter_id"
-  emr__referral ||--o{ emr__diagnosis : "diagnosis_id"
 </pre></div><div class="sec" id="sec_mcms_clinic" style="display:none"><h2>📅 mcms_clinic — Clinics &amp; Appointments <span class="cnt">(4 tables)</span></h2><pre class="mermaid">
 erDiagram
   clinic__appointment {
@@ -1069,10 +1069,10 @@ erDiagram
   rx__drug_interaction ||--o{ rx__drug_item : "drug_item_id_a"
   rx__drug_interaction ||--o{ rx__drug_item : "drug_item_id_b"
   rx__drug_lot ||--o{ rx__drug_item : "drug_item_id"
+  rx__prescription ||--o{ rx__drug_item : "drug_item_id"
   rx__stock_movement ||--o{ rx__drug_item : "drug_item_id"
   rx__stock_movement ||--o{ rx__drug_lot : "lot_id"
   rx__stock_movement ||--o| rx__stock_movement : "self"
-  rx__prescription ||--o{ rx__drug_item : "drug_item_id"
 </pre></div><div class="sec" id="sec_mcms_lab" style="display:none"><h2>🧪 mcms_lab — Laboratory <span class="cnt">(7 tables)</span></h2><pre class="mermaid">
 erDiagram
   lab__lab_order {
@@ -1648,11 +1648,11 @@ erDiagram
     decimal gross_revenue
     decimal avg_line_value
   }
+  billing__claim_response ||--o{ billing__insurance_claim : "claim_id"
   billing__insurance_claim ||--o{ billing__invoice : "invoice_id"
   billing__invoice_line ||--o{ billing__invoice : "invoice_id"
   billing__invoice_line ||--o{ billing__service_price : "service_id"
   billing__payment ||--o{ billing__invoice : "invoice_id"
-  billing__claim_response ||--o{ billing__insurance_claim : "claim_id"
 </pre></div><div class="sec" id="sec_mcms_erp" style="display:none"><h2>📦 mcms_erp — ERP / Supply Chain <span class="cnt">(10 tables)</span></h2><pre class="mermaid">
 erDiagram
   erp__gl_account {
