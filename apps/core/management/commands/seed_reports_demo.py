@@ -26,7 +26,6 @@ from apps.core.models import Facility, Party, Permission, Role, RolePermission
 from apps.emr.models import Patient
 from apps.hr.models import Department, Employee, PayrollItem, PayrollPeriod
 
-
 # Fixed party ids keep demo employees from colliding with real data and let us
 # keep the party sequence in sync (needed by the deep-integrity audit). Same
 # values the old sql/39 used.
@@ -82,9 +81,8 @@ class Command(BaseCommand):
         # Sequence bump is a housekeeping no-op for audit; run outside replica.
         self._bump_party_sequence()
         self.stdout.write(self.style.SUCCESS(
-            "Reports demo seed complete (period=%s, items=%d, claims=%d)."
-            % (period.code if period else "-",
-               len(PAYROLL_ITEMS), len(CLAIMS))))
+            f"Reports demo seed complete (period={period.code if period else '-'}, "
+            f"items={len(PAYROLL_ITEMS)}, claims={len(CLAIMS)})."))
 
     # ---- 1) RBAC -----------------------------------------------------------
     def _seed_rbac(self):
