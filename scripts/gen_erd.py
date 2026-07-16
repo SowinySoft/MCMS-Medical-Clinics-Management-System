@@ -12,8 +12,9 @@ were emitted as Mermaid `erDiagram` type tokens, which Mermaid rejects. This
 generator maps every Postgres type to a Mermaid-safe alias, so all schemas
 parse. Relationships are derived from information_schema foreign keys.
 """
-import os
 import html
+import os
+
 import psycopg
 
 DB = dict(

@@ -60,6 +60,15 @@ jobs:
           PGPASSWORD: postgres
         run: python scripts/audit_deep.py
 
+      - name: Emit-event subject-party lint (static regression guard)
+        run: python scripts/audit_emit_event.py
+
+      - name: ERD docs must match live schema (regenerate guard)
+        run: |
+          python scripts/gen_erd.py
+          git diff --exit-code -- docs/erd_per_schema.html docs/erd_schema_diagram.html docs/erd_schema_cards.html \
+            || { echo "docs/*.html are out of date — run scripts/gen_erd.py and commit the result."; exit 1; }
+
       - name: Run backend tests
         run: pytest --no-migrations -p no:cacheprovider
 
