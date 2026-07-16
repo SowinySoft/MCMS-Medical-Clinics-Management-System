@@ -95,3 +95,78 @@ jobs:
       - name: Build (vite)
         working-directory: frontend
         run: npm run build
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MCMS_DB_HOST: 127.0.0.1
+      MCMS_DB_PORT: 5432
+      MCMS_DB_USER: postgres
+      MCMS_DB_PASSWORD: postgres
+      MCMS_DB_NAME: mcms
+      PGPASSWORD: postgres
+      DJANGO_SETTINGS_MODULE: config.settings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Build test database (from committed sql/)
+        run: MODE=from-sql bash scripts/rebuild_test_db.sh
+
+      - name: Start Django API on :8010
+        run: |
+          python manage.py runserver 127.0.0.1:8010 --noreload > /tmp/django.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8010/api/ >/dev/null 2>&1; then
+              echo "API up"; break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8010/api/ >/dev/null || { echo "API failed to start"; tail -30 /tmp/django.log; exit 1; }
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci || npm install
+
+      - name: Build (vite)
+        working-directory: frontend
+        run: npm run build
+
+      - name: Install Playwright chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e smoke test
+        working-directory: frontend
+        run: npx playwright test
