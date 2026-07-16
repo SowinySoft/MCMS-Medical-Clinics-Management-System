@@ -1,19 +1,31 @@
-<!doctype html><html><head><meta charset="utf-8"><title>MCMS Per-Schema ERDs</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>MCMS — Per-Schema Entity Diagrams</title>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
 body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#0d1117;color:#e6edf3}
 header{padding:16px 24px;background:#161b22;border-bottom:1px solid #30363d}
 h1{margin:0;font-size:20px} .sub{color:#8b949e;font-size:13px;margin-top:4px}
-.tabs{padding:12px 24px;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0}
+.tabs{padding:12px 24px;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap}
 button{background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 10px;margin:3px;cursor:pointer;font-size:12px}
 button:hover{background:#30363d} .wrap{padding:24px}
 .mermaid{background:#fff;border-radius:8px;padding:16px;overflow:auto} h2{font-size:16px}
+.cnt{color:#8b949e;font-weight:400;font-size:13px}
 </style></head><body>
 <header><h1>MCMS — Per-Schema Entity Diagrams</h1>
-<div class="sub">15 focused ERDs · click a schema to view · cross-schema FK targets shown as stubs</div></header>
-<div class="tabs"><button onclick="show('mcms_core')">Core / Event-Store / RBAC</button><button onclick="show('mcms_emr')">EMR</button><button onclick="show('mcms_clinic')">Clinics & Appointments</button><button onclick="show('mcms_hr')">HR & Payroll</button><button onclick="show('mcms_surgical')">Surgical</button><button onclick="show('mcms_emergency')">Emergency</button><button onclick="show('mcms_rx')">Pharmacy</button><button onclick="show('mcms_lab')">Laboratory</button><button onclick="show('mcms_rad')">Radiology</button><button onclick="show('mcms_icu')">ICU</button><button onclick="show('mcms_physio')">Physiotherapy</button><button onclick="show('mcms_dialysis')">Dialysis</button><button onclick="show('mcms_nursery')">Nursery/Neonatal</button><button onclick="show('mcms_billing')">Billing</button><button onclick="show('mcms_erp')">ERP / Supply Chain</button></div>
-<div class="wrap"><div class="sec" id="sec_mcms_core" style="display:block"><h2>mcms_core — Core / Event-Store / RBAC</h2><pre class="mermaid">
+<div class="sub">18 focused ERDs · click a schema to view · foreign keys shown as edges</div></header>
+<div class="tabs"><button onclick="show('mcms_core')">🧩 Core / Event-Store / RBAC</button><button onclick="show('mcms_emr')">🩺 EMR</button><button onclick="show('mcms_clinic')">📅 Clinics &amp; Appointments</button><button onclick="show('mcms_hr')">👥 HR &amp; Payroll</button><button onclick="show('mcms_surgical')">🔪 Surgical</button><button onclick="show('mcms_emergency')">🚑 Emergency</button><button onclick="show('mcms_rx')">💊 Pharmacy</button><button onclick="show('mcms_lab')">🧪 Laboratory</button><button onclick="show('mcms_rad')">🩻 Radiology</button><button onclick="show('mcms_icu')">🏥 ICU</button><button onclick="show('mcms_physio')">🤸 Physiotherapy</button><button onclick="show('mcms_dialysis')">💉 Dialysis</button><button onclick="show('mcms_nursery')">👶 Nursery / Neonatal</button><button onclick="show('mcms_billing')">💳 Billing / Insurance</button><button onclick="show('mcms_erp')">📦 ERP / Supply Chain</button><button onclick="show('mcms_telemed')">📞 Telemedicine</button><button onclick="show('mcms_terminology')">🔤 Terminology / Coding</button><button onclick="show('mcms_vital_records')">📜 Vital Records</button></div>
+<div class="wrap"><div class="sec" id="sec_mcms_core" style="display:block"><h2>🧩 mcms_core — Core / Event-Store / RBAC <span class="cnt">(22 tables)</span></h2><pre class="mermaid">
 erDiagram
+  core__access_log {
+    bigint access_id PK
+    bigint reader_user_id
+    bigint subject_party_id
+    text table_schema
+    text table_name
+    bigint row_id
+    timestamp read_at
+    text reason
+  }
   core__address {
     bigint address_id PK
     bigint party_id
@@ -24,24 +36,25 @@ erDiagram
     text region
     text postal_code
     text country
-    float8 latitude
-    float8 longitude
-    boolean is_primary
-    timestamptz created_at
+    float latitude
+    float longitude
+    bool is_primary
+    timestamp created_at
   }
   core__app_user {
     bigint user_id PK
     bigint party_id
     text username
     text password_hash
-    user_role role
+    text role
     text specialization
-    boolean is_active
-    timestamptz last_login_at
+    bool is_active
+    timestamp last_login_at
     int failed_logins
-    timestamptz locked_until
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp locked_until
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
   }
   core__audit_trail {
     bigint audit_id PK
@@ -50,33 +63,97 @@ erDiagram
     bigint row_id
     text action
     bigint changed_by
-    timestamptz changed_at
-    jsonb before
-    jsonb after
+    timestamp changed_at
+    json before
+    json after
     bigint event_id
+  }
+  core__backup_log {
+    bigint backup_id PK
+    timestamp started_at
+    timestamp finished_at
+    text filename
+    bigint size_bytes
+    text status
+    text detail
+    text triggered_by
+  }
+  core__consent {
+    bigint consent_id PK
+    bigint party_id
+    text consent_type
+    bool granted
+    timestamp granted_at
+    timestamp revoked_at
+    bigint granted_by
+    text note
   }
   core__contact {
     bigint contact_id PK
     bigint party_id
     text kind
     text value
-    boolean is_primary
-    timestamptz verified_at
-    timestamptz created_at
+    bool is_primary
+    timestamp verified_at
+    timestamp created_at
   }
   core__event_log {
     bigint event_id PK
     bigint seq
-    timestamptz occurred_at
-    event_kind kind
-    event_severity severity
+    timestamp occurred_at
+    text kind
+    text severity
     bigint actor_user_id
     bigint subject_party_id
     text source_schema
     text source_table
     bigint source_id
-    jsonb payload
+    json payload
     text channel
+    text prev_hash
+    text hash
+  }
+  core__facility {
+    bigint facility_id PK
+    bigint organization_id
+    text code
+    text name_en
+    text name_ar
+    bigint parent_facility_id
+    bool is_active
+    timestamp created_at
+  }
+  core__federated_identity {
+    bigint fed_id PK
+    text provider_code
+    text external_subject
+    bigint user_id
+    timestamp linked_at
+    timestamp last_seen_at
+  }
+  core__hl7_message {
+    bigint hl7_message_id PK
+    text message_control_id
+    text message_type
+    text sending_app
+    text sending_facility
+    text raw
+    text ack_code
+    text error_detail
+    json actions
+    bigint facility_id
+    bigint received_by
+    timestamp received_at
+  }
+  core__identity_provider {
+    text provider_code PK
+    text name
+    text protocol
+    text client_id
+    json config
+    bool enabled
+    timestamp created_at
+    timestamp updated_at
   }
   core__lookup {
     bigint lookup_id PK
@@ -85,7 +162,7 @@ erDiagram
     text label
     text parent_code
     int sort_order
-    boolean is_active
+    bool is_active
     text label_en
     text label_ar
   }
@@ -94,31 +171,40 @@ erDiagram
     bigint recipient_user_id
     bigint recipient_party_id
     text category
-    notification_channel channel
+    text channel
     text subject
     text body
-    notification_status status
+    text status
     text source_schema
     text source_table
     bigint source_id
-    timestamptz sent_at
-    timestamptz read_at
-    timestamptz created_at
+    timestamp sent_at
+    timestamp read_at
+    timestamp created_at
+  }
+  core__organization {
+    bigint organization_id PK
+    text code
+    text name_en
+    text name_ar
+    bigint parent_org_id
+    bool is_active
+    timestamp created_at
   }
   core__party {
     bigint party_id PK
-    party_type party_type
+    text party_type
     text code
     text display_name
     text legal_name
-    gender_type gender
+    text gender
     date date_of_birth
-    blood_type blood_type
+    text blood_type
     text tax_id
     text national_id
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
     text preferred_language
   }
   core__permission {
@@ -132,58 +218,91 @@ erDiagram
     text name_en
     text name_ar
     text description
-    boolean is_active
-    timestamptz created_at
+    bool is_active
+    timestamp created_at
   }
   core__role_permission {
     bigint role_id PK
     bigint permission_id PK
+  }
+  core__system_flag {
+    text flag PK
+    text value
+    timestamp updated_at
   }
   core__user_role_map {
     bigint user_id PK
     bigint role_id PK
     bigint department_id
   }
-  core__party ||--o{ core__address : "party_id"
-  core__party ||--o{ core__app_user : "party_id"
-  core__app_user ||--o{ core__audit_trail : "changed_by"
-  core__event_log ||--o{ core__audit_trail : "event_id"
-  core__party ||--o{ core__contact : "party_id"
-  core__app_user ||--o{ core__event_log : "actor_user_id"
-  core__party ||--o{ core__event_log : "subject_party_id"
-  core__app_user ||--o{ core__notification : "recipient_user_id"
-  core__party ||--o{ core__notification : "recipient_party_id"
-  core__permission ||--o{ core__role_permission : "permission_id"
-  core__role ||--o{ core__role_permission : "role_id"
-  core__app_user ||--o{ core__user_role_map : "user_id"
-  core__role ||--o{ core__user_role_map : "role_id"
-</pre></div><div class="sec" id="sec_mcms_emr" style="display:none"><h2>mcms_emr — EMR</h2><pre class="mermaid">
+  core__v_event_feed {
+    bigint seq
+    timestamp occurred_at
+    text kind
+    text severity
+    text channel
+    text source_schema
+    text source_table
+    bigint source_id
+    json payload
+    text actor_name
+    text actor_role
+    text subject_name
+  }
+  core__access_log ||--o{ core__app_user : "reader_user_id"
+  core__access_log ||--o{ core__party : "subject_party_id"
+  core__address ||--o{ core__party : "party_id"
+  core__app_user ||--o{ core__party : "party_id"
+  core__app_user ||--o{ core__facility : "facility_id"
+  core__audit_trail ||--o{ core__app_user : "changed_by"
+  core__audit_trail ||--o{ core__event_log : "event_id"
+  core__consent ||--o{ core__app_user : "granted_by"
+  core__consent ||--o{ core__party : "party_id"
+  core__contact ||--o{ core__party : "party_id"
+  core__event_log ||--o{ core__app_user : "actor_user_id"
+  core__event_log ||--o{ core__party : "subject_party_id"
+  core__notification ||--o{ core__party : "recipient_party_id"
+  core__notification ||--o{ core__app_user : "recipient_user_id"
+  core__role_permission ||--o{ core__permission : "permission_id"
+  core__role_permission ||--o{ core__role : "role_id"
+  core__user_role_map ||--o{ core__role : "role_id"
+  core__user_role_map ||--o{ core__app_user : "user_id"
+  core__organization ||--o| core__organization : "self"
+  core__facility ||--o{ core__organization : "organization_id"
+  core__facility ||--o| core__facility : "self"
+  core__hl7_message ||--o{ core__facility : "facility_id"
+  core__hl7_message ||--o{ core__app_user : "received_by"
+  core__federated_identity ||--o{ core__identity_provider : "provider_code"
+  core__federated_identity ||--o{ core__app_user : "user_id"
+</pre></div><div class="sec" id="sec_mcms_emr" style="display:none"><h2>🩺 mcms_emr — EMR <span class="cnt">(15 tables)</span></h2><pre class="mermaid">
 erDiagram
   emr__allergy {
     bigint allergy_id PK
     bigint patient_id
     text substance
     text reaction
-    allergy_severity severity
+    text severity
     text onset_age
-    timestamptz noted_on
+    timestamp noted_on
     bigint noted_by
-    boolean is_active
+    bool is_active
   }
   emr__clinical_note {
     bigint note_id PK
     bigint encounter_id
     bigint patient_id
-    note_type note_type
+    text note_type
     text title
     text body
     bigint author_user_id
-    _int8 coauthor_ids
-    boolean signed
-    timestamptz signed_at
-    timestamptz amended_at
-    timestamptz created_at
-    timestamptz updated_at
+    text coauthor_ids
+    bool signed
+    timestamp signed_at
+    timestamp amended_at
+    timestamp created_at
+    timestamp updated_at
+    bigint signed_by
+    bigint facility_id
   }
   emr__diagnosis {
     bigint diagnosis_id PK
@@ -191,32 +310,37 @@ erDiagram
     bigint patient_id
     text condition_code
     text condition_desc
-    diagnosis_role role
-    diagnosis_status status
+    text role
+    text status
     date onset_date
-    timestamptz resolved_at
+    timestamp resolved_at
     bigint recorded_by
-    boolean is_chronic
-    timestamptz created_at
+    bool is_chronic
+    timestamp created_at
+    bool signed
+    timestamp signed_at
+    bigint signed_by
+    bigint facility_id
   }
   emr__encounter {
     bigint encounter_id PK
     text mrn
     bigint patient_id
-    encounter_status status
-    encounter_class class
+    text status
+    text class
     bigint attending_user_id
     bigint referring_user_id
     bigint department_id
     text reason_for_visit
     text chief_complaint
-    timestamptz started_at
-    timestamptz ended_at
+    timestamp started_at
+    timestamp ended_at
     bigint bed_assign_id
     bigint originating_encounter_id
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
     text fhir_id
+    bigint facility_id
   }
   emr__family_history {
     bigint fh_id PK
@@ -226,8 +350,8 @@ erDiagram
     text condition_code
     text condition_desc
     int age_at_onset
-    boolean is_deceased
-    timestamptz recorded_at
+    bool is_deceased
+    timestamp recorded_at
   }
   emr__immunization {
     bigint immunization_id PK
@@ -235,7 +359,7 @@ erDiagram
     text vaccine_code
     text vaccine_name
     int dose_number
-    timestamptz given_at
+    timestamp given_at
     bigint given_by
     text lot_number
     text site
@@ -249,16 +373,20 @@ erDiagram
     bigint drug_item_id
     text drug_name
     text dose
-    med_route route
+    text route
     text frequency
     int duration_days
-    boolean prn
+    bool prn
     int refill_count
     text instructions
-    med_order_status status
-    timestamptz ordered_at
-    timestamptz created_at
-    timestamptz updated_at
+    text status
+    timestamp ordered_at
+    timestamp created_at
+    timestamp updated_at
+    bool signed
+    timestamp signed_at
+    bigint signed_by
+    bigint facility_id
   }
   emr__patient {
     bigint patient_id PK
@@ -270,63 +398,138 @@ erDiagram
     text insurance_provider
     text insurance_policy_no
     text insurance_group_no
-    boolean coverage_verified
-    timestamptz coverage_verified_at
+    bool coverage_verified
+    timestamp coverage_verified_at
     text preferred_language
-    boolean organ_donor
-    boolean living_will
-    timestamptz created_at
-    timestamptz updated_at
+    bool organ_donor
+    bool living_will
+    timestamp created_at
+    timestamp updated_at
     text fhir_id
     text hl7_mpi
+    bigint facility_id
+    bool is_deceased
+  }
+  emr__referral {
+    bigint referral_id PK
+    bigint from_encounter_id
+    bigint to_encounter_id
+    bigint from_user_id
+    bigint to_user_id
+    bigint to_department_id
+    bigint diagnosis_id
+    text reason
+    text clinical_summary
+    text urgency
+    text status
+    timestamp responded_at
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
+  }
+  emr__referral_linkage_rule {
+    bigint rule_id PK
+    bigint from_department_id
+    text diagnosis_code
+    text code_system
+    bigint to_department_id
+    int priority
+    text rationale
+    bool is_active
+    timestamp created_at
+    bigint to_facility_id
   }
   emr__social_history {
     bigint sh_id PK
     bigint patient_id
     text tobacco_status
-    numeric packs_per_day
+    decimal packs_per_day
     int years_smoked
     text alcohol_status
     int drinks_per_week
-    _text illicit_drugs
+    text illicit_drugs
     text occupation
     text relationship_status
-    timestamptz recorded_at
+    timestamp recorded_at
+  }
+  emr__v_daily_census {
+    bigint department_id
+    text dept_code
+    text dept_name
+    date day
+    bigint in_progress
+    bigint finished_today
+    bigint total_opened
+  }
+  emr__v_encounter_timeline {
+    bigint encounter_id
+    text mrn
+    text patient_name
+    text class
+    text status
+    text reason_for_visit
+    text dept_code
+    text dept_name
+    text attending
+    text attending_role
+    timestamp started_at
+    timestamp ended_at
+    text duration_running
+  }
+  emr__v_patient_360 {
+    bigint patient_id
+    text mrn
+    text display_name
+    text gender
+    date date_of_birth
+    text age
+    text blood_type
+    bigint active_allergies
+    bigint active_dx
+    bigint encounter_count
+    bigint latest_encounter_id
+    text latest_encounter_status
+    text insurance_provider
+    text insurance_policy_no
   }
   emr__vitals {
     bigint vital_id PK
     bigint encounter_id
     bigint patient_id
-    timestamptz taken_at
+    timestamp taken_at
     bigint taken_by
-    numeric temp_c
+    decimal temp_c
     int hr_bpm
     int rr_pm
     int sbp_mmhg
     int dbp_mmhg
-    numeric spo2_pct
-    numeric weight_kg
-    numeric height_cm
-    numeric bmi
+    decimal spo2_pct
+    decimal weight_kg
+    decimal height_cm
+    decimal bmi
     int pain_score
     int glucose_mgdl
+    bigint facility_id
   }
-  emr__patient ||--o{ emr__allergy : "patient_id"
-  emr__encounter ||--o{ emr__clinical_note : "encounter_id"
-  emr__patient ||--o{ emr__clinical_note : "patient_id"
-  emr__encounter ||--o{ emr__diagnosis : "encounter_id"
-  emr__patient ||--o{ emr__diagnosis : "patient_id"
-  emr__encounter ||--o{ emr__encounter : "self"
-  emr__patient ||--o{ emr__encounter : "mrn"
-  emr__patient ||--o{ emr__encounter : "patient_id"
-  emr__patient ||--o{ emr__family_history : "patient_id"
-  emr__patient ||--o{ emr__immunization : "patient_id"
-  emr__encounter ||--o{ emr__medication_order : "encounter_id"
-  emr__patient ||--o{ emr__medication_order : "patient_id"
-  emr__patient ||--o{ emr__social_history : "patient_id"
-  emr__encounter ||--o{ emr__vitals : "encounter_id"
-  emr__patient ||--o{ emr__vitals : "patient_id"
-</pre></div><div class="sec" id="sec_mcms_clinic" style="display:none"><h2>mcms_clinic — Clinics & Appointments</h2><pre class="mermaid">
+  emr__allergy ||--o{ emr__patient : "patient_id"
+  emr__clinical_note ||--o{ emr__encounter : "encounter_id"
+  emr__clinical_note ||--o{ emr__patient : "patient_id"
+  emr__diagnosis ||--o{ emr__encounter : "encounter_id"
+  emr__diagnosis ||--o{ emr__patient : "patient_id"
+  emr__encounter ||--o{ emr__patient : "mrn"
+  emr__encounter ||--o| emr__encounter : "self"
+  emr__encounter ||--o{ emr__patient : "patient_id"
+  emr__family_history ||--o{ emr__patient : "patient_id"
+  emr__immunization ||--o{ emr__patient : "patient_id"
+  emr__medication_order ||--o{ emr__encounter : "encounter_id"
+  emr__medication_order ||--o{ emr__patient : "patient_id"
+  emr__social_history ||--o{ emr__patient : "patient_id"
+  emr__vitals ||--o{ emr__encounter : "encounter_id"
+  emr__vitals ||--o{ emr__patient : "patient_id"
+  emr__referral ||--o{ emr__encounter : "from_encounter_id"
+  emr__referral ||--o{ emr__encounter : "to_encounter_id"
+  emr__referral ||--o{ emr__diagnosis : "diagnosis_id"
+</pre></div><div class="sec" id="sec_mcms_clinic" style="display:none"><h2>📅 mcms_clinic — Clinics &amp; Appointments <span class="cnt">(4 tables)</span></h2><pre class="mermaid">
 erDiagram
   clinic__appointment {
     bigint appointment_id PK
@@ -335,18 +538,21 @@ erDiagram
     bigint clinician_user_id
     bigint room_id
     bigint department_id
-    timestamptz starts_at
-    timestamptz ends_at
-    slot_status status
+    timestamp starts_at
+    timestamp ends_at
+    text status
     text reason
     bigint booked_by
     bigint encounter_id
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
     uuid confirmation_token
-    timestamptz confirmation_deadline
-    timestamptz confirmed_at
-    boolean patient_confirmed
+    timestamp confirmation_deadline
+    timestamp confirmed_at
+    bool patient_confirmed
+    timestamp no_show_at
+    timestamp reminder_sent_at
+    bigint facility_id
   }
   clinic__consultation {
     bigint consultation_id PK
@@ -361,11 +567,11 @@ erDiagram
     text assessment
     text plan
     int follow_up_days
-    consult_status status
-    timestamptz started_at
-    timestamptz completed_at
-    timestamptz created_at
-    timestamptz updated_at
+    text status
+    timestamp started_at
+    timestamp completed_at
+    timestamp created_at
+    timestamp updated_at
   }
   clinic__patient_queue {
     bigint queue_id PK
@@ -375,12 +581,13 @@ erDiagram
     bigint assigned_clinician
     bigint room_id
     int priority
-    queue_status status
-    timestamptz checked_in_at
-    timestamptz called_at
-    timestamptz started_at
-    timestamptz finished_at
+    text status
+    timestamp checked_in_at
+    timestamp called_at
+    timestamp started_at
+    timestamp finished_at
     bigint encounter_id
+    bigint facility_id
   }
   clinic__room {
     bigint room_id PK
@@ -388,27 +595,27 @@ erDiagram
     text code
     text name
     int capacity
-    _text equipment
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    text equipment
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
   }
-  clinic__room ||--o{ clinic__appointment : "room_id"
-  clinic__appointment ||--o{ clinic__consultation : "appointment_id"
-  clinic__patient_queue ||--o{ clinic__consultation : "queue_id"
-  clinic__room ||--o{ clinic__consultation : "room_id"
-  clinic__room ||--o{ clinic__patient_queue : "room_id"
-</pre></div><div class="sec" id="sec_mcms_hr" style="display:none"><h2>mcms_hr — HR & Payroll</h2><pre class="mermaid">
+  clinic__appointment ||--o{ clinic__room : "room_id"
+  clinic__consultation ||--o{ clinic__appointment : "appointment_id"
+  clinic__consultation ||--o{ clinic__patient_queue : "queue_id"
+  clinic__consultation ||--o{ clinic__room : "room_id"
+  clinic__patient_queue ||--o{ clinic__room : "room_id"
+</pre></div><div class="sec" id="sec_mcms_hr" style="display:none"><h2>👥 mcms_hr — HR &amp; Payroll <span class="cnt">(9 tables)</span></h2><pre class="mermaid">
 erDiagram
   hr__attendance {
     bigint attendance_id PK
     bigint employee_id
     bigint shift_id
-    timestamptz clock_in_at
-    timestamptz clock_out_at
-    attendance_status status
+    timestamp clock_in_at
+    timestamp clock_out_at
+    text status
     text note
-    timestamptz created_at
+    timestamp created_at
   }
   hr__department {
     bigint department_id PK
@@ -419,9 +626,9 @@ erDiagram
     bigint head_user_id
     text location_building
     int location_floor
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
   }
   hr__employee {
     bigint employee_id PK
@@ -433,15 +640,15 @@ erDiagram
     text job_title
     text specialisation
     text license_number
-    contract_type contract_type
-    employment_status status
+    text contract_type
+    text status
     date hired_at
     date terminated_at
-    numeric base_salary_monthly
+    decimal base_salary_monthly
     text bank_account
     text tax_number
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   hr__employee_department {
     bigint emp_dept_id PK
@@ -450,80 +657,95 @@ erDiagram
     text role
     date start_date
     date end_date
-    boolean is_primary
+    bool is_primary
   }
   hr__leave_request {
     bigint leave_id PK
     bigint employee_id
-    leave_type leave_type
+    text leave_type
     date start_date
     date end_date
     int days_off
     text reason
-    leave_status status
+    text status
     bigint approved_by
-    timestamptz approved_at
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp approved_at
+    timestamp created_at
+    timestamp updated_at
   }
   hr__payroll_item {
     bigint item_id PK
     bigint period_id
     bigint employee_id
-    numeric base_amount
-    numeric overtime_amount
-    numeric deduction_amount
-    numeric bonus_amount
-    numeric net_amount
-    boolean is_paid
-    timestamptz paid_at
-    timestamptz created_at
+    decimal base_amount
+    decimal overtime_amount
+    decimal deduction_amount
+    decimal bonus_amount
+    decimal net_amount
+    bool is_paid
+    timestamp paid_at
+    timestamp created_at
   }
   hr__payroll_period {
     bigint period_id PK
     text code
     date start_date
     date end_date
-    pay_status status
-    timestamptz closed_at
-    timestamptz created_at
+    text status
+    timestamp closed_at
+    timestamp created_at
   }
   hr__shift {
     bigint shift_id PK
     bigint department_id
     bigint employee_id
-    shift_type shift_type
-    timestamptz start_at
-    timestamptz end_at
-    timestamptz created_at
+    text shift_type
+    timestamp start_at
+    timestamp end_at
+    timestamp created_at
   }
-  hr__employee ||--o{ hr__attendance : "employee_id"
-  hr__shift ||--o{ hr__attendance : "shift_id"
-  hr__department ||--o{ hr__department : "self"
-  hr__department ||--o{ hr__employee : "primary_department_id"
-  hr__department ||--o{ hr__employee_department : "department_id"
-  hr__employee ||--o{ hr__employee_department : "employee_id"
-  hr__employee ||--o{ hr__leave_request : "employee_id"
-  hr__employee ||--o{ hr__payroll_item : "employee_id"
-  hr__payroll_period ||--o{ hr__payroll_item : "period_id"
-  hr__department ||--o{ hr__shift : "department_id"
-  hr__employee ||--o{ hr__shift : "employee_id"
-</pre></div><div class="sec" id="sec_mcms_surgical" style="display:none"><h2>mcms_surgical — Surgical</h2><pre class="mermaid">
+  hr__v_payroll_summary {
+    text period
+    date start_date
+    date end_date
+    text dept_code
+    text dept_name
+    bigint employees_in_period
+    decimal total_base
+    decimal total_overtime
+    decimal total_bonus
+    decimal total_deductions
+    decimal total_net
+    bigint paid_count
+  }
+  hr__department ||--o| hr__department : "self"
+  hr__attendance ||--o{ hr__employee : "employee_id"
+  hr__attendance ||--o{ hr__shift : "shift_id"
+  hr__employee ||--o{ hr__department : "primary_department_id"
+  hr__employee_department ||--o{ hr__department : "department_id"
+  hr__employee_department ||--o{ hr__employee : "employee_id"
+  hr__leave_request ||--o{ hr__employee : "employee_id"
+  hr__payroll_item ||--o{ hr__employee : "employee_id"
+  hr__payroll_item ||--o{ hr__payroll_period : "period_id"
+  hr__shift ||--o{ hr__department : "department_id"
+  hr__shift ||--o{ hr__employee : "employee_id"
+</pre></div><div class="sec" id="sec_mcms_surgical" style="display:none"><h2>🔪 mcms_surgical — Surgical <span class="cnt">(8 tables)</span></h2><pre class="mermaid">
 erDiagram
   surgical__intra_op_vitals {
     bigint iov_id PK
     bigint surgery_id
-    timestamptz recorded_at
+    timestamp recorded_at
     bigint recorded_by
     int hr_bpm
     int sbp_mmhg
     int dbp_mmhg
-    numeric spo2_pct
+    decimal spo2_pct
     int etco2_mmhg
     int anaesthesia_depth
-    numeric temp_c
+    decimal temp_c
     int urine_ml
     text notes
+    bigint facility_id
   }
   surgical__operating_room {
     bigint or_id PK
@@ -531,38 +753,39 @@ erDiagram
     text code
     text name
     text room_type
-    or_status status
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    text status
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
   }
   surgical__post_op_note {
     bigint pon_id PK
     bigint surgery_id
-    timestamptz written_at
+    timestamp written_at
     bigint written_by
     text recovery_room
     int pain_score
     text findings
     text instructions
     int follow_up_days
-    boolean is_signed
-    timestamptz signed_at
+    bool is_signed
+    timestamp signed_at
+    bigint facility_id
   }
   surgical__pre_op_checklist {
     bigint poc_id PK
     bigint surgery_id
-    boolean fasting_confirmed
-    boolean consent_signed
-    boolean site_marked
-    boolean antibiotics_given
-    boolean iv_secured
-    boolean labs_checked
-    boolean imaging_checked
+    bool fasting_confirmed
+    bool consent_signed
+    bool site_marked
+    bool antibiotics_given
+    bool iv_secured
+    bool labs_checked
+    bool imaging_checked
     text risk_score
     bigint checklist_by
-    timestamptz completed_at
-    timestamptz created_at
+    timestamp completed_at
+    timestamp created_at
   }
   surgical__procedure_catalog {
     bigint proc_cat_id PK
@@ -571,7 +794,7 @@ erDiagram
     text body_site
     int default_duration_min
     text notes
-    timestamptz created_at
+    timestamp created_at
   }
   surgical__surgery {
     bigint surgery_id PK
@@ -584,63 +807,82 @@ erDiagram
     bigint primary_dept_id
     bigint procedure_id
     text laterality
-    surg_status status
-    timestamptz scheduled_at
-    timestamptz incision_at
-    timestamptz closure_at
-    timestamptz patient_in_or_at
-    timestamptz patient_out_or_at
+    text status
+    timestamp scheduled_at
+    timestamp incision_at
+    timestamp closure_at
+    timestamp patient_in_or_at
+    timestamp patient_out_or_at
     text anaesthesia_type
     int blood_loss_ml
     int tourniquet_time_minutes
     text complications
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   surgical__surgical_team {
     bigint surg_team_id PK
     bigint surgery_id
     bigint user_id
-    team_role role
-    timestamptz joined_at
-    timestamptz left_at
+    text role
+    timestamp joined_at
+    timestamp left_at
   }
-  surgical__surgery ||--o{ surgical__intra_op_vitals : "surgery_id"
-  surgical__surgery ||--o{ surgical__post_op_note : "surgery_id"
-  surgical__surgery ||--o{ surgical__pre_op_checklist : "surgery_id"
-  surgical__operating_room ||--o{ surgical__surgery : "or_id"
-  surgical__procedure_catalog ||--o{ surgical__surgery : "procedure_id"
-  surgical__surgery ||--o{ surgical__surgical_team : "surgery_id"
-</pre></div><div class="sec" id="sec_mcms_emergency" style="display:none"><h2>mcms_emergency — Emergency</h2><pre class="mermaid">
+  surgical__v_surgery_board {
+    bigint surgery_id
+    text operation_no
+    text mrn
+    text patient_name
+    text cpt_code
+    text procedure_name
+    text or_code
+    text or_status
+    text laterality
+    text status
+    timestamp scheduled_at
+    timestamp incision_at
+    timestamp closure_at
+    text surgeon
+    text anaesthetist
+    text primary_dept
+  }
+  surgical__intra_op_vitals ||--o{ surgical__surgery : "surgery_id"
+  surgical__post_op_note ||--o{ surgical__surgery : "surgery_id"
+  surgical__pre_op_checklist ||--o{ surgical__surgery : "surgery_id"
+  surgical__surgery ||--o{ surgical__operating_room : "or_id"
+  surgical__surgery ||--o{ surgical__procedure_catalog : "procedure_id"
+  surgical__surgical_team ||--o{ surgical__surgery : "surgery_id"
+</pre></div><div class="sec" id="sec_mcms_emergency" style="display:none"><h2>🚑 mcms_emergency — Emergency <span class="cnt">(4 tables)</span></h2><pre class="mermaid">
 erDiagram
   emergency__ed_bed {
     bigint ed_bed_id PK
     bigint triage_id
     text bed_label
-    timestamptz assigned_at
-    timestamptz released_at
+    timestamp assigned_at
+    timestamp released_at
     int observation_minutes
     text notes
+    bigint facility_id
   }
   emergency__resuscitation {
     bigint resus_id PK
     bigint triage_id
     bigint encounter_id
     bigint patient_id
-    timestamptz code_initiated_at
+    timestamp code_initiated_at
     text code_type
     bigint team_leader_id
     text airway
-    _text interventions
+    text interventions
     text iv_access
-    _text meds_administered
-    boolean rosc
-    timestamptz rosc_at
+    text meds_administered
+    bool rosc
+    timestamp rosc_at
     int duration_minutes
     text outcome
     text notes
-    timestamptz created_at
+    timestamp created_at
   }
   emergency__triage {
     bigint triage_id PK
@@ -648,33 +890,51 @@ erDiagram
     bigint patient_id
     text mrn
     bigint encounter_id
-    timestamptz presentation_time
+    timestamp presentation_time
     text chief_complaint
     int esi_level
     text arrival_mode
-    boolean trauma_alert
-    numeric vital_temp_c
+    bool trauma_alert
+    decimal vital_temp_c
     int vital_hr_bpm
     int vital_sbp_mmhg
     int vital_dbp_mmhg
     int vital_rr_pm
-    numeric vital_spo2_pct
+    decimal vital_spo2_pct
     int vital_pain_score
     int vital_gcs
     text allergies_known
-    _text meds_on_arrival
+    text meds_on_arrival
     bigint triage_nurse_user_id
-    timestamptz triaged_at
-    triage_status status
+    timestamp triaged_at
+    text status
     text disposition
     text disposition_destination
-    timestamptz disposition_at
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp disposition_at
+    timestamp created_at
+    timestamp updated_at
   }
-  emergency__triage ||--o{ emergency__ed_bed : "triage_id"
-  emergency__triage ||--o{ emergency__resuscitation : "triage_id"
-</pre></div><div class="sec" id="sec_mcms_rx" style="display:none"><h2>mcms_rx — Pharmacy</h2><pre class="mermaid">
+  emergency__v_ed_board {
+    bigint triage_id
+    text ed_visit_no
+    text patient_name
+    text gender
+    text age
+    timestamp presentation_time
+    text chief_complaint
+    int esi_level
+    bool trauma_alert
+    int vital_sbp_mmhg
+    decimal vital_spo2_pct
+    int vital_gcs
+    text status
+    text disposition
+    decimal minutes_in_ed
+    text triage_nurse
+  }
+  emergency__ed_bed ||--o{ emergency__triage : "triage_id"
+  emergency__resuscitation ||--o{ emergency__triage : "triage_id"
+</pre></div><div class="sec" id="sec_mcms_rx" style="display:none"><h2>💊 mcms_rx — Pharmacy <span class="cnt">(9 tables)</span></h2><pre class="mermaid">
 erDiagram
   rx__administration {
     bigint administer_id PK
@@ -682,7 +942,7 @@ erDiagram
     bigint med_order_id
     bigint drug_item_id
     text dose_given
-    timestamptz dose_at
+    timestamp dose_at
     bigint administered_by
     bigint witnessed_by
     text site
@@ -697,7 +957,7 @@ erDiagram
     bigint drug_item_id
     bigint lot_id
     int quantity
-    timestamptz dispensed_at
+    timestamp dispensed_at
     bigint dispensed_by
     text instructions
     text notes
@@ -707,39 +967,39 @@ erDiagram
     bigint drug_item_id
     bigint alt_drug_item_id
     text reason
-    boolean is_generic_equiv
-    timestamptz created_at
+    bool is_generic_equiv
+    timestamp created_at
   }
   rx__drug_interaction {
     bigint interaction_id PK
     bigint drug_item_id_a
     bigint drug_item_id_b
-    interaction_severity severity
+    text severity
     text mechanism
     text clinical_effect
     text management
     text source_ref
-    timestamptz created_at
+    timestamp created_at
   }
   rx__drug_item {
     bigint drug_item_id PK
     text generic_name
     text brand_name
-    drug_class drug_class
+    text drug_class
     text form
     text strength
     text unit
     text atc_code
-    boolean controlled_substance
-    boolean requires_cold_chain
+    bool controlled_substance
+    bool requires_cold_chain
     text manufacturer
     int reorder_level
     int reorder_qty
-    boolean is_active
-    numeric cost_per_unit
-    numeric sale_price_per_unit
-    timestamptz created_at
-    timestamptz updated_at
+    bool is_active
+    decimal cost_per_unit
+    decimal sale_price_per_unit
+    timestamp created_at
+    timestamp updated_at
     text rxnorm_code
   }
   rx__drug_lot {
@@ -750,36 +1010,70 @@ erDiagram
     int on_hand_qty
     date manufactured_on
     date expires_on
-    timestamptz received_at
+    timestamp received_at
     bigint supplier_party_id
     bigint purchase_order_id
-    numeric unit_cost
-    lot_status status
+    decimal unit_cost
+    text status
+  }
+  rx__prescription {
+    bigint prescription_id PK
+    bigint encounter_id
+    bigint visit_id
+    bigint patient_id
+    text mrn
+    bigint prescriber_user_id
+    bigint drug_item_id
+    text dose
+    text route
+    text frequency
+    int duration_days
+    decimal quantity
+    text notes
+    text status
+    text interaction_severity
+    bool controlled
+    timestamp signed_at
+    timestamp dispensed_at
+    bigint facility_id
+    timestamp created_at
+    timestamp updated_at
   }
   rx__stock_movement {
     bigint movement_id PK
     bigint drug_item_id
     bigint lot_id
-    move_type movement_type
+    text movement_type
     int qty_delta
     int balance_after
     bigint related_movement_id
     text reason
     bigint performed_by
-    timestamptz performed_at
+    timestamp performed_at
   }
-  rx__drug_item ||--o{ rx__administration : "drug_item_id"
-  rx__drug_item ||--o{ rx__dispensation : "drug_item_id"
-  rx__drug_lot ||--o{ rx__dispensation : "lot_id"
-  rx__drug_item ||--o{ rx__drug_alternative : "alt_drug_item_id"
-  rx__drug_item ||--o{ rx__drug_alternative : "drug_item_id"
-  rx__drug_item ||--o{ rx__drug_interaction : "drug_item_id_a"
-  rx__drug_item ||--o{ rx__drug_interaction : "drug_item_id_b"
-  rx__drug_item ||--o{ rx__drug_lot : "drug_item_id"
-  rx__drug_item ||--o{ rx__stock_movement : "drug_item_id"
-  rx__drug_lot ||--o{ rx__stock_movement : "lot_id"
-  rx__stock_movement ||--o{ rx__stock_movement : "self"
-</pre></div><div class="sec" id="sec_mcms_lab" style="display:none"><h2>mcms_lab — Laboratory</h2><pre class="mermaid">
+  rx__v_low_stock {
+    bigint drug_item_id
+    text generic_name
+    text brand_name
+    bigint qty_on_hand
+    int reorder_level
+    int reorder_qty
+    bigint lot_count
+    bigint expiring_lots
+  }
+  rx__administration ||--o{ rx__drug_item : "drug_item_id"
+  rx__dispensation ||--o{ rx__drug_item : "drug_item_id"
+  rx__dispensation ||--o{ rx__drug_lot : "lot_id"
+  rx__drug_alternative ||--o{ rx__drug_item : "alt_drug_item_id"
+  rx__drug_alternative ||--o{ rx__drug_item : "drug_item_id"
+  rx__drug_interaction ||--o{ rx__drug_item : "drug_item_id_a"
+  rx__drug_interaction ||--o{ rx__drug_item : "drug_item_id_b"
+  rx__drug_lot ||--o{ rx__drug_item : "drug_item_id"
+  rx__stock_movement ||--o{ rx__drug_item : "drug_item_id"
+  rx__stock_movement ||--o{ rx__drug_lot : "lot_id"
+  rx__stock_movement ||--o| rx__stock_movement : "self"
+  rx__prescription ||--o{ rx__drug_item : "drug_item_id"
+</pre></div><div class="sec" id="sec_mcms_lab" style="display:none"><h2>🧪 mcms_lab — Laboratory <span class="cnt">(7 tables)</span></h2><pre class="mermaid">
 erDiagram
   lab__lab_order {
     bigint order_id PK
@@ -788,61 +1082,64 @@ erDiagram
     bigint patient_id
     text mrn
     bigint requested_by
-    order_priority order_priority
+    text order_priority
     bigint panel_id
     text clinical_indication
-    timestamptz requested_at
+    timestamp requested_at
+    bigint facility_id
   }
   lab__result {
     bigint result_id PK
     bigint sample_id
     bigint test_id
     text value_text
-    numeric value_numeric
+    decimal value_numeric
     text unit
     text ref_range
-    result_flag flag
+    text flag
     bigint analysed_by
-    timestamptz analysed_at
+    timestamp analysed_at
     bigint verified_by
-    timestamptz verified_at
-    timestamptz rejected_at
+    timestamp verified_at
+    timestamp rejected_at
     text rejected_reason
-    timestamptz created_at
+    timestamp created_at
+    bigint facility_id
   }
   lab__sample {
     bigint sample_id PK
     text sample_no
     bigint lab_order_id
-    _int8 test_ids
-    specimen_type specimen_type
-    numeric volume_collected
-    timestamptz collected_at
+    text test_ids
+    text specimen_type
+    decimal volume_collected
+    timestamp collected_at
     bigint collected_by
-    timestamptz received_at
+    timestamp received_at
     bigint received_by
-    sample_status status
+    text status
     text rejected_reason
+    bigint facility_id
   }
   lab__test_catalog {
     bigint test_id PK
     text loinc_code
     text name
     text category
-    specimen_type specimen_type
-    numeric volume_required
+    text specimen_type
+    decimal volume_required
     text unit
-    numeric ref_low
-    numeric ref_high
+    decimal ref_low
+    decimal ref_high
     int turnaround_minutes
-    boolean is_active
-    timestamptz created_at
+    bool is_active
+    timestamp created_at
   }
   lab__test_panel {
     bigint panel_id PK
     text code
     text name
-    timestamptz created_at
+    timestamp created_at
   }
   lab__test_panel_item {
     bigint ppi_id PK
@@ -850,23 +1147,32 @@ erDiagram
     bigint test_id
     int sort_order
   }
-  lab__test_panel ||--o{ lab__lab_order : "panel_id"
-  lab__sample ||--o{ lab__result : "sample_id"
-  lab__test_catalog ||--o{ lab__result : "test_id"
-  lab__lab_order ||--o{ lab__sample : "lab_order_id"
-  lab__test_catalog ||--o{ lab__test_panel_item : "test_id"
-  lab__test_panel ||--o{ lab__test_panel_item : "panel_id"
-</pre></div><div class="sec" id="sec_mcms_rad" style="display:none"><h2>mcms_rad — Radiology</h2><pre class="mermaid">
+  lab__v_tat {
+    bigint test_id
+    text test_name
+    text category
+    bigint results_count
+    decimal avg_minutes
+    float p50_minutes
+    float p95_minutes
+  }
+  lab__lab_order ||--o{ lab__test_panel : "panel_id"
+  lab__result ||--o{ lab__sample : "sample_id"
+  lab__result ||--o{ lab__test_catalog : "test_id"
+  lab__sample ||--o{ lab__lab_order : "lab_order_id"
+  lab__test_panel_item ||--o{ lab__test_panel : "panel_id"
+  lab__test_panel_item ||--o{ lab__test_catalog : "test_id"
+</pre></div><div class="sec" id="sec_mcms_rad" style="display:none"><h2>🩻 mcms_rad — Radiology <span class="cnt">(5 tables)</span></h2><pre class="mermaid">
 erDiagram
   rad__exam_catalog {
     bigint exam_id PK
     text snomed_code
     text name
     text body_part
-    modality_type default_modality
-    boolean contrast_used
+    text default_modality
+    bool contrast_used
     int duration_minutes
-    timestamptz created_at
+    timestamp created_at
   }
   rad__image_instance {
     bigint image_id PK
@@ -874,22 +1180,22 @@ erDiagram
     int series_number
     int instance_number
     text sop_instance_uid
-    image_type image_type
+    text image_type
     text storage_uri
     int rows
     int columns
     int bits_allocated
-    timestamptz created_at
+    timestamp created_at
   }
   rad__modality_suite {
     bigint suite_id PK
     bigint department_id
     text code
     text name
-    modality_type modality
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    text modality
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
   }
   rad__study_request {
     bigint study_id PK
@@ -900,29 +1206,44 @@ erDiagram
     bigint exam_id
     bigint suite_id
     bigint requested_by
-    order_priority priority
+    text priority
     text clinical_indication
-    study_status status
-    timestamptz scheduled_at
-    timestamptz started_at
-    timestamptz completed_at
+    text status
+    timestamp scheduled_at
+    timestamp started_at
+    timestamp completed_at
     int image_count
-    numeric radiation_dose_msv
-    jsonb contrast_data
+    decimal radiation_dose_msv
+    json contrast_data
     text findings
     text impression
     bigint reported_by
-    timestamptz reported_at
+    timestamp reported_at
     bigint verified_by
-    timestamptz verified_at
+    timestamp verified_at
     text cancelled_reason
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
-  rad__study_request ||--o{ rad__image_instance : "study_id"
-  rad__exam_catalog ||--o{ rad__study_request : "exam_id"
-  rad__modality_suite ||--o{ rad__study_request : "suite_id"
-</pre></div><div class="sec" id="sec_mcms_icu" style="display:none"><h2>mcms_icu — ICU</h2><pre class="mermaid">
+  rad__v_study_pipeline {
+    bigint study_id
+    text accession_no
+    text patient_name
+    text mrn
+    text exam
+    text suite
+    text status
+    text priority
+    bigint requested_by
+    timestamp scheduled_at
+    timestamp started_at
+    timestamp completed_at
+    timestamp verified_at
+  }
+  rad__image_instance ||--o{ rad__study_request : "study_id"
+  rad__study_request ||--o{ rad__exam_catalog : "exam_id"
+  rad__study_request ||--o{ rad__modality_suite : "suite_id"
+</pre></div><div class="sec" id="sec_mcms_icu" style="display:none"><h2>🏥 mcms_icu — ICU <span class="cnt">(7 tables)</span></h2><pre class="mermaid">
 erDiagram
   icu__admission {
     bigint admission_id PK
@@ -932,14 +1253,15 @@ erDiagram
     bigint bed_id
     bigint primary_physician_id
     bigint attending_nurse_id
-    icu_status status
+    text status
     text admit_diagnosis
     text admit_reason
-    timestamptz admitted_at
-    timestamptz discharged_at
+    timestamp admitted_at
+    timestamp discharged_at
     text discharge_destination
-    timestamptz expired_at
+    timestamp expired_at
     text notes
+    bigint facility_id
   }
   icu__bed {
     bigint bed_id PK
@@ -947,66 +1269,83 @@ erDiagram
     text bed_label
     bigint department_id
     int level
-    bed_status status
-    boolean has_ventilator
-    boolean has_dialysis
-    boolean is_isolation
-    timestamptz created_at
-    timestamptz updated_at
+    text status
+    bool has_ventilator
+    bool has_dialysis
+    bool is_isolation
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
   }
   icu__bed_stay {
     bigint stay_id PK
     bigint admission_id
     bigint bed_id
-    timestamptz assigned_at
-    timestamptz released_at
+    timestamp assigned_at
+    timestamp released_at
+    bigint facility_id
   }
   icu__score {
     bigint score_id PK
     bigint admission_id
     text type
     int raw
-    numeric computed_value
+    decimal computed_value
     text interpretation
-    timestamptz assessed_at
+    timestamp assessed_at
     bigint assessed_by
   }
   icu__support_session {
     bigint session_id PK
     bigint admission_id
-    support_kind support_kind
-    timestamptz started_at
-    timestamptz stopped_at
-    jsonb parameters
+    text support_kind
+    timestamp started_at
+    timestamp stopped_at
+    json parameters
     text stopped_reason
+  }
+  icu__v_bed_board {
+    bigint bed_id
+    text room_code
+    text bed_label
+    text status
+    int level
+    bool has_ventilator
+    bool has_dialysis
+    text dept_code
+    bigint patient_id
+    text mrn
+    text patient_name
+    timestamp admitted_at
   }
   icu__vitals_stream {
     bigint stream_id PK
     bigint admission_id
     bigint patient_id
-    timestamptz recorded_at
+    timestamp recorded_at
     bigint charted_by
-    numeric temp_c
+    decimal temp_c
     int hr_bpm
     int rr_pm
     int sbp_mmhg
     int dbp_mmhg
     int mbp_mmhg
-    numeric spo2_pct
+    decimal spo2_pct
     int etco2_mmhg
     int cvp_cmh2o
     int urine_ml_hour
     int gcs
     text pupils
     text notes
+    bigint facility_id
   }
-  icu__bed ||--o{ icu__admission : "bed_id"
-  icu__admission ||--o{ icu__bed_stay : "admission_id"
-  icu__bed ||--o{ icu__bed_stay : "bed_id"
-  icu__admission ||--o{ icu__score : "admission_id"
-  icu__admission ||--o{ icu__support_session : "admission_id"
-  icu__admission ||--o{ icu__vitals_stream : "admission_id"
-</pre></div><div class="sec" id="sec_mcms_physio" style="display:none"><h2>mcms_physio — Physiotherapy</h2><pre class="mermaid">
+  icu__admission ||--o{ icu__bed : "bed_id"
+  icu__bed_stay ||--o{ icu__admission : "admission_id"
+  icu__bed_stay ||--o{ icu__bed : "bed_id"
+  icu__score ||--o{ icu__admission : "admission_id"
+  icu__support_session ||--o{ icu__admission : "admission_id"
+  icu__vitals_stream ||--o{ icu__admission : "admission_id"
+</pre></div><div class="sec" id="sec_mcms_physio" style="display:none"><h2>🤸 mcms_physio — Physiotherapy <span class="cnt">(4 tables)</span></h2><pre class="mermaid">
 erDiagram
   physio__session {
     bigint session_id PK
@@ -1016,7 +1355,7 @@ erDiagram
     bigint therapy_id
     bigint room_id
     int sessions_in_seq
-    timestamptz scheduled_at
+    timestamp scheduled_at
     int duration_minutes
     int pain_before_score
     int pain_after_score
@@ -1024,23 +1363,23 @@ erDiagram
     text rom_after
     text subjective
     text interventions
-    session_status status
-    timestamptz started_at
-    timestamptz completed_at
+    text status
+    timestamp started_at
+    timestamp completed_at
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   physio__therapy_catalog {
     bigint therapy_id PK
     text code
     text name
-    therapy_type type
+    text type
     text body_region
     int duration_minutes
-    _text equipment
-    boolean is_active
-    timestamptz created_at
+    text equipment
+    bool is_active
+    timestamp created_at
   }
   physio__treatment_plan {
     bigint plan_id PK
@@ -1054,14 +1393,26 @@ erDiagram
     text frequency
     date starts_on
     date ends_on
-    plan_status status
+    text status
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
-  physio__therapy_catalog ||--o{ physio__session : "therapy_id"
-  physio__treatment_plan ||--o{ physio__session : "plan_id"
-</pre></div><div class="sec" id="sec_mcms_dialysis" style="display:none"><h2>mcms_dialysis — Dialysis</h2><pre class="mermaid">
+  physio__v_session_throughput {
+    bigint plan_id
+    text mrn
+    text patient_name
+    text therapist
+    text diagnosis
+    int sessions_planned
+    int sessions_completed
+    text status
+    bigint completed_sessions_count
+    bigint no_shows
+  }
+  physio__session ||--o{ physio__treatment_plan : "plan_id"
+  physio__session ||--o{ physio__therapy_catalog : "therapy_id"
+</pre></div><div class="sec" id="sec_mcms_dialysis" style="display:none"><h2>💉 mcms_dialysis — Dialysis <span class="cnt">(2 tables)</span></h2><pre class="mermaid">
 erDiagram
   dialysis__session {
     bigint session_id PK
@@ -1070,59 +1421,59 @@ erDiagram
     bigint station_id
     bigint nurse_user_id
     bigint nephrologist_user_id
-    modality modality
-    timestamptz scheduled_at
-    timestamptz started_at
-    timestamptz ended_at
+    text modality
+    timestamp scheduled_at
+    timestamp started_at
+    timestamp ended_at
     int duration_minutes
-    numeric pre_weight_kg
+    decimal pre_weight_kg
     text pre_bp
-    numeric dry_weight_kg
-    numeric post_weight_kg
+    decimal dry_weight_kg
+    decimal post_weight_kg
     text post_bp
     int fluid_removed_ml
     int blood_flow_rate
     int dialysate_flow
     int heparin_units
-    numeric kt_v
+    decimal kt_v
     text complications
-    dialysis_status status
+    text status
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   dialysis__station {
     bigint station_id PK
     text code
     text name
     bigint department_id
-    boolean has_ro_water
-    bed_status status
-    timestamptz created_at
-    timestamptz updated_at
+    bool has_ro_water
+    text status
+    timestamp created_at
+    timestamp updated_at
   }
-  dialysis__station ||--o{ dialysis__session : "station_id"
-</pre></div><div class="sec" id="sec_mcms_nursery" style="display:none"><h2>mcms_nursery — Nursery/Neonatal</h2><pre class="mermaid">
+  dialysis__session ||--o{ dialysis__station : "station_id"
+</pre></div><div class="sec" id="sec_mcms_nursery" style="display:none"><h2>👶 mcms_nursery — Nursery / Neonatal <span class="cnt">(3 tables)</span></h2><pre class="mermaid">
 erDiagram
   nursery__cot {
     bigint cot_id PK
     text code
     text name
     bigint department_id
-    boolean is_incubator
-    boolean has_phototherapy
-    cot_status status
-    timestamptz created_at
-    timestamptz updated_at
+    bool is_incubator
+    bool has_phototherapy
+    text status
+    timestamp created_at
+    timestamp updated_at
   }
   nursery__growth_entry {
     bigint entry_id PK
     bigint neonate_id
-    timestamptz recorded_at
+    timestamp recorded_at
     int weight_g
-    numeric length_cm
-    numeric head_circ_cm
-    numeric temperature_c
+    decimal length_cm
+    decimal head_circ_cm
+    decimal temperature_c
     text feeding_type
     int feed_volume_ml
     bigint nurse_user_id
@@ -1133,37 +1484,60 @@ erDiagram
     bigint patient_id
     bigint mother_party_id
     bigint cot_id
-    numeric gestational_age_weeks
+    decimal gestational_age_weeks
     int birth_weight_g
     int apgar_1min
     int apgar_5min
-    timestamptz admitted_at
-    timestamptz discharged_at
+    timestamp admitted_at
+    timestamp discharged_at
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
-  nursery__neonate_record ||--o{ nursery__growth_entry : "neonate_id"
-  nursery__cot ||--o{ nursery__neonate_record : "cot_id"
-</pre></div><div class="sec" id="sec_mcms_billing" style="display:none"><h2>mcms_billing — Billing</h2><pre class="mermaid">
+  nursery__growth_entry ||--o{ nursery__neonate_record : "neonate_id"
+  nursery__neonate_record ||--o{ nursery__cot : "cot_id"
+</pre></div><div class="sec" id="sec_mcms_billing" style="display:none"><h2>💳 mcms_billing — Billing / Insurance <span class="cnt">(11 tables)</span></h2><pre class="mermaid">
 erDiagram
+  billing__claim_response {
+    bigint response_id PK
+    bigint claim_id
+    text payer_code
+    text status
+    decimal approved_amount
+    decimal rejected_amount
+    text remittance
+    timestamp received_at
+    bigint facility_id
+  }
+  billing__eligibility_check {
+    bigint eligibility_id PK
+    bigint patient_id
+    text payer_code
+    text policy_no
+    text status
+    text reason
+    text raw_response
+    timestamp checked_at
+    bigint facility_id
+  }
   billing__insurance_claim {
     bigint claim_id PK
     bigint invoice_id
     text policy_no
     text insurance_provider
     bigint patient_id
-    numeric billed_amount
-    numeric approved_amount
-    numeric rejected_amount
-    claim_status status
-    timestamptz submitted_at
-    timestamptz adjudicated_at
-    timestamptz paid_at
+    decimal billed_amount
+    decimal approved_amount
+    decimal rejected_amount
+    text status
+    timestamp submitted_at
+    timestamp adjudicated_at
+    timestamp paid_at
     text claim_no_external
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
   }
   billing__invoice {
     bigint invoice_id PK
@@ -1172,20 +1546,21 @@ erDiagram
     text mrn
     bigint encounter_id
     bigint issued_by
-    inv_status status
-    numeric subtotal
-    numeric tax_amount
-    numeric discount_amount
-    numeric insurance_covers
-    numeric patient_pays
-    numeric total
+    text status
+    decimal subtotal
+    decimal tax_amount
+    decimal discount_amount
+    decimal insurance_covers
+    decimal patient_pays
+    decimal total
     text currency
-    timestamptz issued_at
+    timestamp issued_at
     date due_date
-    timestamptz paid_at
+    timestamp paid_at
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
   }
   billing__invoice_line {
     bigint line_id PK
@@ -1195,18 +1570,29 @@ erDiagram
     text source_table
     bigint source_id
     text description
-    numeric qty
-    numeric unit_price
-    numeric line_total
-    timestamptz created_at
+    decimal qty
+    decimal unit_price
+    decimal line_total
+    timestamp created_at
+    bigint facility_id
+  }
+  billing__payer {
+    bigint payer_id PK
+    text payer_code
+    text name
+    bool supports_eligibility
+    bool supports_claims
+    bool mock_mode
+    bool is_active
+    timestamp created_at
   }
   billing__payment {
     bigint payment_id PK
     bigint invoice_id
-    pay_method method
-    numeric amount
+    text method
+    decimal amount
     text currency
-    timestamptz paid_at
+    timestamp paid_at
     bigint received_by
     text txn_ref
     text notes
@@ -1215,31 +1601,68 @@ erDiagram
     bigint service_id PK
     text code
     text name
-    service_type service_type
+    text service_type
     bigint department_id
-    numeric unit_price
+    decimal unit_price
     text currency
-    boolean is_taxable
-    boolean is_active
+    bool is_taxable
+    bool is_active
     date effective_from
     date effective_to
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
   }
-  billing__invoice ||--o{ billing__insurance_claim : "invoice_id"
-  billing__invoice ||--o{ billing__invoice_line : "invoice_id"
-  billing__service_price ||--o{ billing__invoice_line : "service_id"
-  billing__invoice ||--o{ billing__payment : "invoice_id"
-</pre></div><div class="sec" id="sec_mcms_erp" style="display:none"><h2>mcms_erp — ERP / Supply Chain</h2><pre class="mermaid">
+  billing__v_invoice_aging {
+    bigint invoice_id
+    text invoice_no
+    text mrn
+    text patient_name
+    text status
+    decimal total
+    timestamp issued_at
+    date due_date
+    decimal paid_amount
+    decimal balance
+    text aging_bucket
+  }
+  billing__v_patient_ledger {
+    bigint invoice_id
+    text invoice_no
+    text mrn
+    text patient_name
+    bigint line_id
+    text line_description
+    text service_type
+    text dept_name
+    decimal qty
+    decimal unit_price
+    decimal line_total
+    timestamp issued_at
+    text invoice_status
+  }
+  billing__v_revenue_by_dept {
+    text service_type
+    text dept_code
+    text dept_name
+    bigint invoice_count
+    decimal gross_revenue
+    decimal avg_line_value
+  }
+  billing__insurance_claim ||--o{ billing__invoice : "invoice_id"
+  billing__invoice_line ||--o{ billing__invoice : "invoice_id"
+  billing__invoice_line ||--o{ billing__service_price : "service_id"
+  billing__payment ||--o{ billing__invoice : "invoice_id"
+  billing__claim_response ||--o{ billing__insurance_claim : "claim_id"
+</pre></div><div class="sec" id="sec_mcms_erp" style="display:none"><h2>📦 mcms_erp — ERP / Supply Chain <span class="cnt">(10 tables)</span></h2><pre class="mermaid">
 erDiagram
   erp__gl_account {
     bigint account_id PK
     text code
     text name
-    account_type account_type
+    text account_type
     bigint parent_account_id
-    boolean is_postable
-    boolean is_active
+    bool is_postable
+    bool is_active
   }
   erp__goods_receipt {
     bigint grn_id PK
@@ -1247,8 +1670,8 @@ erDiagram
     bigint po_id
     bigint supplier_id
     bigint received_by
-    timestamptz received_at
-    grn_status status
+    timestamp received_at
+    text status
     text notes
   }
   erp__goods_receipt_line {
@@ -1260,20 +1683,20 @@ erDiagram
     int qty_received
     text lot_number
     date expiration_date
-    numeric unit_cost
+    decimal unit_cost
   }
   erp__inventory_item {
     bigint item_id PK
     text code
     text name
-    item_type type
+    text type
     text unit
     int reorder_level
     int reorder_qty
-    numeric cost_per_unit
-    boolean is_active
-    timestamptz created_at
-    timestamptz updated_at
+    decimal cost_per_unit
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
   }
   erp__inventory_stock {
     bigint stock_id PK
@@ -1281,8 +1704,8 @@ erDiagram
     bigint department_id
     int qty_on_hand
     int qty_reserved
-    timestamptz last_count_at
-    timestamptz updated_at
+    timestamp last_count_at
+    timestamp updated_at
   }
   erp__purchase_order {
     bigint po_id PK
@@ -1290,14 +1713,15 @@ erDiagram
     bigint supplier_id
     bigint requested_by
     bigint approved_by
-    po_status status
+    text status
     date expected_at
-    timestamptz ordered_at
-    timestamptz received_at
-    timestamptz closed_at
+    timestamp ordered_at
+    timestamp received_at
+    timestamp closed_at
     text notes
-    timestamptz created_at
-    timestamptz updated_at
+    timestamp created_at
+    timestamp updated_at
+    bigint facility_id
   }
   erp__purchase_order_line {
     bigint line_id PK
@@ -1306,9 +1730,10 @@ erDiagram
     bigint drug_item_id
     text item_description
     int qty
-    numeric unit_price
+    decimal unit_price
     int qty_received
-    numeric line_total
+    decimal line_total
+    bigint facility_id
   }
   erp__stock_movement {
     bigint movement_id PK
@@ -1316,11 +1741,11 @@ erDiagram
     bigint from_department_id
     bigint to_department_id
     int qty_delta
-    move_type movement_type
+    text movement_type
     text reference_table
     bigint reference_id
     bigint performed_by
-    timestamptz performed_at
+    timestamp performed_at
     text reason
   }
   erp__supplier {
@@ -1329,22 +1754,112 @@ erDiagram
     text supplier_code
     bigint contact_user_id
     int payment_terms_days
-    boolean is_active
-    timestamptz created_at
+    bool is_active
+    timestamp created_at
   }
-  erp__gl_account ||--o{ erp__gl_account : "self"
-  erp__purchase_order ||--o{ erp__goods_receipt : "po_id"
-  erp__supplier ||--o{ erp__goods_receipt : "supplier_id"
-  erp__goods_receipt ||--o{ erp__goods_receipt_line : "grn_id"
-  erp__inventory_item ||--o{ erp__goods_receipt_line : "item_id"
-  erp__purchase_order_line ||--o{ erp__goods_receipt_line : "po_line_id"
-  erp__inventory_item ||--o{ erp__inventory_stock : "item_id"
-  erp__supplier ||--o{ erp__purchase_order : "supplier_id"
-  erp__inventory_item ||--o{ erp__purchase_order_line : "item_id"
-  erp__purchase_order ||--o{ erp__purchase_order_line : "po_id"
-  erp__inventory_item ||--o{ erp__stock_movement : "item_id"
+  erp__v_department_stock {
+    bigint item_id
+    text code
+    text name
+    text type
+    text dept_code
+    text dept_name
+    int qty_on_hand
+    int qty_reserved
+    int qty_available
+    int reorder_level
+    text stock_state
+  }
+  erp__gl_account ||--o| erp__gl_account : "self"
+  erp__goods_receipt ||--o{ erp__purchase_order : "po_id"
+  erp__goods_receipt ||--o{ erp__supplier : "supplier_id"
+  erp__goods_receipt_line ||--o{ erp__goods_receipt : "grn_id"
+  erp__goods_receipt_line ||--o{ erp__inventory_item : "item_id"
+  erp__goods_receipt_line ||--o{ erp__purchase_order_line : "po_line_id"
+  erp__inventory_stock ||--o{ erp__inventory_item : "item_id"
+  erp__purchase_order ||--o{ erp__supplier : "supplier_id"
+  erp__purchase_order_line ||--o{ erp__inventory_item : "item_id"
+  erp__purchase_order_line ||--o{ erp__purchase_order : "po_id"
+  erp__stock_movement ||--o{ erp__inventory_item : "item_id"
+</pre></div><div class="sec" id="sec_mcms_telemed" style="display:none"><h2>📞 mcms_telemed — Telemedicine <span class="cnt">(1 tables)</span></h2><pre class="mermaid">
+erDiagram
+  telemed__visit {
+    bigint visit_id PK
+    bigint patient_id
+    text mrn
+    bigint clinician_user_id
+    bigint encounter_id
+    bigint appointment_id
+    text mode
+    text status
+    text subjective
+    text objective
+    text assessment
+    text plan
+    timestamp started_at
+    timestamp ended_at
+    bigint facility_id
+    timestamp created_at
+    timestamp updated_at
+  }
+</pre></div><div class="sec" id="sec_mcms_terminology" style="display:none"><h2>🔤 mcms_terminology — Terminology / Coding <span class="cnt">(1 tables)</span></h2><pre class="mermaid">
+erDiagram
+  terminology__concept {
+    bigint concept_id PK
+    text code_system
+    text code
+    text display
+    text display_ar
+    text synonyms
+    text source
+    bigint facility_id
+    timestamp created_at
+  }
+</pre></div><div class="sec" id="sec_mcms_vital_records" style="display:none"><h2>📜 mcms_vital_records — Vital Records <span class="cnt">(2 tables)</span></h2><pre class="mermaid">
+erDiagram
+  vital_records__birth_certificate {
+    bigint birth_cert_id PK
+    text registration_no
+    bigint newborn_patient_id
+    bigint mother_patient_id
+    bigint father_party_id
+    bigint delivery_encounter_id
+    bigint facility_id
+    timestamp birth_datetime
+    decimal birth_weight_g
+    decimal gestation_weeks
+    text place_of_birth
+    bigint attendant_user_id
+    bigint registrar_user_id
+    bigint certifier_user_id
+    text status
+    timestamp signed_at
+    bigint amended_from
+    timestamp created_at
+    timestamp updated_at
+  }
+  vital_records__death_certificate {
+    bigint death_cert_id PK
+    text registration_no
+    bigint patient_id
+    bigint facility_id
+    timestamp death_datetime
+    text cause_icd10
+    text cause_text
+    bigint certifying_clinician_user_id
+    bool coroner_case
+    bigint registrar_user_id
+    text status
+    timestamp signed_at
+    bigint amended_from
+    timestamp created_at
+    timestamp updated_at
+  }
+  vital_records__birth_certificate ||--o| vital_records__birth_certificate : "self"
+  vital_records__death_certificate ||--o| vital_records__death_certificate : "self"
 </pre></div></div>
 <script>
-mermaid.initialize({startOnLoad:true,theme:'default',maxTextSize:200000});
+mermaid.initialize({startOnLoad:true,theme:'default',maxTextSize:4000000,securityLevel:'loose'});
 function show(s){document.querySelectorAll('.sec').forEach(e=>e.style.display='none');document.getElementById('sec_'+s).style.display='block';}
-</script></body></html>
+</script>
+</body></html>
