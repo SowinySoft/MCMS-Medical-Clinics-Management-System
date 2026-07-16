@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict R3KFCFhKa1raZWE7tJPlZIoyaCNjsZUocaiguZOkb0qHWLQt6Y9Ae4Xowm8cx6B
+\restrict aMXGR5JdXrhIaIZh2IwjGk2HDgxrch5v3H0bY76HiiP18TpabbwgHGmd7z9Tk8k
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -1689,9 +1689,12 @@ END$$;
 CREATE FUNCTION mcms_emr.fn_med_order_event() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    PERFORM mcms_core.emit_event(
-      'prescription_issued','info', NEW.prescriber_user_id, NEW.patient_id,
+      'prescription_issued','info', NEW.prescriber_user_id, v_party,
       'mcms_emr','medication_order', NEW.order_id,
       jsonb_build_object('drug_name', NEW.drug_name, 'dose', NEW.dose,
                          'route', NEW.route::text, 'frequency', NEW.frequency));
@@ -14645,5 +14648,5 @@ ALTER TABLE ONLY public.django_admin_log
 -- PostgreSQL database dump complete
 --
 
-\unrestrict R3KFCFhKa1raZWE7tJPlZIoyaCNjsZUocaiguZOkb0qHWLQt6Y9Ae4Xowm8cx6B
+\unrestrict aMXGR5JdXrhIaIZh2IwjGk2HDgxrch5v3H0bY76HiiP18TpabbwgHGmd7z9Tk8k
 

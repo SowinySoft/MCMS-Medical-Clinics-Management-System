@@ -229,9 +229,13 @@ CREATE INDEX ON mcms_emr.medication_order (status);
 
 CREATE OR REPLACE FUNCTION mcms_emr.fn_med_order_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+   v_party BIGINT;
 BEGIN
+   -- emit_event's 4th arg is the SUBJECT PARTY id, not the patient id
+   SELECT party_id INTO v_party FROM mcms_emr.patient WHERE patient_id = NEW.patient_id;
    PERFORM mcms_core.emit_event(
-      'prescription_issued','info', NEW.prescriber_user_id, NEW.patient_id,
+      'prescription_issued','info', NEW.prescriber_user_id, v_party,
       'mcms_emr','medication_order', NEW.order_id,
       jsonb_build_object('drug_name', NEW.drug_name, 'dose', NEW.dose,
                          'route', NEW.route::text, 'frequency', NEW.frequency));
