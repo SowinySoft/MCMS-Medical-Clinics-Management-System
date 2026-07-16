@@ -52,11 +52,8 @@ VALUES
 ON CONFLICT (employee_no) DO NOTHING;
 
 -- payroll items for the period (net_amount is GENERATED; is_paid/paid_at
--- omitted because the generic audit trigger cannot cast boolean columns —
--- they default to false, which the report still handles correctly)
--- The audit trigger on payroll_item cannot cast boolean defaults, so we
--- disable it for this seed insert and re-enable afterwards.
-ALTER TABLE mcms_hr.payroll_item DISABLE TRIGGER trg_mcms_hr_payroll_item_audit;
+-- default as needed — the generic audit trigger now logs these rows safely,
+-- since fn_generic_audit derives the PK without casting boolean columns).
 INSERT INTO mcms_hr.payroll_item
   (period_id, employee_id, base_amount, overtime_amount, deduction_amount, bonus_amount)
 SELECT
@@ -72,7 +69,6 @@ FROM (VALUES
 ) v(eno, base, ot, ded, bonus)
 JOIN mcms_hr.employee e ON e.employee_no = v.eno
 ON CONFLICT DO NOTHING;
-ALTER TABLE mcms_hr.payroll_item ENABLE TRIGGER trg_mcms_hr_payroll_item_audit;
 
 -- ---------- 3) Insurance claims across statuses
 -- invoice_id is NOT NULL; reuse an existing invoice. claim_status enum:

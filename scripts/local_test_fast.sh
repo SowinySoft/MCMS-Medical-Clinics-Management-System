@@ -18,7 +18,11 @@ export MCMS_DB_PASSWORD="${MCMS_DB_PASSWORD:-postgres}"
 export MCMS_DB_USER="${MCMS_DB_USER:-postgres}"
 export MCMS_DB_HOST="${MCMS_DB_HOST:-127.0.0.1}"
 export MCMS_DB_PORT="${MCMS_DB_PORT:-5432}"
-export MCMS_DB_NAME="${MCMS_DB_NAME:-mcms_test}"
+# The fast gate always targets the canonical test DB (mcms_test). Force it so a
+# lingering MCMS_DB_NAME from another shell session can't redirect the ERD
+# doc-vs-schema guard or the pytest slice.
+export MCMS_DB_NAME="mcms_test"
+export MCMS_TEST_DB="mcms_test"
 export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.test_settings}"
 export PYTHONPATH="$(pwd)${PYTHONPATH:+:$PYTHONPATH}"
 

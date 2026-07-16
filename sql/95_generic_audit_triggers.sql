@@ -40,14 +40,22 @@ BEGIN
 
   v_row := CASE TG_OP WHEN 'DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
 
-  -- derive the PK value generically, preferring the real primary key
-  IF v_row ? 'id' THEN
+  -- derive the PK value generically, preferring the real primary key.
+  -- Guard every cast: only treat a key as an id when its JSON value is an
+  -- integer string, so boolean/text columns (e.g. is_paid) never break the
+  -- bigint cast. (A bare to_jsonb(NEW)->>'is_paid' is "false", which is not
+  -- a valid bigint and used to abort the whole trigger on tables like
+  -- mcms_hr.payroll_item.)
+  IF v_row ? 'id' AND v_row->>'id' ~ '^[0-9]+$' THEN
     v_id := (v_row->>'id')::bigint;
-  ELSIF v_row ? (v_table || '_id') THEN
+  ELSIF v_row ? (v_table || '_id') AND v_row->>(v_table || '_id') ~ '^[0-9]+$' THEN
     v_id := (v_row->>(v_table || '_id'))::bigint;
   ELSE
     FOR k IN SELECT jsonb_object_keys(v_row) LOOP
-      IF k LIKE '%_id' THEN v_id := (v_row->>k)::bigint; EXIT; END IF;
+      IF k LIKE '%_id' AND v_row->>k ~ '^[0-9]+$' THEN
+        v_id := (v_row->>k)::bigint;
+        EXIT;
+      END IF;
     END LOOP;
   END IF;
 

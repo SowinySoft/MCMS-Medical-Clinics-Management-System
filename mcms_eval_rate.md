@@ -47,14 +47,21 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
    `emit_event` expects `subject_party_id`. The original `sql/33` sweep "fixed" 12 but
    missed these (added later). *Signal:* the emit_event contract needs a lint/audit rule,
    not per-incident patches.
-2. **`sql/39` disables the `payroll_item` audit trigger around its INSERTs** — a
-   workaround. Verified: `fn_generic_audit` uses `to_jsonb(NEW)` (serializes `boolean`
-   fine) and `event_log.subject_party_id` is nullable+FK, so the trigger does NOT fail on
-   a boolean column or a NULL subject. The disable/enable is therefore masking nothing
-   obvious — BUT the generic audit triggers (`sql/95`) are **not** in the standard
-   `rebuild_test_db.sh`/`setup_db.sh` apply list (both stop at `42`), so the hack's real
-   effect is unclear. Leave as-is until the audit-trigger attach path is mapped; do NOT
-   blindly remove it.
+2. **`sql/39` disabled the `payroll_item` audit trigger — ROOT CAUSE FOUND & FIXED.**
+   The original trigger failure was **not** a `to_jsonb` boolean problem (that works
+   fine). `fn_generic_audit` derives the row PK by casting JSON values to `bigint`, and
+   that cast chokes on the `is_paid=false` value (`invalid input syntax for type bigint:
+   "false"`), so the AFTER-INSERT trigger raised and rolled the seed insert back. Fix:
+   guard every PK cast in `fn_generic_audit` to only treat integer-string JSON values as
+   ids (`~ '^[0-9]+$'`). Also promoted `sql/95_generic_audit_triggers.sql` into the
+   standard `rebuild_test_db.sh`/`setup_db.sh` apply list (run FIRST, before any seed) so
+   the fixed function is live when seeds run — it was previously dead/redundant vs the
+   `mcms_schema.sql` dump. The `sql/39` disable/enable hack + its wrong "boolean cast"
+   comment were removed; payroll_item now seeds AND emits 6 audit `create` rows (the
+   trigger had been silently suppressing those events — a real audit-coverage gap).
+   Verified: fresh from-sql build → payroll_item=6 rows, event_log payroll_item create=6.
+   No new backend-test failures vs the committed baseline (5 pre-existing failures in
+   identity/facility-linkage/interop are environmental, reproduced on baseline).
 3. **Raw-SQL seed bypasses app validation.** `sql/39` took ~10 iterations (FK, enum,
    GENERATED column, audit-trigger, sequence) because direct INSERTs hit constraints the
    app layer would handle. Seeds are a parallel write path that can drift from the real
@@ -88,14 +95,14 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
   the emit_event subject-party invariant. Committed; CI green.
 
 ### P1 — root-cause the workarounds
-- ⚠️ **`sql/39` trigger-disable hack (risk #2):** RE-CHECKED — `fn_generic_audit` handles
-  `boolean` (`to_jsonb`) and `event_log.subject_party_id` is nullable, so the trigger does
-  NOT fail. The hack is masking nothing obvious, but the generic audit triggers (`sql/95`)
-  are outside the standard `rebuild_test_db.sh`/`setup_db.sh` apply path (both stop at
-  `42`). **Needs the attach path mapped before touching it** — defer.
-- 🔲 **Frontend e2e (risk #5):** Stand up a Playwright/Cypress smoke test that loads the
-  built React app, logs in, opens `/reports` + one schema. Closes the least-tested layer.
-  **Structural/infra (adds a browser runner to CI) — needs your sign-off.**
+- ✅ **`sql/39` trigger-disable hack (risk #2):** ROOT CAUSED & FIXED. The trigger failure
+  was a `bigint` PK-cast choking on `is_paid=false` inside `fn_generic_audit` (not a
+  `to_jsonb` boolean issue). Guarded the cast, promoted `sql/95` into the build apply list
+  (run first), removed the hack. payroll_item now seeds **and** emits 6 audit rows.
+  Verified on a fresh from-sql build; no new backend-test failures vs baseline.
+- ✅ **Frontend e2e (risk #5):** Playwright smoke test in CI (`frontend-e2e` job). Loads the
+  built SPA, logs in, opens `/reports` + `/browse/mcms_core`. CI green (run `29533305952`).
+  Closes the least-tested layer.
 
 ### P2 — hardening
 - 🔲 **Seeds via app layer (risk #3):** Route seed data through the ORM/validated fixture
@@ -107,10 +114,7 @@ bugs actually encountered and fixed during the journey. Ratings are honest, not 
   fully parameterized. No action.
 
 ### Remaining open items (await your go-ahead)
-1. Map the generic audit-trigger attach path (`sql/95` vs rebuild/setup scripts) and decide
-   on the `sql/39` hack.
-2. Add frontend e2e (Playwright) to CI.
-3. Refactor seeds to the app write path.
+1. Refactor seeds to the app write path (P2 #3).
 
 ---
 
