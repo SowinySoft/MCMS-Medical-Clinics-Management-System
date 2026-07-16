@@ -118,6 +118,7 @@ jobs:
       MCMS_DB_USER: postgres
       MCMS_DB_PASSWORD: postgres
       MCMS_DB_NAME: mcms
+      MCMS_TEST_DB: mcms
       PGPASSWORD: postgres
       DJANGO_SETTINGS_MODULE: config.settings
     steps:
