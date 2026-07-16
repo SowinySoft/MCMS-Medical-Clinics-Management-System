@@ -117,8 +117,12 @@ jobs:
       MCMS_DB_PORT: 5432
       MCMS_DB_USER: postgres
       MCMS_DB_PASSWORD: postgres
-      MCMS_DB_NAME: mcms
-      MCMS_TEST_DB: mcms
+      # Isolated DB: the backend job also targets `mcms` and these jobs run in
+      # parallel, so reusing `mcms` let the e2e rebuild (DROP DATABASE ... FORCE)
+      # collide with backend's tests and intermittently empty the schema. Give
+      # e2e its own database.
+      MCMS_DB_NAME: mcms_e2e
+      MCMS_TEST_DB: mcms_e2e
       PGPASSWORD: postgres
       DJANGO_SETTINGS_MODULE: config.settings
       AXES_ENABLED: "false"
