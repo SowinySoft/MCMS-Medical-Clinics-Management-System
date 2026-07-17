@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { mcmsApi } from "../api";
+import { mcmsApi, apiSlug } from "../api";
 import { MODEL_LABELS } from "../schemas";
 import { useTranslation } from "react-i18next";
 
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 // reachable — now all 89 backend routes are navigable.
 export function SchemaBrowser() {
   const { schema } = useParams<{ schema: string }>();
+  const slug = apiSlug(schema || "");
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [models, setModels] = useState<{ slug: string; label: string }[]>([]);
@@ -20,7 +21,7 @@ export function SchemaBrowser() {
     setLoading(true);
     mcmsApi.get("/").then(({ data }) => {
       if (!active) return;
-      const prefix = `${schema}/`;
+      const prefix = `${slug}/`;
       let list = Object.keys(data)
         .filter((k) => k.startsWith(prefix))
         .map((k) => {
@@ -34,7 +35,7 @@ export function SchemaBrowser() {
       // Fall back to GET /api/<schema>/ which ServiceViewSet.list exposes as
       // an action inventory, so they remain navigable ("no backend w/o page").
       if (list.length === 0) {
-        return mcmsApi.get(`/${schema}/`).then(({ data: svc }) => {
+        return mcmsApi.get(`/${slug}/`).then(({ data: svc }) => {
           if (!active) return;
           const acts = (svc?.actions || []).map((a: any) => ({
             slug: a.name,
@@ -48,7 +49,7 @@ export function SchemaBrowser() {
       setLoading(false);
     }).catch(() => { if (active) { setModels([]); setLoading(false); } });
     return () => { active = false; };
-  }, [schema]);
+  }, [slug]);
 
   if (loading) return <div className="mcms-spinner" />;
 

@@ -1,8 +1,9 @@
-import { mcmsApi } from "../api";
+import { mcmsApi, apiSlug } from "../api";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MODEL_LABELS } from "../schemas";
 import { useToast } from "../useToast";
+import { useParams } from "react-router-dom";
 
 // Generic data browser with richer CRUD:
 //  - dynamic form from DRF OPTIONS metadata
@@ -12,7 +13,10 @@ import { useToast } from "../useToast";
 //  - loading / empty / error states + toasts
 const PAGE = 25;
 
-export function TableBrowser({ schema, model }: { schema: string; model: string }) {
+export function TableBrowser() {
+  const { schema, model } = useParams<{ schema: string; model: string }>();
+  const slug = apiSlug(schema || "");
+  const m = model || "";
   const { t } = useTranslation();
   const toast = useToast();
   const [rows, setRows] = useState<any[]>([]);
@@ -33,7 +37,7 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
   const load = async (pg = 1) => {
     setLoading(true); setError("");
     try {
-      const { data } = await mcmsApi.list(schema, model, { page: pg });
+      const { data } = await mcmsApi.list(slug, m, { page: pg });
       setCount(data.count); setRows(data.results); setPage(pg);
       if (data.results[0]) setCols(Object.keys(data.results[0]).slice(0, 8));
     } catch (e: any) {
@@ -41,24 +45,36 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
     } finally { setLoading(false); }
   };
 
-  // Load related-record options for *_id fields so create/edit forms show
-  // dropdowns instead of requiring raw IDs. Tries likely schemas in order.
+  // Load related-record options for FK/relation fields so create/edit forms
+  // show dropdowns instead of requiring raw IDs. DRF exposes relations as
+  // `type: "field"` (and sometimes with an `_id` suffix); the related model
+  // name is the field name with a relationship prefix (parent_, child_, ...)
+  // and/or trailing _id stripped.
   const loadFkOptions = async (post: Record<string, any>) => {
     const opts: Record<string, { id: any; label: string }[]> = {};
-    await Promise.all(Object.keys(post).filter((k) => /_id$/.test(k) && k !== pkField).map(async (k) => {
-      const base = k.replace(/_id$/, "");
-      const schemasToTry = [schema, "core", "emr", "hr", "clinic", "billing", "rx"];
-      for (const sc of schemasToTry) {
-        try {
-          const { data } = await mcmsApi.list(sc, base, { page: 1 });
-          if (data.results && data.results.length) {
-            opts[k] = data.results.slice(0, 50).map((r: any) => ({
-              id: r[`${base}_id`] ?? r.id,
-              label: r.name || r.display_name || r.code || r.mrn || String(r[`${base}_id`] ?? r.id),
-            }));
-            break;
-          }
-        } catch { /* try next schema */ }
+    const fkKeys = Object.keys(post).filter((k) => {
+      if (k === pkField || post[k].read_only) return false;
+      const t = post[k].type;
+      return t === "field" || /_id$/.test(k);
+    });
+    await Promise.all(fkKeys.map(async (k) => {
+      let base = k.replace(/_id$/, "");
+      base = base.replace(/^(parent_|child_|default_|source_|target_|to_|from_)/, "");
+      const candidates = [base, k.replace(/_id$/, "")].filter((b, i, a) => a.indexOf(b) === i);
+      const schemasToTry = [slug, "core", "emr", "hr", "clinic", "billing", "rx"];
+      for (const baseTry of candidates) {
+        for (const sc of schemasToTry) {
+          try {
+            const { data } = await mcmsApi.list(sc, baseTry, { page: 1 });
+            if (data.results && data.results.length) {
+              opts[k] = data.results.slice(0, 50).map((r: any) => ({
+                id: r[`${baseTry}_id`] ?? r.id,
+                label: r.name || r.display_name || r.code || r.mrn || String(r[`${baseTry}_id`] ?? r.id),
+              }));
+              return;
+            }
+          } catch { /* try next schema */ }
+        }
       }
     }));
     setFkOptions(opts);
@@ -66,16 +82,16 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
 
   const loadMeta = async () => {
     try {
-      const res = await mcmsApi.options(`/${schema}/${model}/`);
+      const res = await mcmsApi.options(`/${slug}/${m}/`);
       const post = res.data.actions?.POST || {};
       setMeta(post);
       const idField = Object.keys(post).find((k) => post[k].type === "integer" && /_id$|^id$/.test(k));
-      setPkField(idField || `${model.replace(/s$/, "")}_id`);
+      setPkField(idField || `${m.replace(/s$/, "")}_id`);
       loadFkOptions(post);
     } catch {}
   };
 
-  useEffect(() => { setMeta(null); setEditing(null); setConfirmDel(null); load(); loadMeta(); /* eslint-disable-next-line */ }, [schema, model]);
+  useEffect(() => { setMeta(null); setEditing(null); setConfirmDel(null); load(); loadMeta(); /* eslint-disable-next-line */ }, [slug, m]);
 
   const openCreate = () => {
     const init: Record<string, any> = {};
@@ -105,8 +121,8 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
       }
     }
     try {
-      if (editing._new) { await mcmsApi.post(`/${schema}/${model}/`, form); toast.show(t("created") || "Created"); }
-      else { await mcmsApi.patch(`/${schema}/${model}/${editing[pkField]}/`, form); toast.show(t("updated") || "Updated"); }
+      if (editing._new) { await mcmsApi.post(`/${slug}/${m}/`, form); toast.show(t("created") || "Created"); }
+      else { await mcmsApi.patch(`/${slug}/${m}/${editing[pkField]}/`, form); toast.show(t("updated") || "Updated"); }
       setEditing(null); load(page);
     } catch (err: any) {
       const detail = err.response?.data ? JSON.stringify(err.response.data).slice(0, 200) : err.message;
@@ -115,7 +131,7 @@ export function TableBrowser({ schema, model }: { schema: string; model: string 
   };
 
   const doDelete = async () => {
-    try { await mcmsApi.del(`/${schema}/${model}/${confirmDel[pkField]}/`); toast.show(t("deleted") || "Deleted"); setConfirmDel(null); load(page); }
+    try { await mcmsApi.del(`/${slug}/${m}/${confirmDel[pkField]}/`); toast.show(t("deleted") || "Deleted"); setConfirmDel(null); load(page); }
     catch (err: any) { toast.show("Error: " + (err.response?.status || err.message), "err"); }
   };
 

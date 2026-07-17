@@ -203,7 +203,11 @@ STATIC_ROOT = _os.environ.get("MCMS_STATIC_ROOT", str(BASE_DIR / "staticfiles"))
 
 # ---------------------------------------------------------------- Brute-force protection (django-axes)
 # Locks an IP+username after N failed logins within COOLOFF. Tunable via env.
-AXES_ENABLED = _os.environ.get("MCMS_AXES_ENABLED", "true").lower() in ("1", "true", "yes")
+# Honor AXES_ENABLED (used by CI) first, then MCMS_AXES_ENABLED (legacy),
+# defaulting to enabled. CI's e2e job sets AXES_ENABLED=false so parallel
+# login-heavy Playwright runs are not rate-limited/locked out.
+_AXES_ENV = _os.environ.get("AXES_ENABLED", _os.environ.get("MCMS_AXES_ENABLED", "true")).lower()
+AXES_ENABLED = _AXES_ENV in ("1", "true", "yes")
 AXES_FAILURE_LIMIT = int(_os.environ.get("MCMS_AXES_FAILURE_LIMIT", "5"))
 AXES_COOLOFF_TIME = int(_os.environ.get("MCMS_AXES_COOLOFF_TIME", "10"))  # minutes
 AXES_LOCKOUT_TIME = int(_os.environ.get("MCMS_AXES_LOCKOUT_TIME", "30"))   # minutes

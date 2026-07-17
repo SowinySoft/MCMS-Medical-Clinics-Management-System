@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./auth";
 import { useAuth } from "./useAuth";
@@ -21,13 +20,12 @@ function Shell() {
   const { access, hasPerm } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [view, setView] = useState<{ schema: string; model: string }>({ schema: "", model: "" });
 
   if (!access) return <Navigate to="/login" />;
 
   const open = (schema: string, model: string) => {
-    if (schema && model) { setView({ schema, model }); navigate(`/browse/${schema}/${model}`); }
-    else if (schema) { setView({ schema, model: "" }); navigate(`/browse/${schema}`); }
+    if (schema && model) { navigate(`/browse/${schema}/${model}`); }
+    else if (schema) { navigate(`/browse/${schema}`); }
     else navigate("/");
   };
 
@@ -60,7 +58,7 @@ function Shell() {
           <Route path="/monitors" element={<Monitors />} />
           <Route path="/vital" element={<VitalRecords />} />
           <Route path="/browse/:schema" element={<SchemaBrowser />} />
-          <Route path="/browse/:schema/:model" element={<TableBrowser schema={view.schema} model={view.model} />} />
+          <Route path="/browse/:schema/:model" element={<TableBrowser />} />
         </Routes>
       </main>
     </div>

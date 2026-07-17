@@ -51,6 +51,13 @@ export const authApi = {
   refresh: (r: string) => api.post("/auth/token/refresh/", { refresh: r }),
 };
 
+// The DB uses physical `mcms_*` schemas, but the DRF routers register each
+// domain app under its bare app label (e.g. `mcms_core` -> `core`). Schema-group
+// navigation passes the physical `mcms_*` name, so strip the prefix when
+// building API URLs — otherwise every TableBrowser/ModelBrowser call 404s and
+// the "every UI page hits a real endpoint" contract is broken.
+export const apiSlug = (schema: string) => schema.replace(/^mcms_/, "");
+
 export const mcmsApi = {
   get: (url: string, params?: any) => api.get(url, { params }),
   post: (url: string, body: any) => api.post(url, body),
@@ -58,7 +65,7 @@ export const mcmsApi = {
   del: (url: string) => api.delete(url),
   options: (url: string) => api.options(url),
   list: (schema: string, model: string, params?: any) =>
-    api.get(`/${schema}/${model}/`, { params }),
+    api.get(`/${apiSlug(schema)}/${model}/`, { params }),
 };
 
 export default api;
