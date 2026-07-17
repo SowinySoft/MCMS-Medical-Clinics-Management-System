@@ -112,3 +112,25 @@ test("RBAC: admin sees System/Monitors/Vital Records; accountant does not", asyn
   // but accountant (billing.read) still sees the billing schema group
   await expect(page.getByRole("button", { name: /^billing$/ })).toBeVisible();
 });
+
+test("medical waste schema group is navigable and reaches the backend", async ({ page }) => {
+  await login(page);
+  // the waste schema button lives under the Management & Support group
+  const wasteBtn = page.getByRole("button", { name: /^waste$/ });
+  await expect(wasteBtn).toBeAttached();
+  await wasteBtn.click();
+  await expect(page).toHaveURL(/\/browse\/waste$/);
+  await expect(page.locator(".mcms-spinner")).toHaveCount(0, { timeout: 15_000 });
+  await expect(
+    page.locator(".mcms-card").first().or(page.locator(".mcms-empty").first())
+  ).toBeVisible({ timeout: 15_000 });
+  // open the disposal manifests model — exercises the new CRUD endpoint
+  const manifestCard = page.getByRole("button", { name: /Disposal Manifests/i }).first();
+  await expect(manifestCard).toBeVisible({ timeout: 15_000 });
+  await manifestCard.click();
+  await expect(page).toHaveURL(/\/browse\/waste\/waste-disposal-manifest$/);
+  await expect(page.locator(".mcms-spinner")).toHaveCount(0, { timeout: 15_000 });
+  await expect(
+    page.locator("table").first().or(page.locator(".mcms-empty").first())
+  ).toBeVisible({ timeout: 15_000 });
+});

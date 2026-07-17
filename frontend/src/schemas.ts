@@ -18,7 +18,7 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
   { key: "pharma", label: { en: "Pharmaceuticals & Pharmacy", ar: "الصيدلية والأدوية" }, icon: "💊",
     schemas: ["rx"], perm: "pharmacy.dispense" },
   { key: "mgmt", label: { en: "Management & Support", ar: "الإدارة والدعم" }, icon: "⚙️",
-    schemas: ["billing", "erp", "hr", "payer"], perm: "billing.read" },
+    schemas: ["billing", "erp", "hr", "payer", "waste"], perm: "billing.read" },
   { key: "reporting", label: { en: "Reporting & Localization", ar: "التقارير والتعريب" }, icon: "📊",
     schemas: ["core", "identity", "fhir", "hl7v2", "vital_records"], perm: "admin.all" },
 ];

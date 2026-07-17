@@ -61,6 +61,7 @@ DOMAIN_APPS = [
     "apps.identity",
     "apps.referral",
     "apps.vital_records",
+    "apps.waste",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS + ["channels"]
 

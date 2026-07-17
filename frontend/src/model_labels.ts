@@ -90,4 +90,9 @@ export const MODEL_LABELS: Record<string, { en: string; ar: string }> = {
   "surgical/procedure-catalog": { en: "Procedure Catalog", ar: "Procedure Catalog" },
   "surgical/surgery": { en: "Surgeries", ar: "العمليات الجراحية" },
   "surgical/surgical-team": { en: "Surgical Team", ar: "Surgical Team" },
+  "waste/waste-stream": { en: "Waste Streams", ar: "أنواع النفايات" },
+  "waste/waste-container": { en: "Waste Containers", ar: "حاويات النفايات" },
+  "waste/waste-collection": { en: "Waste Collections", ar: "جمع النفايات" },
+  "waste/waste-disposal-manifest": { en: "Disposal Manifests", ar: "بيانات التخلص" },
+  "waste/waste-cost-allocation": { en: "Waste Cost Allocation", ar: "توزيع تكلفة النفايات" },
 };

@@ -35,6 +35,7 @@ DOMAIN_PERMS = {
     "nursery":   ("emr.read", "emr.write"),
     "billing":   ("billing.read", "billing.manage"),
     "erp":       ("inventory.manage", "inventory.manage"),  # warehouse manager reads+writes
+    "waste":     ("waste.read", "waste.manage"),            # medical waste tracking + costing
 }
 
 # heuristic search fields by column name presence
