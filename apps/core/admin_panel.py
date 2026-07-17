@@ -21,7 +21,7 @@ from django.conf import settings
 from django.db import connection
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.permissions import HasRolePermission, effective_perms
@@ -221,7 +221,7 @@ class SystemViewSet(viewsets.ViewSet):
         })
 
     # ----------------------------------------------------- Phase 12: scale / health
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def health(self, request):
         """Liveness probe. Returns 200 when the DB is reachable.
 
@@ -237,7 +237,7 @@ class SystemViewSet(viewsets.ViewSet):
             return Response({"status": "error", "db": "down", "detail": str(e)[:200]},
                             status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def readiness(self, request):
         """Readiness probe. 200 only when primary DB + channel layer are up.
 

@@ -13,6 +13,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 import os as _os
 
+try:
+    import dj_database_url  # type: ignore
+except Exception:  # pragma: no cover - optional dep
+    dj_database_url = None
+
 SECRET_KEY = _os.environ.get("MCMS_SECRET_KEY", "mcms-dev-insecure-change-me")
 DEBUG = _os.environ.get("MCMS_DEBUG", "false").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = _os.environ.get("MCMS_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
@@ -105,18 +110,31 @@ _SCHEMAS = ",".join([
 import os as _os
 
 _SP_OVERRIDE = _os.environ.get("MCMS_SEARCH_PATH")
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": _os.environ.get("MCMS_DB_NAME", "mcms"),
-        "USER": _os.environ.get("MCMS_DB_USER", "postgres"),
-        "PASSWORD": _os.environ.get("MCMS_DB_PASSWORD", "postgres"),
-        "HOST": _os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
-        "PORT": _os.environ.get("MCMS_DB_PORT", "5432"),
-        "CONN_MAX_AGE": int(_os.environ.get("MCMS_CONN_MAX_AGE", "60")),
-        "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
+_DATABASE_URL = _os.environ.get("DATABASE_URL")
+if _DATABASE_URL and dj_database_url is not None:
+    # Miget (and most PaaS) inject a single DATABASE_URL connection string.
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=_DATABASE_URL,
+            conn_max_age=int(_os.environ.get("MCMS_CONN_MAX_AGE", "60")),
+        )
     }
-}
+    DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASES["default"]["OPTIONS"]["options"] = f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"
+else:
+    # Local / explicit component wiring via MCMS_DB_* (CI parity).
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _os.environ.get("MCMS_DB_NAME", "mcms"),
+            "USER": _os.environ.get("MCMS_DB_USER", "postgres"),
+            "PASSWORD": _os.environ.get("MCMS_DB_PASSWORD", "postgres"),
+            "HOST": _os.environ.get("MCMS_DB_HOST", "127.0.0.1"),
+            "PORT": _os.environ.get("MCMS_DB_PORT", "5432"),
+            "CONN_MAX_AGE": int(_os.environ.get("MCMS_CONN_MAX_AGE", "60")),
+            "OPTIONS": {"options": f"-c search_path={_SP_OVERRIDE or _SCHEMAS}"},
+        }
+    }
 # Phase 12: optional read replica. When MCMS_DB_REPLICA_HOST is set we register a
 # `replica` connection + a ReplicaRouter that routes reads to it (writes still go
 # to the primary). With no replica configured the app is single-node as before.
