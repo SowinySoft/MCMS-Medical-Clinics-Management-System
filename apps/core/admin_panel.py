@@ -299,3 +299,36 @@ class SystemViewSet(viewsets.ViewSet):
             return Response({"detail": "schema sync completed", "log": buf.getvalue()[-2000:]})
         except Exception as e:  # noqa
             return Response({"detail": str(e)[:400]}, status=status.HTTP_500_INTERNAL_ERROR)
+
+
+# ----------------------------------------------------------- root landing page
+# Lightweight HTML landing so GET / is not a 404. Links to the API root and the
+# OpenAPI/Swagger docs. The full SPA is deployed separately; this just proves the
+# service is alive and points operators at the API surface.
+from django.http import HttpResponse  # noqa: E402
+
+_INDEX_HTML = """<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>MCMS API</title>
+<style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#0b1220;color:#e6edf6}
+.wrap{max-width:640px;margin:12vh auto;padding:0 20px}
+h1{font-size:24px;margin-bottom:4px}
+p{color:#9fb3c8}
+a{color:#5ec8ff;text-decoration:none} a:hover{text-decoration:underline}
+.cards{display:grid;gap:12px;margin-top:24px}
+.card{background:#13203a;border:1px solid #23344f;border-radius:10px;padding:16px 18px}
+code{background:#0e1830;padding:2px 6px;border-radius:6px;color:#9effc7}</style></head>
+<body><div class="wrap">
+<h1>MCMS &middot; Medical Clinics Management System</h1>
+<p>Backend API is running. The web UI is deployed separately.</p>
+<div class="cards">
+  <div class="card"><b>API root</b><br><a href="/api/">/api/</a> &mdash; browse all endpoints</div>
+  <div class="card"><b>Interactive docs (Swagger)</b><br><a href="/api/docs/">/api/docs/</a></div>
+  <div class="card"><b>ReDoc</b><br><a href="/api/redoc/">/api/redoc/</a></div>
+  <div class="card"><b>OpenAPI schema</b><br><a href="/api/schema/">/api/schema/</a></div>
+  <div class="card"><b>Health</b><br><code>GET /api/system/health</code></div>
+</div></div></body></html>"""
+
+
+def landing(request):
+    return HttpResponse(_INDEX_HTML, content_type="text/html; charset=utf-8")

@@ -17,7 +17,7 @@ from drf_spectacular.views import (
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.ai.views import AiViewSet
-from apps.core.admin_panel import SystemViewSet
+from apps.core.admin_panel import SystemViewSet, landing
 from apps.core.auth import MCMSTokenObtainPairView
 from apps.core.reports import ReportViewSet
 from apps.core.routers import build_router
@@ -46,6 +46,7 @@ router.register("referral", ReferralViewSet, basename="referral")
 router.register("vital_records", VitalRecordsViewSet, basename="vital_records")
 
 urlpatterns = [
+    path("", landing, name="landing"),
     path("admin/", admin.site.urls),
     path("api/sync/", SyncViewSet.as_view({"get": "sync", "post": "sync"})),
     path("api/", include(router.urls)),
