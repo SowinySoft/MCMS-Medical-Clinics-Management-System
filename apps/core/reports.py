@@ -63,6 +63,10 @@ class ReportViewSet(viewsets.ViewSet):
         "claims_status": "billing.read",
         "lab_turnaround": "lab_rad.result",
         "appointment_utilization": "emr.read",
+        # Medical Waste Records Management — quantity (kg) + cost accounting
+        "waste_quantity_by_department": "waste.read",
+        "waste_cost_by_period": "waste.read",
+        "waste_stream_summary": "waste.read",
     }
 
     def _guard(self, request, key):
@@ -591,3 +595,101 @@ class ReportViewSet(viewsets.ViewSet):
             FROM mcms_clinic.appointment
         """
         return Response(_rows(sql)[0])
+
+    # --------------------------------------------------- Medical Waste Records Management
+    @action(detail=False, methods=["get"])
+    def waste_quantity_by_department(self, request):
+        """Quantity (kg) trace: collected vs disposed weight per department.
+
+        Date-range on the disposal manifest datetime (?since/&until). This is
+        the operational cradle-to-grave weight tracking that feeds cost roll-ups.
+        """
+        if (d := self._guard(request, "waste.read")):
+            return d
+        rcl, rp = _range(request, "dm.disposal_datetime")
+        rows = _rows(f"""
+            SELECT d.code  AS department_code,
+                   d.name  AS department_name,
+                   COALESCE(SUM(ca.allocated_weight_kg), 0)::numeric(12,3) AS disposed_kg,
+                   COALESCE(SUM(ca.allocated_cost), 0)::numeric(16,4)      AS cost
+            FROM mcms_waste.waste_cost_allocation ca
+            JOIN mcms_waste.waste_disposal_manifest dm ON dm.manifest_id = ca.manifest_id
+            JOIN mcms_hr.department d                ON d.department_id = ca.department_id
+            WHERE 1=1 {rcl}
+            GROUP BY d.code, d.name
+            ORDER BY disposed_kg DESC
+        """, rp)
+        return Response({
+            "rows": rows,
+            "totals": {
+                "departments": len(rows),
+                "disposed_kg": sum((r["disposed_kg"] or 0) for r in rows),
+                "cost": sum((r["cost"] or 0) for r in rows),
+            },
+        })
+
+    @action(detail=False, methods=["get"])
+    def waste_cost_by_period(self, request):
+        """Cost-accounting trace: allocated weight + cost by accounting month.
+
+        Reads mcms_waste.waste_cost_allocation (the accounts bridge that ties
+        each manifest's cost/weight to a department + period). Optional
+        ?cost_center= filters to a single GL/cost-centre code.
+        """
+        if (d := self._guard(request, "waste.read")):
+            return d
+        cost_center = request.query_params.get("cost_center")
+        where, params = "WHERE 1=1", []
+        if cost_center:
+            where += " AND ca.cost_center_code = %s"
+            params.append(cost_center)
+        rows = _rows(f"""
+            SELECT ca.period_month,
+                   COALESCE(SUM(ca.allocated_weight_kg), 0)::numeric(12,3) AS weight_kg,
+                   COALESCE(SUM(ca.allocated_cost), 0)::numeric(16,4)      AS cost
+            FROM mcms_waste.waste_cost_allocation ca
+            {where}
+            GROUP BY ca.period_month
+            ORDER BY ca.period_month
+        """, params)
+        return Response({
+            "rows": rows,
+            "totals": {
+                "periods": len(rows),
+                "weight_kg": sum((r["weight_kg"] or 0) for r in rows),
+                "cost": sum((r["cost"] or 0) for r in rows),
+            },
+        })
+
+    @action(detail=False, methods=["get"])
+    def waste_stream_summary(self, request):
+        """Spend + volume by waste category (stream/kind).
+
+        Joins collections -> containers -> streams and the disposal manifest
+        for the cost, so Finance sees kg and cost per waste *type*
+        (sharps / infectious / pharmaceutical / cytotoxic / general ...).
+        """
+        if (d := self._guard(request, "waste.read")):
+            return d
+        rcl, rp = _range(request, "dm.disposal_datetime")
+        rows = _rows(f"""
+            SELECT ws.code AS stream_code,
+                   ws.name AS stream_name,
+                   ws.kind AS kind,
+                   COALESCE(SUM(wc.weight_kg), 0)::numeric(12,3)           AS weight_kg,
+                   COALESCE(SUM(wc.weight_kg * ws.unit_cost_per_kg), 0)::numeric(16,4) AS cost
+            FROM mcms_waste.waste_collection wc
+            JOIN mcms_waste.waste_container c ON c.container_id = wc.container_id
+            JOIN mcms_waste.waste_stream ws  ON ws.stream_id = c.stream_id
+            WHERE 1=1 {rcl}
+            GROUP BY ws.code, ws.name, ws.kind
+            ORDER BY cost DESC
+        """, rp)
+        return Response({
+            "rows": rows,
+            "totals": {
+                "streams": len(rows),
+                "weight_kg": sum((r["weight_kg"] or 0) for r in rows),
+                "cost": sum((r["cost"] or 0) for r in rows),
+            },
+        })

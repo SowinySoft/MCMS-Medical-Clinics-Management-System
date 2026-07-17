@@ -112,3 +112,43 @@ def test_payroll_read_perm_seeded():
     with connection.cursor() as cur:
         cur.execute("SELECT 1 FROM mcms_core.permission WHERE code='payroll.read'")
         assert cur.fetchone(), "payroll.read permission missing"
+
+
+# --------------------------------------------------- Medical Waste Records Management reports
+def test_waste_quantity_by_department_report(admin_client):
+    """Quantity (kg) trace per department — uses the demo seed in 43_medical_waste.sql."""
+    r = admin_client.get("/api/reports/waste_quantity_by_department/")
+    assert r.status_code == 200, r.content
+    body = r.json()
+    assert "rows" in body and "totals" in body
+    # demo seed allocates 7.5 kg / cost to one department
+    assert body["totals"]["departments"] >= 1
+    assert body["totals"]["disposed_kg"] >= 7.5
+    assert body["totals"]["cost"] > 0
+
+
+def test_waste_cost_by_period_report(admin_client):
+    """Cost-accounting trace by accounting month."""
+    r = admin_client.get("/api/reports/waste_cost_by_period/")
+    assert r.status_code == 200, r.content
+    body = r.json()
+    assert "rows" in body and "totals" in body
+    assert body["totals"]["weight_kg"] >= 7.5
+    assert body["totals"]["cost"] > 0
+
+
+def test_waste_stream_summary_report(admin_client):
+    """Spend + volume by waste category (stream/kind)."""
+    r = admin_client.get("/api/reports/waste_stream_summary/")
+    assert r.status_code == 200, r.content
+    body = r.json()
+    assert "rows" in body and "totals" in body
+    assert body["totals"]["weight_kg"] >= 7.5
+
+
+def test_waste_reports_require_waste_read(acc1_client):
+    """Accountant holds waste.read, so the waste reports are visible to Finance."""
+    for ep in ("waste_quantity_by_department", "waste_cost_by_period", "waste_stream_summary"):
+        r = acc1_client.get(f"/api/reports/{ep}/")
+        assert r.status_code == 200, (ep, r.content)
+

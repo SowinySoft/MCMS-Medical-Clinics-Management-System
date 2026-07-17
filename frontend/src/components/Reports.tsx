@@ -24,6 +24,10 @@ const SECTIONS = [
   { key: "claims_status", title: "Insurance Claims Status / TAT", type: "object" },
   { key: "lab_turnaround", title: "Lab Order Demand", type: "object" },
   { key: "appointment_utilization", title: "Appointment Utilization", type: "kv" },
+  // Medical Waste Records Management — quantity (kg) + cost accounting
+  { key: "waste_quantity_by_department", title: "Waste Quantity by Department (kg)", type: "object" },
+  { key: "waste_cost_by_period", title: "Waste Cost by Period", type: "object" },
+  { key: "waste_stream_summary", title: "Waste by Stream / Category", type: "object" },
 ] as const;
 
 export function Reports() {
