@@ -12,8 +12,8 @@ button:hover{background:#30363d} .wrap{padding:24px}
 .cnt{color:#8b949e;font-weight:400;font-size:13px}
 </style></head><body>
 <header><h1>MCMS — Per-Schema Entity Diagrams</h1>
-<div class="sub">18 focused ERDs · click a schema to view · foreign keys shown as edges</div></header>
-<div class="tabs"><button onclick="show('mcms_core')">🧩 Core / Event-Store / RBAC</button><button onclick="show('mcms_emr')">🩺 EMR</button><button onclick="show('mcms_clinic')">📅 Clinics &amp; Appointments</button><button onclick="show('mcms_hr')">👥 HR &amp; Payroll</button><button onclick="show('mcms_surgical')">🔪 Surgical</button><button onclick="show('mcms_emergency')">🚑 Emergency</button><button onclick="show('mcms_rx')">💊 Pharmacy</button><button onclick="show('mcms_lab')">🧪 Laboratory</button><button onclick="show('mcms_rad')">🩻 Radiology</button><button onclick="show('mcms_icu')">🏥 ICU</button><button onclick="show('mcms_physio')">🤸 Physiotherapy</button><button onclick="show('mcms_dialysis')">💉 Dialysis</button><button onclick="show('mcms_nursery')">👶 Nursery / Neonatal</button><button onclick="show('mcms_billing')">💳 Billing / Insurance</button><button onclick="show('mcms_erp')">📦 ERP / Supply Chain</button><button onclick="show('mcms_telemed')">📞 Telemedicine</button><button onclick="show('mcms_terminology')">🔤 Terminology / Coding</button><button onclick="show('mcms_vital_records')">📜 Vital Records</button></div>
+<div class="sub">19 focused ERDs · click a schema to view · foreign keys shown as edges</div></header>
+<div class="tabs"><button onclick="show('mcms_core')">🧩 Core / Event-Store / RBAC</button><button onclick="show('mcms_emr')">🩺 EMR</button><button onclick="show('mcms_clinic')">📅 Clinics &amp; Appointments</button><button onclick="show('mcms_hr')">👥 HR &amp; Payroll</button><button onclick="show('mcms_surgical')">🔪 Surgical</button><button onclick="show('mcms_emergency')">🚑 Emergency</button><button onclick="show('mcms_rx')">💊 Pharmacy</button><button onclick="show('mcms_lab')">🧪 Laboratory</button><button onclick="show('mcms_rad')">🩻 Radiology</button><button onclick="show('mcms_icu')">🏥 ICU</button><button onclick="show('mcms_physio')">🤸 Physiotherapy</button><button onclick="show('mcms_dialysis')">💉 Dialysis</button><button onclick="show('mcms_nursery')">👶 Nursery / Neonatal</button><button onclick="show('mcms_billing')">💳 Billing / Insurance</button><button onclick="show('mcms_erp')">📦 ERP / Supply Chain</button><button onclick="show('mcms_telemed')">📞 Telemedicine</button><button onclick="show('mcms_terminology')">🔤 Terminology / Coding</button><button onclick="show('mcms_vital_records')">📜 Vital Records</button><button onclick="show('mcms_waste')">🗂️ mcms_waste</button></div>
 <div class="wrap"><div class="sec" id="sec_mcms_core" style="display:block"><h2>🧩 mcms_core — Core / Event-Store / RBAC <span class="cnt">(22 tables)</span></h2><pre class="mermaid">
 erDiagram
   core__access_log {
@@ -1857,6 +1857,70 @@ erDiagram
   }
   vital_records__birth_certificate ||--o| vital_records__birth_certificate : "self"
   vital_records__death_certificate ||--o| vital_records__death_certificate : "self"
+</pre></div><div class="sec" id="sec_mcms_waste" style="display:none"><h2>🗂️ mcms_waste — mcms_waste <span class="cnt">(5 tables)</span></h2><pre class="mermaid">
+erDiagram
+  waste__waste_collection {
+    bigint collection_id PK
+    bigint container_id
+    decimal weight_kg
+    bigint collected_by_user_id
+    timestamp collection_datetime
+    text storage_location
+    timestamp created_at
+  }
+  waste__waste_container {
+    bigint container_id PK
+    text barcode
+    bigint stream_id
+    bigint department_id
+    decimal capacity_kg
+    text status
+    timestamp opened_at
+    timestamp created_at
+  }
+  waste__waste_cost_allocation {
+    bigint allocation_id PK
+    bigint manifest_id
+    bigint department_id
+    date period_month
+    decimal allocated_weight_kg
+    decimal allocated_cost
+    text cost_center_code
+    timestamp created_at
+  }
+  waste__waste_disposal_manifest {
+    bigint manifest_id PK
+    text manifest_no
+    text carrier_vendor
+    text treatment_method
+    timestamp disposal_datetime
+    decimal total_weight_kg
+    decimal unit_cost_per_kg
+    decimal total_cost
+    text currency
+    text certificate_ref
+    bigint certified_by_user_id
+    text status
+    timestamp created_at
+    timestamp updated_at
+  }
+  waste__waste_stream {
+    bigint stream_id PK
+    text code
+    text name
+    text kind
+    text color_code
+    text hazard_class
+    text default_disposal_method
+    decimal unit_cost_per_kg
+    text currency
+    bool is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+  waste__waste_collection ||--o{ waste__waste_container : "container_id"
+  waste__waste_container ||--o{ waste__waste_stream : "stream_id"
+  waste__waste_cost_allocation ||--o{ waste__waste_disposal_manifest : "manifest_id"
 </pre></div></div>
 <script>
 mermaid.initialize({startOnLoad:true,theme:'default',maxTextSize:4000000,securityLevel:'loose'});
