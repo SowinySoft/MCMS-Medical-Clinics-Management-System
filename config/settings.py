@@ -20,7 +20,17 @@ except Exception:  # pragma: no cover - optional dep
 
 SECRET_KEY = _os.environ.get("MCMS_SECRET_KEY", "mcms-dev-insecure-change-me")
 DEBUG = _os.environ.get("MCMS_DEBUG", "false").lower() in ("1", "true", "yes")
-ALLOWED_HOSTS = _os.environ.get("MCMS_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+# ALLOWED_HOSTS: explicit via MCMS_ALLOWED_HOSTS, else permissive on a PaaS
+# (miget injects DATABASE_URL and reaches the app via an internal IP + public
+# domain unknown at build time). All authenticated endpoints still require JWT,
+# so widening host validation only affects the two public liveness probes.
+_allowed_hosts = _os.environ.get("MCMS_ALLOWED_HOSTS")
+if _allowed_hosts:
+    ALLOWED_HOSTS = [h for h in _allowed_hosts.split(",") if h]
+elif _os.environ.get("DATABASE_URL"):
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # ---------------------------------------------------------------- apps
 DJANGO_APPS = [
