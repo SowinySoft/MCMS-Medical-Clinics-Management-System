@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r re
 
 FROM python:3.11-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
-    MCMS_DB_HOST=postgres MCMS_REDIS_URL=redis://redis:6379/0 \
+    MCMS_REDIS_URL=redis://redis:6379/0 \
     MCMS_CONN_MAX_AGE=60 DJANGO_SETTINGS_MODULE=config.settings
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libpq5 \
@@ -19,6 +19,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 # Readiness/liveness are served by the API itself (/api/system/health|readiness).
-EXPOSE 8000
+# Port is taken from $PORT (miget sets immutable PORT=5000; default 8000 locally).
+EXPOSE 5000
 # Daphne ASGI — handles HTTP + WebSocket (Channels) on one port.
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
+CMD ["sh", "-c", "daphne -b 0.0.0.0 -p ${PORT:-8000} config.asgi:application"]
