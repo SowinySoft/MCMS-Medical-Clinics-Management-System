@@ -35,3 +35,7 @@ staticfiles/
 !.env.example
 !.env.production
 
+# SPA build output is committed so the Django image can serve the UI from the
+# same miget resource (single-service deploy; no Node at runtime, no 2nd service).
+!frontend/dist/
+

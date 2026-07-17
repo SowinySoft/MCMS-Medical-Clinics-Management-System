@@ -83,6 +83,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS + ["channels"]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -227,8 +228,13 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+# Static files. The Vite SPA is built into frontend/dist and collected into
+# STATIC_ROOT so WhiteNoise can serve it in production (single-service deploy:
+# the SPA and the API share one origin, so the SPA calls relative /api — no CORS).
+STATIC_URL = "assets/"
 STATIC_ROOT = _os.environ.get("MCMS_STATIC_ROOT", str(BASE_DIR / "staticfiles"))
+STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
+WHITENOISE_MAX_AGE = 60 * 60 * 24 * 30  # cache hashed SPA assets 30d
 
 # ---------------------------------------------------------------- Brute-force protection (django-axes)
 # Locks an IP+username after N failed logins within COOLOFF. Tunable via env.

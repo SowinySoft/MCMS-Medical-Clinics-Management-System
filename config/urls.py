@@ -8,7 +8,7 @@ MCMS URL configuration.
   /api/redoc/                  -> ReDoc
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -55,4 +55,7 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    # SPA catch-all: any non-/api GET path serves the built SPA (client-side
+    # routing). Must stay LAST so it doesn't shadow the API routes above.
+    re_path(r"^(?!api/).*$", landing, name="spa"),
 ]
