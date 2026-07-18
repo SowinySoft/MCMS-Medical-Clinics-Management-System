@@ -862,6 +862,111 @@ class Command(BaseCommand):
             return True
         _try(_grl, "erp.goods_receipt_line")
 
+        # --- Demo coverage for operational / integration tables that would
+        # otherwise stay empty (claims, eligibility, telemed, terminology,
+        # federated identity, HL7, backup log). Each inserts a single realistic
+        # demo row so the UI is not blank in a fresh demo deploy. Wrapped in
+        # their own savepoints like every other raw insert above. ---
+
+        def _ensure_telemed_visit():
+            if _count("mcms_telemed.visit"):
+                return False
+            p = patients[0]
+            _ins("""INSERT INTO mcms_telemed.visit
+                   (patient_id, mrn, clinician_user_id, encounter_id, mode, status,
+                    subjective, objective, assessment, plan)
+                   VALUES (%s,%s,%s,%s,'video','completed',
+                           'Routine tele-consult', 'Stable', 'Follow-up', 'Continue meds')""",
+                 [p.patient_id, p.mrn, clinician_id, first_enc_id])
+            return True
+        _try(_ensure_telemed_visit, "telemed.visit")
+
+        def _ensure_eligibility_check():
+            if _count("mcms_billing.eligibility_check"):
+                return False
+            p = patients[0]
+            _ins("""INSERT INTO mcms_billing.eligibility_check
+                   (patient_id, payer_code, policy_no, status, reason, checked_at)
+                   VALUES (%s,'TML','POL-DEMO-001','eligible','Demo eligibility OK',now())""",
+                 [p.patient_id])
+            return True
+        _try(_ensure_eligibility_check, "billing.eligibility_check")
+
+        def _ensure_claim_response():
+            if _count("mcms_billing.claim_response"):
+                return False
+            inv_id = _scalar("SELECT invoice_id FROM mcms_billing.invoice LIMIT 1")
+            if inv_id is None:
+                return False
+            # Create a matching insurance_claim if none exists, then its response.
+            claim_id = _scalar("SELECT claim_id FROM mcms_billing.insurance_claim LIMIT 1")
+            if claim_id is None:
+                p = patients[0]
+                _ins("""INSERT INTO mcms_billing.insurance_claim
+                       (invoice_id, policy_no, insurance_provider, patient_id,
+                        billed_amount, status)
+                       VALUES (%s,'POL-DEMO-001','TML',%s,100.00,'adjudicated')""",
+                     [inv_id, p.patient_id])
+                claim_id = _scalar("SELECT claim_id FROM mcms_billing.insurance_claim LIMIT 1")
+            if claim_id is None:
+                return False
+            _ins("""INSERT INTO mcms_billing.claim_response
+                   (claim_id, payer_code, status, approved_amount, rejected_amount,
+                    remittance, received_at)
+                   VALUES (%s,'TML','paid',100.00,0.00,'Demo remittance advice',now())""",
+                 [claim_id])
+            return True
+        _try(_ensure_claim_response, "billing.claim_response")
+
+        def _ensure_terminology_concept():
+            if _count("mcms_terminology.concept"):
+                return False
+            fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1") or 1
+            _ins("""INSERT INTO mcms_terminology.concept
+                   (code_system, code, display, display_ar, synonyms, source, facility_id)
+                   VALUES ('SNOMED-CT','123456','Acute myocardial infarction',
+                           'احتشاء عضلة القلب', 'AMI; MI','demo-seed',%s)""",
+                 [fac])
+            return True
+        _try(_ensure_terminology_concept, "terminology.concept")
+
+        def _ensure_federated_identity():
+            if _count("mcms_core.federated_identity"):
+                return False
+            uid = _scalar("SELECT user_id FROM mcms_core.app_user LIMIT 1")
+            if uid is None:
+                return False
+            _ins("""INSERT INTO mcms_core.federated_identity
+                   (provider_code, external_subject, user_id, linked_at, last_seen_at)
+                   VALUES ('moh_oidc','demo-subject-001',%s,now(),now())""",
+                 [uid])
+            return True
+        _try(_ensure_federated_identity, "core.federated_identity")
+
+        def _ensure_hl7_message():
+            if _count("mcms_core.hl7_message"):
+                return False
+            _ins("""INSERT INTO mcms_core.hl7_message
+                   (message_control_id, message_type, sending_app, sending_facility,
+                    raw, ack_code)
+                   VALUES ('MCM-DEMO-001','ADT^A01','MCMS','DEMO-FAC',
+                           'MSH|^~\\&|MCMS|DEMO|FAC|DEMO|20240101000000||ADT^A01|MCM-DEMO-001|P|2.5','AA')""",
+                 [])
+            return True
+        _try(_ensure_hl7_message, "core.hl7_message")
+
+        def _ensure_backup_log():
+            if _count("mcms_core.backup_log"):
+                return False
+            _ins("""INSERT INTO mcms_core.backup_log
+                   (started_at, finished_at, filename, size_bytes, status, detail,
+                    triggered_by)
+                   VALUES (now(), now(), 'mcms_demo_backup.dump', 1048576, 'success',
+                           'Demo backup', 'seed_demo_clinical')""",
+                 [])
+            return True
+        _try(_ensure_backup_log, "core.backup_log")
+
         self.stdout.write(f"specialty coverage: +{spec_created}")
 
         # --- Generic coverage for the remaining specialty tables ---

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lPfARl8gMsTvkLtDtB6cWBqFXIHtKKD46AJsP4PO7YwuOCz4cBwb4S5prtUkbda
+\restrict Ac9xh5qkoA1bbRW7ILHVeSfYLUaes23ZeXE4p3UsemjeCBY6IfSqQ1o2BMYaOLd
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -59,11 +59,11 @@ INSERT INTO mcms_core.party VALUES
 	(1, 'person', NULL, 'Test Admin', NULL, NULL, NULL, 'unknown', NULL, NULL, true, '2026-07-18 21:59:08.656874+03', '2026-07-18 21:59:08.656874+03', 'en', 1),
 	(2, 'person', NULL, 'Test Acc1', NULL, NULL, NULL, 'unknown', NULL, NULL, true, '2026-07-18 21:59:08.656874+03', '2026-07-18 21:59:08.656874+03', 'en', 1),
 	(99004, 'person', NULL, 'System Administrator', NULL, NULL, NULL, 'unknown', NULL, NULL, true, '2026-07-18 21:59:14.437289+03', '2026-07-18 21:59:14.437289+03', 'ar', 1),
-	(99005, 'person', 'MRN-DEMO-001', 'Ahmad Mansour', 'Ahmad Mansour', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-001', true, '2026-07-18 21:59:17.929136+03', '2026-07-18 21:59:17.929136+03', 'en', 1),
-	(99006, 'person', 'MRN-DEMO-002', 'Layla Haddad', 'Layla Haddad', 'female', '1985-01-01', NULL, NULL, 'MRN-DEMO-002', true, '2026-07-18 21:59:17.966972+03', '2026-07-18 21:59:17.966972+03', 'en', 1),
-	(99007, 'person', 'MRN-DEMO-003', 'Karim Nasser', 'Karim Nasser', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-003', true, '2026-07-18 21:59:17.979058+03', '2026-07-18 21:59:17.979058+03', 'en', 1),
-	(99008, 'person', 'MRN-DEMO-004', 'Sara Khoury', 'Sara Khoury', 'female', '1985-01-01', NULL, NULL, 'MRN-DEMO-004', true, '2026-07-18 21:59:17.991907+03', '2026-07-18 21:59:17.991907+03', 'en', 1),
-	(99009, 'person', 'MRN-DEMO-005', 'Omar Saleh', 'Omar Saleh', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-005', true, '2026-07-18 21:59:17.998016+03', '2026-07-18 21:59:17.998016+03', 'en', 1);
+	(99005, 'person', 'MRN-DEMO-001', 'Ahmad Mansour', 'Ahmad Mansour', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-001', true, '2026-07-18 21:59:17.929136+03', '2026-07-18 22:38:05.784643+03', 'en', 1),
+	(99006, 'person', 'MRN-DEMO-002', 'Layla Haddad', 'Layla Haddad', 'female', '1985-01-01', NULL, NULL, 'MRN-DEMO-002', true, '2026-07-18 21:59:17.966972+03', '2026-07-18 22:38:05.822007+03', 'en', 1),
+	(99007, 'person', 'MRN-DEMO-003', 'Karim Nasser', 'Karim Nasser', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-003', true, '2026-07-18 21:59:17.979058+03', '2026-07-18 22:38:05.825079+03', 'en', 1),
+	(99008, 'person', 'MRN-DEMO-004', 'Sara Khoury', 'Sara Khoury', 'female', '1985-01-01', NULL, NULL, 'MRN-DEMO-004', true, '2026-07-18 21:59:17.991907+03', '2026-07-18 22:38:05.828077+03', 'en', 1),
+	(99009, 'person', 'MRN-DEMO-005', 'Omar Saleh', 'Omar Saleh', 'male', '1985-01-01', NULL, NULL, 'MRN-DEMO-005', true, '2026-07-18 21:59:17.998016+03', '2026-07-18 22:38:05.836448+03', 'en', 1);
 
 
 ALTER TABLE mcms_core.party ENABLE TRIGGER ALL;
@@ -173,7 +173,12 @@ INSERT INTO mcms_emr.encounter VALUES
 	(3, 'MRN-DEMO-002', 99003, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-17 21:59:17.913956+03', '2026-07-17 22:59:17.913956+03', NULL, NULL, '2026-07-18 21:59:18.144845+03', '2026-07-18 21:59:18.144845+03', NULL, 1),
 	(4, 'MRN-DEMO-003', 99004, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-16 21:59:17.913956+03', '2026-07-16 22:59:17.913956+03', NULL, NULL, '2026-07-18 21:59:18.159546+03', '2026-07-18 21:59:18.159546+03', NULL, 1),
 	(5, 'MRN-DEMO-004', 99005, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-15 21:59:17.913956+03', '2026-07-15 22:59:17.913956+03', NULL, NULL, '2026-07-18 21:59:18.170656+03', '2026-07-18 21:59:18.170656+03', NULL, 1),
-	(6, 'MRN-DEMO-005', 99006, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-14 21:59:17.913956+03', '2026-07-14 22:59:17.913956+03', NULL, NULL, '2026-07-18 21:59:18.181888+03', '2026-07-18 21:59:18.181888+03', NULL, 1);
+	(6, 'MRN-DEMO-005', 99006, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-14 21:59:17.913956+03', '2026-07-14 22:59:17.913956+03', NULL, NULL, '2026-07-18 21:59:18.181888+03', '2026-07-18 21:59:18.181888+03', NULL, 1),
+	(7, 'MRN-DEMO-001', 99002, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-18 22:38:05.773315+03', '2026-07-18 23:38:05.773315+03', NULL, NULL, '2026-07-18 22:38:05.897314+03', '2026-07-18 22:38:05.898304+03', NULL, 1),
+	(8, 'MRN-DEMO-002', 99003, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-17 22:38:05.773315+03', '2026-07-17 23:38:05.773315+03', NULL, NULL, '2026-07-18 22:38:05.925076+03', '2026-07-18 22:38:05.925076+03', NULL, 1),
+	(9, 'MRN-DEMO-003', 99004, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-16 22:38:05.773315+03', '2026-07-16 23:38:05.773315+03', NULL, NULL, '2026-07-18 22:38:05.937598+03', '2026-07-18 22:38:05.937598+03', NULL, 1),
+	(10, 'MRN-DEMO-004', 99005, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-15 22:38:05.773315+03', '2026-07-15 23:38:05.773315+03', NULL, NULL, '2026-07-18 22:38:05.943753+03', '2026-07-18 22:38:05.943753+03', NULL, 1),
+	(11, 'MRN-DEMO-005', 99006, 'finished', 'ambulatory', 1, NULL, 1, 'Demo visit', 'Routine', '2026-07-14 22:38:05.773315+03', '2026-07-14 23:38:05.773315+03', NULL, NULL, '2026-07-18 22:38:05.956701+03', '2026-07-18 22:38:05.956701+03', NULL, 1);
 
 
 ALTER TABLE mcms_emr.encounter ENABLE TRIGGER ALL;
@@ -210,6 +215,8 @@ ALTER TABLE mcms_billing.insurance_claim ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_billing.claim_response DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_billing.claim_response VALUES
+	(2, 2, 'TML', 'paid', 100.00, 0.00, 'Demo remittance advice', '2026-07-18 22:38:05.773813+03', 1);
 
 
 ALTER TABLE mcms_billing.claim_response ENABLE TRIGGER ALL;
@@ -220,6 +227,8 @@ ALTER TABLE mcms_billing.claim_response ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_billing.eligibility_check DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_billing.eligibility_check VALUES
+	(2, 99002, 'TML', 'POL-DEMO-001', 'eligible', 'Demo eligibility OK', NULL, '2026-07-18 22:38:05.773813+03', 1);
 
 
 ALTER TABLE mcms_billing.eligibility_check ENABLE TRIGGER ALL;
@@ -312,7 +321,11 @@ INSERT INTO mcms_clinic.appointment VALUES
 	(2, 'MRN-DEMO-001', 99002, 1, NULL, 1, '2026-07-19 06:59:17.913956+03', '2026-07-19 07:29:17.913956+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 21:59:18.036264+03', '2026-07-18 21:59:18.036264+03', NULL, NULL, NULL, false, NULL, NULL, 1),
 	(3, 'MRN-DEMO-002', 99003, 1, NULL, 1, '2026-07-20 06:59:17.913956+03', '2026-07-20 07:29:17.913956+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 21:59:18.060275+03', '2026-07-18 21:59:18.060275+03', NULL, NULL, NULL, false, NULL, NULL, 1),
 	(4, 'MRN-DEMO-003', 99004, 1, NULL, 1, '2026-07-21 06:59:17.913956+03', '2026-07-21 07:29:17.913956+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 21:59:18.064274+03', '2026-07-18 21:59:18.064274+03', NULL, NULL, NULL, false, NULL, NULL, 1),
-	(5, 'MRN-DEMO-004', 99005, 1, NULL, 1, '2026-07-22 06:59:17.913956+03', '2026-07-22 07:29:17.913956+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 21:59:18.075632+03', '2026-07-18 21:59:18.075632+03', NULL, NULL, NULL, false, NULL, NULL, 1);
+	(5, 'MRN-DEMO-004', 99005, 1, NULL, 1, '2026-07-22 06:59:17.913956+03', '2026-07-22 07:29:17.913956+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 21:59:18.075632+03', '2026-07-18 21:59:18.075632+03', NULL, NULL, NULL, false, NULL, NULL, 1),
+	(6, 'MRN-DEMO-001', 99002, 1, NULL, 1, '2026-07-19 07:38:05.773315+03', '2026-07-19 08:08:05.773315+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 22:38:05.861966+03', '2026-07-18 22:38:05.861966+03', NULL, NULL, NULL, false, NULL, NULL, 1),
+	(7, 'MRN-DEMO-002', 99003, 1, NULL, 1, '2026-07-20 07:38:05.773315+03', '2026-07-20 08:08:05.773315+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 22:38:05.874635+03', '2026-07-18 22:38:05.874635+03', NULL, NULL, NULL, false, NULL, NULL, 1),
+	(8, 'MRN-DEMO-003', 99004, 1, NULL, 1, '2026-07-21 07:38:05.773315+03', '2026-07-21 08:08:05.773315+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 22:38:05.877634+03', '2026-07-18 22:38:05.877634+03', NULL, NULL, NULL, false, NULL, NULL, 1),
+	(9, 'MRN-DEMO-004', 99005, 1, NULL, 1, '2026-07-22 07:38:05.773315+03', '2026-07-22 08:08:05.773315+03', 'booked', 'Routine check-up', 1, NULL, '2026-07-18 22:38:05.884638+03', '2026-07-18 22:38:05.884638+03', NULL, NULL, NULL, false, NULL, NULL, 1);
 
 
 ALTER TABLE mcms_clinic.appointment ENABLE TRIGGER ALL;
@@ -474,6 +487,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(100, 200, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_core', 'lookup', 37, '{"code": "71250", "label": "CT thorax without contrast", "label_ar": null, "label_en": null, "is_active": true, "lookup_id": 37, "namespace": "cpt", "sort_order": 0, "facility_id": 1, "parent_code": null}', 'db-trigger', '62d2dbc50d2e3e063e8fbf459831a0b268b7d8a6eda07e369e8d0ab1c4479209', 'd73450a7ae7d4f7a40bbe79b8990ccd1ad568b6f58a9c269445fbc9e3a957431', 1),
 	(101, 202, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_core', 'lookup', 38, '{"code": "70553", "label": "MRI brain with contrast", "label_ar": null, "label_en": null, "is_active": true, "lookup_id": 38, "namespace": "cpt", "sort_order": 0, "facility_id": 1, "parent_code": null}', 'db-trigger', 'd73450a7ae7d4f7a40bbe79b8990ccd1ad568b6f58a9c269445fbc9e3a957431', 'f08b75966949635a10d086835866420162642b624596508ea9cdfe1d24735a9e', 1),
 	(102, 204, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_core', 'lookup', 39, '{"code": "76700", "label": "Ultrasound abdomen", "label_ar": null, "label_en": null, "is_active": true, "lookup_id": 39, "namespace": "cpt", "sort_order": 0, "facility_id": 1, "parent_code": null}', 'db-trigger', 'f08b75966949635a10d086835866420162642b624596508ea9cdfe1d24735a9e', 'bc7cc49422fc25254863a2dffba4d845a0cb40b54f17f72b8c2618108c82c6ce', 1),
+	(232, 464, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 15, '{"code": "patient.read", "description": "View patient demographics", "facility_id": 1, "permission_id": 15}', 'db-trigger', 'd55073ac83eef32393502365bcbe470b9491d8bea0d673654a70dadc89b469fa', 'e1130109ff58e554462d617343329d3fb7e0a0aff795ec937c74cdea652a64f4', 1),
 	(103, 206, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_core', 'lookup', 40, '{"code": "93000", "label": "ECG, 12-lead", "label_ar": null, "label_en": null, "is_active": true, "lookup_id": 40, "namespace": "cpt", "sort_order": 0, "facility_id": 1, "parent_code": null}', 'db-trigger', 'bc7cc49422fc25254863a2dffba4d845a0cb40b54f17f72b8c2618108c82c6ce', 'a37bd2a239fca87343b5b73de29fec8bd606663a21bc51cf5c26ac1fb5921975', 1),
 	(104, 208, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_rx', 'drug_item', 2, '{"form": "tablet", "unit": "tablet", "atc_code": null, "strength": "500 mg", "is_active": true, "brand_name": "Panadol", "created_at": "2026-07-18T21:59:08.489232+03:00", "drug_class": "analgesic", "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "reorder_qty": 5000, "rxnorm_code": null, "drug_item_id": 2, "generic_name": "Paracetamol", "manufacturer": null, "cost_per_unit": 0.05, "reorder_level": 1000, "requires_cold_chain": false, "sale_price_per_unit": 0.15, "controlled_substance": false}', 'db-trigger', 'a37bd2a239fca87343b5b73de29fec8bd606663a21bc51cf5c26ac1fb5921975', 'b67f43432619b94dca1dc50f254360d7080ff799cb9cacfa44a685b3c51b9dad', 1),
 	(105, 210, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_rx', 'drug_item', 3, '{"form": "tablet", "unit": "tablet", "atc_code": null, "strength": "400 mg", "is_active": true, "brand_name": "Brufen", "created_at": "2026-07-18T21:59:08.489232+03:00", "drug_class": "nsaid", "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "reorder_qty": 3000, "rxnorm_code": null, "drug_item_id": 3, "generic_name": "Ibuprofen", "manufacturer": null, "cost_per_unit": 0.08, "reorder_level": 500, "requires_cold_chain": false, "sale_price_per_unit": 0.20, "controlled_substance": false}', 'db-trigger', 'b67f43432619b94dca1dc50f254360d7080ff799cb9cacfa44a685b3c51b9dad', '95986d17d2c9be7e733bbc7e51e1790f37c4f4df5d02c4ade7def0290a881db0', 1),
@@ -495,6 +509,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(120, 240, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 3, '{"code": "SVC-CONSULT-GEN", "name": "General Consultation", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 3, "unit_price": 150.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "consultation", "department_id": 27, "effective_from": "2026-07-18"}', 'db-trigger', 'ea5125e05d3fc43bb039ba243c79968c7d14058dd38e6719b58747e9b48fef10', '38a8b41824dcb6f7f2c87c75c0386a855b2349fed613d2c7ddd5947e2f87728a', 1),
 	(121, 242, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 4, '{"code": "SVC-CONSULT-CARD", "name": "Cardiology Consultation", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 4, "unit_price": 250.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "consultation", "department_id": 28, "effective_from": "2026-07-18"}', 'db-trigger', '38a8b41824dcb6f7f2c87c75c0386a855b2349fed613d2c7ddd5947e2f87728a', '202bd2a13322eeb7049c0864a2cacc0605aa20c0b2a243483ce6dbb0196d162d', 1),
 	(122, 244, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 5, '{"code": "SVC-ANAESTHESIA", "name": "Anaesthesia Fee", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 5, "unit_price": 500.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "anaesthesia", "department_id": 33, "effective_from": "2026-07-18"}', 'db-trigger', '202bd2a13322eeb7049c0864a2cacc0605aa20c0b2a243483ce6dbb0196d162d', '3705360719d87b17c2ace32a1067fe1be505d548f84167dad2d787496920e3c8', 1),
+	(134, 268, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_physio', 'therapy_catalog', 2, '{"code": "PHY-MAN1", "name": "Manual Therapy 30", "type": "manual_therapy", "equipment": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "therapy_id": 2, "body_region": "spine", "facility_id": 1, "duration_minutes": 30}', 'db-trigger', '74916dedc61742d4aad833b38550ffb934b1424a3a9699f3135892ed48b56409', 'b92430cb1f6da794b4a92c938ad23085337448ff9e1ffa987fda2f741e93d9cb', 1),
 	(123, 246, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 6, '{"code": "SVC-OR-MIN", "name": "OR Charge per Minute", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 6, "unit_price": 45.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "surgery_or", "department_id": 33, "effective_from": "2026-07-18"}', 'db-trigger', '3705360719d87b17c2ace32a1067fe1be505d548f84167dad2d787496920e3c8', 'e6f54ad5872f6f94f8605d06afe595f5cdd2fcbfeb6f9884e1e36c4d027fc3fe', 1),
 	(124, 248, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 7, '{"code": "SVC-AMBULATE", "name": "Ambulance Service", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 7, "unit_price": 350.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "ambulance", "department_id": 37, "effective_from": "2026-07-18"}', 'db-trigger', 'e6f54ad5872f6f94f8605d06afe595f5cdd2fcbfeb6f9884e1e36c4d027fc3fe', '48e1e269bfacc5cf010b00c6d19a715df4dd2ce48fd4b81f6b1dfbb2ce3992f8', 1),
 	(125, 250, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 8, '{"code": "SVC-ED-VISIT", "name": "Emergency Visit Fee", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 8, "unit_price": 450.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "emergency_triage", "department_id": 37, "effective_from": "2026-07-18"}', 'db-trigger', '48e1e269bfacc5cf010b00c6d19a715df4dd2ce48fd4b81f6b1dfbb2ce3992f8', '37f0f647ec1357c0f26aeb03f922bae76aefda366528f7362e3faf196f3611f9', 1),
@@ -507,7 +522,6 @@ INSERT INTO mcms_core.event_log VALUES
 	(131, 262, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 14, '{"code": "SVC-RAD-CT-THX", "name": "CT Thorax", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 14, "unit_price": 650.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "imaging", "department_id": 44, "effective_from": "2026-07-18"}', 'db-trigger', '14d36ab5c365442e3c13b62983071836a02316d5d468e0a9b4682f5a7bd7269a', 'b060e28d3191bce37c483b808db19b9570cd4e19b512e224e6c8ee22ff19d414', 1),
 	(132, 264, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 15, '{"code": "SVC-RAD-XR-CHST", "name": "Chest X-ray", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 15, "unit_price": 120.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "imaging", "department_id": 44, "effective_from": "2026-07-18"}', 'db-trigger', 'b060e28d3191bce37c483b808db19b9570cd4e19b512e224e6c8ee22ff19d414', '49359a41595dc950e159e0da00c38d1bb0b8cdb77bb983d7a22fa8d6077167ea', 1),
 	(133, 266, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'service_price', 16, '{"code": "SVC-PHYSIO-SESS", "name": "Physiotherapy Session", "currency": "SAR", "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "is_taxable": true, "service_id": 16, "unit_price": 200.00, "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "effective_to": null, "service_type": "physio_session", "department_id": 47, "effective_from": "2026-07-18"}', 'db-trigger', '49359a41595dc950e159e0da00c38d1bb0b8cdb77bb983d7a22fa8d6077167ea', '74916dedc61742d4aad833b38550ffb934b1424a3a9699f3135892ed48b56409', 1),
-	(134, 268, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_physio', 'therapy_catalog', 2, '{"code": "PHY-MAN1", "name": "Manual Therapy 30", "type": "manual_therapy", "equipment": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "therapy_id": 2, "body_region": "spine", "facility_id": 1, "duration_minutes": 30}', 'db-trigger', '74916dedc61742d4aad833b38550ffb934b1424a3a9699f3135892ed48b56409', 'b92430cb1f6da794b4a92c938ad23085337448ff9e1ffa987fda2f741e93d9cb', 1),
 	(135, 270, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_physio', 'therapy_catalog', 3, '{"code": "PHY-ELEC1", "name": "Electrotherapy TENS", "type": "electrotherapy", "equipment": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "therapy_id": 3, "body_region": "any", "facility_id": 1, "duration_minutes": 20}', 'db-trigger', 'b92430cb1f6da794b4a92c938ad23085337448ff9e1ffa987fda2f741e93d9cb', '8a14cb4d0f6c6a695c3d95e5e77aa0e2233332ccf7e9d2a85df821f6d8241892', 1),
 	(136, 272, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_physio', 'therapy_catalog', 4, '{"code": "PHY-EX1", "name": "Therapeutic Exercise Set A", "type": "therapeutic_exercise", "equipment": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "therapy_id": 4, "body_region": "any", "facility_id": 1, "duration_minutes": 45}', 'db-trigger', '8a14cb4d0f6c6a695c3d95e5e77aa0e2233332ccf7e9d2a85df821f6d8241892', '4d73edf791154c994613ee2be4385a7a2b0d0167532e5aa697376e9921a0cd99', 1),
 	(137, 274, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_physio', 'therapy_catalog', 5, '{"code": "PHY-HYDRO", "name": "Hydrotherapy Session", "type": "hydrotherapy", "equipment": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "therapy_id": 5, "body_region": "lower_limb", "facility_id": 1, "duration_minutes": 30}', 'db-trigger', '4d73edf791154c994613ee2be4385a7a2b0d0167532e5aa697376e9921a0cd99', 'c54822a3adff71d67f42b3ffa4ae72ba34336c667d9543ae88b103a5298386c8', 1),
@@ -523,6 +537,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(146, 292, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'procedure_catalog', 1, '{"name": "Total knee arthroplasty", "notes": null, "cpt_code": "27447", "body_site": null, "created_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "proc_cat_id": 4, "default_duration_min": 90}', 'db-trigger', 'e0cdb50161f30f5a89f6f8ad1283f0ef3fef306a80740e87e9207d4a6bc326ea', '018726760cc0e2223282404688dccdc5e42e2b5bb7e6e9a564d6c394d4e6dccf', 1),
 	(147, 294, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'procedure_catalog', 1, '{"name": "Coronary artery bypass, single", "notes": null, "cpt_code": "33533", "body_site": null, "created_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "proc_cat_id": 5, "default_duration_min": 90}', 'db-trigger', '018726760cc0e2223282404688dccdc5e42e2b5bb7e6e9a564d6c394d4e6dccf', 'affd32cc864c60be826b1e5736dd2c93f640cb79ca2ed38e3bd4fcba86c2cfc0', 1),
 	(148, 296, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'procedure_catalog', 1, '{"name": "Open cholecystectomy", "notes": null, "cpt_code": "47579", "body_site": null, "created_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "proc_cat_id": 6, "default_duration_min": 90}', 'db-trigger', 'affd32cc864c60be826b1e5736dd2c93f640cb79ca2ed38e3bd4fcba86c2cfc0', '95a7e680b669aea1a0793ee54d8a8a781d6f1c48e61df56f7ff4b8bb8b8ae422', 1),
+	(231, 462, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 14, '{"code": "billing.manage", "description": "Create/modify invoices & payments", "facility_id": 1, "permission_id": 14}', 'db-trigger', 'abff6b72d9285e79abe25f99777ea88f30155d2ce25cc28a4bf6c5a89a262e85', 'd55073ac83eef32393502365bcbe470b9491d8bea0d673654a70dadc89b469fa', 1),
 	(149, 298, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'procedure_catalog', 1, '{"name": "Repair of femoral hernia", "notes": null, "cpt_code": "49505", "body_site": null, "created_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "proc_cat_id": 7, "default_duration_min": 90}', 'db-trigger', '95a7e680b669aea1a0793ee54d8a8a781d6f1c48e61df56f7ff4b8bb8b8ae422', '54d1e3f05d186d070faeeaed2a1b13fc3091a080e7b31826a3cbe293521e237a', 1),
 	(150, 300, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'procedure_catalog', 1, '{"name": "Total abdominal hysterectomy", "notes": null, "cpt_code": "58150", "body_site": null, "created_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "proc_cat_id": 8, "default_duration_min": 90}', 'db-trigger', '54d1e3f05d186d070faeeaed2a1b13fc3091a080e7b31826a3cbe293521e237a', '9c0fa2d61c526b81455e6c5a87805ed168a1dce1b92aea215253029bd6305fda', 1),
 	(151, 302, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_surgical', 'operating_room', 2, '{"code": "OR-GEN", "name": "General Operating Theatre", "or_id": 2, "status": "available", "is_active": true, "room_type": "general", "created_at": "2026-07-18T21:59:08.489232+03:00", "updated_at": "2026-07-18T21:59:08.489232+03:00", "facility_id": 1, "department_id": 33}', 'db-trigger', '9c0fa2d61c526b81455e6c5a87805ed168a1dce1b92aea215253029bd6305fda', '4f3186edeee12f5a971de71294d1c510595c76fe60b609ea3690e892280913e7', 1),
@@ -551,6 +566,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(174, 348, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 10, '{"name": "Creatinine", "unit": "mg/dL", "ref_low": 0.7, "test_id": 10, "category": "Chemistry", "ref_high": 1.3, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "38483-4", "facility_id": 1, "specimen_type": "blood", "volume_required": 3.00, "turnaround_minutes": 90}', 'db-trigger', '4558f815f038b05de33dd3fb7e7362d9c9a7fbef406892fee932a589ce7cfc2c', 'c0d97c7e440cf325d0b8205d9d30ddd9ec1c59c60a4daaa7054174f0bd49a493', 1),
 	(175, 350, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 11, '{"name": "Troponin I, Cardiac", "unit": "ng/mL", "ref_low": 0.0, "test_id": 11, "category": "Chemistry", "ref_high": 0.04, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "33914-3", "facility_id": 1, "specimen_type": "blood", "volume_required": 3.00, "turnaround_minutes": 45}', 'db-trigger', 'c0d97c7e440cf325d0b8205d9d30ddd9ec1c59c60a4daaa7054174f0bd49a493', '7354f0a974ab67a4673b81dd3e85484ba59214f83884e2bdf8af11c5810ecab7', 1),
 	(176, 352, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 12, '{"name": "PT/INR", "unit": "INR", "ref_low": 0.8, "test_id": 12, "category": "Coagulation", "ref_high": 1.2, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "25428-4", "facility_id": 1, "specimen_type": "blood", "volume_required": 2.50, "turnaround_minutes": 60}', 'db-trigger', '7354f0a974ab67a4673b81dd3e85484ba59214f83884e2bdf8af11c5810ecab7', '40881cd4c436cf3688520ffe062f64e1f7316f6dcfff5529fcc543288fa1aaa5', 1),
+	(196, 392, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 3, '{"code": "1001", "name": "Cash on Hand", "is_active": true, "account_id": 3, "facility_id": 1, "is_postable": true, "account_type": "cash", "parent_account_id": null}', 'db-trigger', 'df5a248b3d28a80fdd9e42002215d7d6ae56e7b2ebc2fff1ee3eff62482ce98d', '10268f429854cff8ac04afc61a606654bfb5b869491607f0a5206ed1adf60ce4', 1),
 	(177, 354, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 13, '{"name": "Potassium, Urine", "unit": "mmol/d", "ref_low": 25, "test_id": 13, "category": "Urinalysis", "ref_high": 125, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "6298-4", "facility_id": 1, "specimen_type": "urine", "volume_required": 10.00, "turnaround_minutes": 120}', 'db-trigger', '40881cd4c436cf3688520ffe062f64e1f7316f6dcfff5529fcc543288fa1aaa5', 'e84c3e98d550a90d6ea030e2e1ab366196dcdfc119d5ccc5091133a70d321d94', 1),
 	(178, 356, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 14, '{"name": "Glucose, Urine", "unit": "mg/dL", "ref_low": 0, "test_id": 14, "category": "Urinalysis", "ref_high": 0, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "5792-7", "facility_id": 1, "specimen_type": "urine", "volume_required": 10.00, "turnaround_minutes": 30}', 'db-trigger', 'e84c3e98d550a90d6ea030e2e1ab366196dcdfc119d5ccc5091133a70d321d94', 'b16246270cf783b3d0b78411b67973067673df8777f215c786787aed4d45c46d', 1),
 	(179, 358, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_catalog', 15, '{"name": "Stool Routine", "unit": " qualitative", "ref_low": null, "test_id": 15, "category": "Microbiology", "ref_high": null, "is_active": true, "created_at": "2026-07-18T21:59:08.489232+03:00", "loinc_code": "11277-5", "facility_id": 1, "specimen_type": "stool", "volume_required": 5.00, "turnaround_minutes": 240}', 'db-trigger', 'b16246270cf783b3d0b78411b67973067673df8777f215c786787aed4d45c46d', '5ad09ea0ebc9a9575010b8d83ac678d087274594af3a82c03cb6cee3067c12ed', 1),
@@ -568,11 +584,10 @@ INSERT INTO mcms_core.event_log VALUES
 	(192, 384, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_panel_item', 9, '{"ppi_id": 9, "test_id": 10, "panel_id": 3, "sort_order": 5, "facility_id": 1}', 'db-trigger', '0313973d8b507ed84d57443a248291ce1129b1fb10fa40bdf9f512a60cde91f0', 'b67c51ad13762a1fa16a8e47e02af1048f207faf590f5c7c5c24d99df0fffce0', 1),
 	(193, 386, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_panel_item', 10, '{"ppi_id": 10, "test_id": 8, "panel_id": 3, "sort_order": 6, "facility_id": 1}', 'db-trigger', 'b67c51ad13762a1fa16a8e47e02af1048f207faf590f5c7c5c24d99df0fffce0', 'faab020fe974202d0d5fa371c68884e6195717d376ce09eb0d598fefe47784cb', 1),
 	(194, 388, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_lab', 'test_panel_item', 11, '{"ppi_id": 11, "test_id": 11, "panel_id": 4, "sort_order": 1, "facility_id": 1}', 'db-trigger', 'faab020fe974202d0d5fa371c68884e6195717d376ce09eb0d598fefe47784cb', '47bbae794bd7a3ce80d12c030db38cd7c13783629b7663e48fa5946ebcf1258c', 1),
-	(195, 390, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 2, '{"code": "1000", "name": "Assets", "is_active": true, "account_id": 2, "facility_id": 1, "is_postable": true, "account_type": "asset", "parent_account_id": null}', 'db-trigger', '47bbae794bd7a3ce80d12c030db38cd7c13783629b7663e48fa5946ebcf1258c', 'df5a248b3d28a80fdd9e42002215d7d6ae56e7b2ebc2fff1ee3eff62482ce98d', 1),
-	(196, 392, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 3, '{"code": "1001", "name": "Cash on Hand", "is_active": true, "account_id": 3, "facility_id": 1, "is_postable": true, "account_type": "cash", "parent_account_id": null}', 'db-trigger', 'df5a248b3d28a80fdd9e42002215d7d6ae56e7b2ebc2fff1ee3eff62482ce98d', '10268f429854cff8ac04afc61a606654bfb5b869491607f0a5206ed1adf60ce4', 1),
-	(197, 394, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 4, '{"code": "1002", "name": "Bank Account", "is_active": true, "account_id": 4, "facility_id": 1, "is_postable": true, "account_type": "bank", "parent_account_id": null}', 'db-trigger', '10268f429854cff8ac04afc61a606654bfb5b869491607f0a5206ed1adf60ce4', '13eb8c5a1c618b1e7069a86b62e48c51c338c1f5a1541e87abccff6b107d24aa', 1),
-	(198, 396, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 5, '{"code": "1200", "name": "Accounts Receivable", "is_active": true, "account_id": 5, "facility_id": 1, "is_postable": true, "account_type": "asset", "parent_account_id": null}', 'db-trigger', '13eb8c5a1c618b1e7069a86b62e48c51c338c1f5a1541e87abccff6b107d24aa', '0716796d4d7d4f434e7596898f5cbf8dc490908d31dee219f396f5579fea70ec', 1);
+	(195, 390, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 2, '{"code": "1000", "name": "Assets", "is_active": true, "account_id": 2, "facility_id": 1, "is_postable": true, "account_type": "asset", "parent_account_id": null}', 'db-trigger', '47bbae794bd7a3ce80d12c030db38cd7c13783629b7663e48fa5946ebcf1258c', 'df5a248b3d28a80fdd9e42002215d7d6ae56e7b2ebc2fff1ee3eff62482ce98d', 1);
 INSERT INTO mcms_core.event_log VALUES
+	(197, 394, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 4, '{"code": "1002", "name": "Bank Account", "is_active": true, "account_id": 4, "facility_id": 1, "is_postable": true, "account_type": "bank", "parent_account_id": null}', 'db-trigger', '10268f429854cff8ac04afc61a606654bfb5b869491607f0a5206ed1adf60ce4', '13eb8c5a1c618b1e7069a86b62e48c51c338c1f5a1541e87abccff6b107d24aa', 1),
+	(198, 396, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 5, '{"code": "1200", "name": "Accounts Receivable", "is_active": true, "account_id": 5, "facility_id": 1, "is_postable": true, "account_type": "asset", "parent_account_id": null}', 'db-trigger', '13eb8c5a1c618b1e7069a86b62e48c51c338c1f5a1541e87abccff6b107d24aa', '0716796d4d7d4f434e7596898f5cbf8dc490908d31dee219f396f5579fea70ec', 1),
 	(199, 398, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 6, '{"code": "1400", "name": "Inventory", "is_active": true, "account_id": 6, "facility_id": 1, "is_postable": true, "account_type": "asset", "parent_account_id": null}', 'db-trigger', '0716796d4d7d4f434e7596898f5cbf8dc490908d31dee219f396f5579fea70ec', 'ae0b87303d9338987f9c99e5785b65c8985ddfa9deb92272e8d4efa0ffa4f4ea', 1),
 	(200, 400, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 7, '{"code": "2000", "name": "Liabilities", "is_active": true, "account_id": 7, "facility_id": 1, "is_postable": true, "account_type": "liability", "parent_account_id": null}', 'db-trigger', 'ae0b87303d9338987f9c99e5785b65c8985ddfa9deb92272e8d4efa0ffa4f4ea', 'cbc852479107b6c67bcd21c51b1a55fe9d9c5676dfb890e06a83cb9f567e7907', 1),
 	(201, 402, '2026-07-18 21:59:08.489232+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'gl_account', 8, '{"code": "2100", "name": "Accounts Payable", "is_active": true, "account_id": 8, "facility_id": 1, "is_postable": true, "account_type": "liability", "parent_account_id": null}', 'db-trigger', 'cbc852479107b6c67bcd21c51b1a55fe9d9c5676dfb890e06a83cb9f567e7907', '52f441351f38a575fd6d6ff44e99c904292a4d29b636c29dc994ee124acac3fe', 1),
@@ -606,8 +621,6 @@ INSERT INTO mcms_core.event_log VALUES
 	(228, 456, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 11, '{"code": "pharmacy.dispense", "description": "Dispense medications", "facility_id": 1, "permission_id": 11}', 'db-trigger', 'f9ab0d4a8cbffc6d4e70b1142e58ff94342127028a506d57c914552ab13c14d0', '64adad3f375ad38a3063a8ec9f1daf7cfe9f66fe7eb9985cf1109a8a0af3132d', 1),
 	(229, 458, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 12, '{"code": "order.execute", "description": "Execute orders / enter preliminary results", "facility_id": 1, "permission_id": 12}', 'db-trigger', '64adad3f375ad38a3063a8ec9f1daf7cfe9f66fe7eb9985cf1109a8a0af3132d', '234b5da2bea0eab42628affe220778a2f24d45a8c51ff1352f74d39629b522e6', 1),
 	(230, 460, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 13, '{"code": "emr.read", "description": "Read clinical records", "facility_id": 1, "permission_id": 13}', 'db-trigger', '234b5da2bea0eab42628affe220778a2f24d45a8c51ff1352f74d39629b522e6', 'abff6b72d9285e79abe25f99777ea88f30155d2ce25cc28a4bf6c5a89a262e85', 1),
-	(231, 462, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 14, '{"code": "billing.manage", "description": "Create/modify invoices & payments", "facility_id": 1, "permission_id": 14}', 'db-trigger', 'abff6b72d9285e79abe25f99777ea88f30155d2ce25cc28a4bf6c5a89a262e85', 'd55073ac83eef32393502365bcbe470b9491d8bea0d673654a70dadc89b469fa', 1),
-	(232, 464, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 15, '{"code": "patient.read", "description": "View patient demographics", "facility_id": 1, "permission_id": 15}', 'db-trigger', 'd55073ac83eef32393502365bcbe470b9491d8bea0d673654a70dadc89b469fa', 'e1130109ff58e554462d617343329d3fb7e0a0aff795ec937c74cdea652a64f4', 1),
 	(233, 466, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 16, '{"code": "lab_rad.result", "description": "Enter lab/radiology results & reports", "facility_id": 1, "permission_id": 16}', 'db-trigger', 'e1130109ff58e554462d617343329d3fb7e0a0aff795ec937c74cdea652a64f4', 'f73eefce259c0bd86f29f28a7400a349e363d7ea5d09b0945da5dfe9b573b1a5', 1),
 	(234, 468, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 17, '{"code": "patient.write", "description": "Create/edit patients", "facility_id": 1, "permission_id": 17}', 'db-trigger', 'f73eefce259c0bd86f29f28a7400a349e363d7ea5d09b0945da5dfe9b573b1a5', '873fb727bf68eb1fa6c3ebcdade5d91c45d53489b7d7fad681cf6f6024e97fb5', 1),
 	(235, 470, '2026-07-18 21:59:08.579833+03', 'create', 'info', NULL, NULL, 'mcms_core', 'permission', 18, '{"code": "admin.all", "description": "Full administrative access", "facility_id": 1, "permission_id": 18}', 'db-trigger', '873fb727bf68eb1fa6c3ebcdade5d91c45d53489b7d7fad681cf6f6024e97fb5', 'e58156ea4009f7a679ab1bc75a1f35a3123d0a260b9a6e147a12ad929e42b14d', 1),
@@ -670,6 +683,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(293, 582, '2026-07-18 21:59:17.914572+03', 'appointment_booked', 'info', 1, 99008, 'mcms_clinic', 'appointment', 5, '{"status": "booked", "starts_at": "2026-07-22T03:59:17.913956+00:00", "department_id": 1}', 'mcms', 'aa16167f63133f941bf4a422a97bd86789a48c857f145c68ab1e97d8d020bd11', 'bd54622594da505064c5d7e3ab615368172396a959445cdf1e43bba875f4b987', 1),
 	(294, 583, '2026-07-18 21:59:17.914572+03', 'encounter_opened', 'info', 1, 99005, 'mcms_emr', 'encounter', 2, '{"mrn": "MRN-DEMO-001", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', 'bd54622594da505064c5d7e3ab615368172396a959445cdf1e43bba875f4b987', '0140411f5d5756869d9b6cf830eb581b74dc852bc1ec2a70fc173f2c76b4912d', 1),
 	(295, 585, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 2, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 2, "note_type": "progress", "signed_at": "2026-07-18T18:59:17.913956+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T18:59:18.113661+00:00", "patient_id": 99002, "updated_at": "2026-07-18T18:59:18.113661+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 2, "author_user_id": 1}', 'db-trigger', '0140411f5d5756869d9b6cf830eb581b74dc852bc1ec2a70fc173f2c76b4912d', '93a1e1176f4900815b2ae611b6ed77997d27bdb1eec3543117f33f7cb4531c30', 1),
+	(309, 608, '2026-07-18 21:59:17.914572+03', 'prescription_issued', 'info', 1, 99005, 'mcms_emr', 'medication_order', 2, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '8d69bf23b47aa044aa4957cec3fe53047dad169091b7b9d5825decf1e741d6dd', '9b432f917e271ff37afd5ac5aec7c0ae89a6e94330bb4e19f034826c25852a26', 1),
 	(296, 587, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 2, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-18T18:59:17.913956+00:00", "taken_by": 1, "vital_id": 2, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99002, "facility_id": 1, "encounter_id": 2, "glucose_mgdl": null}', 'db-trigger', '93a1e1176f4900815b2ae611b6ed77997d27bdb1eec3543117f33f7cb4531c30', 'e943e6f39db0e8b26f9c79e6f092a9aef26e487b172a71f5ff254fc61a829f05', 1),
 	(297, 588, '2026-07-18 21:59:17.914572+03', 'encounter_opened', 'info', 1, 99006, 'mcms_emr', 'encounter', 3, '{"mrn": "MRN-DEMO-002", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', 'e943e6f39db0e8b26f9c79e6f092a9aef26e487b172a71f5ff254fc61a829f05', '2b22c26ce5b8e4152b47631f8489e6fc4c99b359af33a46518820a394237fcf6', 1),
 	(298, 590, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 3, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 3, "note_type": "progress", "signed_at": "2026-07-18T18:59:17.913956+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T18:59:18.147965+00:00", "patient_id": 99003, "updated_at": "2026-07-18T18:59:18.147965+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 3, "author_user_id": 1}', 'db-trigger', '2b22c26ce5b8e4152b47631f8489e6fc4c99b359af33a46518820a394237fcf6', '4c8477f81f6c6b3deb8cd7281afa0bdb5c532c09c2fc69a1310ad271c27f8f0b', 1),
@@ -684,7 +698,6 @@ INSERT INTO mcms_core.event_log VALUES
 	(306, 603, '2026-07-18 21:59:17.914572+03', 'encounter_opened', 'info', 1, 99009, 'mcms_emr', 'encounter', 6, '{"mrn": "MRN-DEMO-005", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', 'f68009b839786d49b67735c03072cb71923097853aea42120e6e46f7ff6559e9', '4d40d377e90f5bec069b7f534f0b3a9cbca021ea7513e077c806990ed96511fe', 1),
 	(307, 605, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 6, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 6, "note_type": "progress", "signed_at": "2026-07-18T18:59:17.913956+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T18:59:18.18689+00:00", "patient_id": 99006, "updated_at": "2026-07-18T18:59:18.18689+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 6, "author_user_id": 1}', 'db-trigger', '4d40d377e90f5bec069b7f534f0b3a9cbca021ea7513e077c806990ed96511fe', '9c504a868dfab4c442ff9e417acbaeb33062d82af50ebf1f8ee5dca22440a174', 1),
 	(308, 607, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 6, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-14T18:59:17.913956+00:00", "taken_by": 1, "vital_id": 6, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99006, "facility_id": 1, "encounter_id": 6, "glucose_mgdl": null}', 'db-trigger', '9c504a868dfab4c442ff9e417acbaeb33062d82af50ebf1f8ee5dca22440a174', '8d69bf23b47aa044aa4957cec3fe53047dad169091b7b9d5825decf1e741d6dd', 1),
-	(309, 608, '2026-07-18 21:59:17.914572+03', 'prescription_issued', 'info', 1, 99005, 'mcms_emr', 'medication_order', 2, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '8d69bf23b47aa044aa4957cec3fe53047dad169091b7b9d5825decf1e741d6dd', '9b432f917e271ff37afd5ac5aec7c0ae89a6e94330bb4e19f034826c25852a26', 1),
 	(310, 609, '2026-07-18 21:59:17.914572+03', 'prescription_issued', 'info', 1, 99006, 'mcms_emr', 'medication_order', 3, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '9b432f917e271ff37afd5ac5aec7c0ae89a6e94330bb4e19f034826c25852a26', '89ec50873629034c71c854ab6e92f120d2310df1020840a5f67a3573d0681b2b', 1),
 	(311, 610, '2026-07-18 21:59:17.914572+03', 'prescription_issued', 'info', 1, 99007, 'mcms_emr', 'medication_order', 4, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '89ec50873629034c71c854ab6e92f120d2310df1020840a5f67a3573d0681b2b', 'f72922110fc532a9270fceda821330efacebe1c4e2858a8a25ffa160a1d060d7', 1),
 	(312, 611, '2026-07-18 21:59:17.914572+03', 'lab_order_placed', 'info', 1, 99005, 'mcms_lab', 'lab_order', 2, '{"order_no": "LAB-DEMO-001", "panel_id": 2, "priority": "routine"}', 'mcms', 'f72922110fc532a9270fceda821330efacebe1c4e2858a8a25ffa160a1d060d7', 'd98324fe66eb8d925c5493509c29aa1b2d8d2b459aa42a006207eae6c3fd0d87', 1),
@@ -745,6 +758,7 @@ INSERT INTO mcms_core.event_log VALUES
 	(367, 708, '2026-07-18 21:59:17.914572+03', 'medication_dispensed', 'info', 1, 99003, 'mcms_rx', 'dispensation', 2, '{"mrn": "MRN-DEMO-PORTAL", "qty": 5, "drug_item_id": 2}', 'mcms', '6cdeaa99d9396aca9af84b03dbc052ca98e26359b7cfd7e72200202bf17f5958', '83e118fa724d49be7956db8f57106af636c41ca5a5c6d6973d3f87041a3e5ff1', 1),
 	(368, 709, '2026-07-18 21:59:17.914572+03', 'low_stock_alert', 'warning', NULL, NULL, 'mcms_rx', 'drug_item', 2, '{"drug": "Paracetamol", "on_hand": 95, "reorder_level": 1000}', 'mcms_inventory', '83e118fa724d49be7956db8f57106af636c41ca5a5c6d6973d3f87041a3e5ff1', 'b9ff28fc86203aac305b7f189350d80f9f277c7846779754cd9c1579ad15494b', 1),
 	(369, 711, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'payroll_period', 2, '{"code": "PP-DEMO-2026-01", "status": "draft", "end_date": "2026-01-31", "closed_at": null, "period_id": 2, "created_at": "2026-07-18T18:59:17.914572+00:00", "start_date": "2026-01-01", "facility_id": 1}', 'db-trigger', 'b9ff28fc86203aac305b7f189350d80f9f277c7846779754cd9c1579ad15494b', 'ec19d4c2c86ab36ce9d45106918b815b086d95bb0ef164e8d794b45041b3f75d', 1),
+	(384, 738, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'shift', 2, '{"end_at": "2026-07-18T18:59:19.0783+00:00", "shift_id": 2, "start_at": "2026-07-18T18:59:19.077295+00:00", "created_at": "2026-07-18T18:59:19.079293+00:00", "shift_type": "morning", "employee_id": 2, "facility_id": 1, "department_id": 1}', 'db-trigger', '694488f5b50a89944cf2b50d8873159067298f1229a739626fefc09f6cb49225', '5cee89230e7de03b95141fbb8464768191b7d60f6297518a9530d2ddc2de76c8', 1),
 	(370, 713, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_vital_records', 'birth_certificate', 1, '{"status": "draft", "signed_at": null, "created_at": "2026-07-18T18:59:17.914572+00:00", "updated_at": "2026-07-18T18:59:17.914572+00:00", "facility_id": 1, "amended_from": null, "birth_cert_id": 2, "birth_datetime": "2026-07-18T18:59:17.914572+00:00", "birth_weight_g": null, "place_of_birth": null, "father_party_id": 1, "gestation_weeks": null, "registration_no": "BC-DEMO-001", "attendant_user_id": null, "certifier_user_id": null, "mother_patient_id": 99001, "registrar_user_id": null, "newborn_patient_id": 99001, "delivery_encounter_id": 2}', 'db-trigger', 'ec19d4c2c86ab36ce9d45106918b815b086d95bb0ef164e8d794b45041b3f75d', '0701b32b53f4b02a9c8442b58bcde6f7dbcc6f2a40483baf87af87fa066465d9', 1),
 	(371, 715, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_vital_records', 'death_certificate', 99006, '{"status": "draft", "signed_at": null, "cause_text": null, "created_at": "2026-07-18T18:59:17.914572+00:00", "patient_id": 99006, "updated_at": "2026-07-18T18:59:17.914572+00:00", "cause_icd10": null, "facility_id": 1, "amended_from": null, "coroner_case": false, "death_cert_id": 2, "death_datetime": "2026-07-18T18:59:17.914572+00:00", "registration_no": "DC-DEMO-001", "registrar_user_id": null, "certifying_clinician_user_id": null}', 'db-trigger', '0701b32b53f4b02a9c8442b58bcde6f7dbcc6f2a40483baf87af87fa066465d9', '831a8b2c57c6ed2a1db6865cdd50e475614dc1c8be2e2b4acc28b587f65c2cdb', 1),
 	(372, 717, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_rx', 'drug_alternative', 1, '{"reason": null, "created_at": "2026-07-18T18:59:17.914572+00:00", "facility_id": 1, "drug_item_id": 2, "alternative_id": 2, "alt_drug_item_id": 3, "is_generic_equiv": false}', 'db-trigger', '831a8b2c57c6ed2a1db6865cdd50e475614dc1c8be2e2b4acc28b587f65c2cdb', 'f3c97c4c9b05756cb5fae36b67b795c5564d623b2705e12c946df2fc6088d4e8', 1),
@@ -759,7 +773,6 @@ INSERT INTO mcms_core.event_log VALUES
 	(381, 733, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'referral', 2, '{"reason": "demo", "status": "draft", "urgency": "demo", "created_at": "2026-07-18T18:59:18.999677+00:00", "to_user_id": 99, "updated_at": "2026-07-18T18:59:17.914572+00:00", "facility_id": 1, "referral_id": 2, "diagnosis_id": 2, "from_user_id": 1, "responded_at": "2026-07-18T18:59:18.998635+00:00", "to_encounter_id": 2, "clinical_summary": "demo", "to_department_id": 1, "from_encounter_id": 2}', 'db-trigger', 'b149dc991453a8105efd041cc8d91014030cb89adcea99c4b0dc1412adcc62c9', '89ba77e6499e75cd20b1f6c001039c6f0bf0d41d80ca6df8c99c1739b7fbfd0e', 1),
 	(382, 735, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'referral', 2, '{"reason": "demo", "status": "draft", "urgency": "demo", "created_at": "2026-07-18T18:59:18.999677+00:00", "to_user_id": 99, "updated_at": "2026-07-18T18:59:17.914572+00:00", "facility_id": 1, "referral_id": 2, "diagnosis_id": 2, "from_user_id": 1, "responded_at": "2026-07-18T18:59:18.998635+00:00", "to_encounter_id": 2, "clinical_summary": "demo", "to_department_id": 1, "from_encounter_id": 2}', 'db-trigger', '89ba77e6499e75cd20b1f6c001039c6f0bf0d41d80ca6df8c99c1739b7fbfd0e', '0ec11069d7a0e735b7bb7860c6d617f1631beb799c4479385b8a6f7edf17215a', 1),
 	(383, 736, '2026-07-18 21:59:17.914572+03', 'employee_hired', 'info', NULL, 99003, 'mcms_hr', 'employee', 2, '{"role": "demo", "employee_no": "demo", "department_id": 1}', 'mcms', '0ec11069d7a0e735b7bb7860c6d617f1631beb799c4479385b8a6f7edf17215a', '694488f5b50a89944cf2b50d8873159067298f1229a739626fefc09f6cb49225', 1),
-	(384, 738, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'shift', 2, '{"end_at": "2026-07-18T18:59:19.0783+00:00", "shift_id": 2, "start_at": "2026-07-18T18:59:19.077295+00:00", "created_at": "2026-07-18T18:59:19.079293+00:00", "shift_type": "morning", "employee_id": 2, "facility_id": 1, "department_id": 1}', 'db-trigger', '694488f5b50a89944cf2b50d8873159067298f1229a739626fefc09f6cb49225', '5cee89230e7de03b95141fbb8464768191b7d60f6297518a9530d2ddc2de76c8', 1),
 	(385, 740, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'attendance', 2, '{"note": "demo", "status": "present", "shift_id": 2, "created_at": "2026-07-18T18:59:19.094763+00:00", "clock_in_at": "2026-07-18T18:59:19.084375+00:00", "employee_id": 2, "facility_id": 1, "clock_out_at": "2026-07-18T18:59:19.085374+00:00", "attendance_id": 2}', 'db-trigger', '5cee89230e7de03b95141fbb8464768191b7d60f6297518a9530d2ddc2de76c8', '290eda0b2f6cf1bbc6e57b61818de01cb7d57bf277f08a2cfd26f8ffb42a6fdb', 1),
 	(386, 742, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'employee_department', 2, '{"role": "demo", "end_date": "2025-01-01", "is_primary": true, "start_date": "2025-01-01", "emp_dept_id": 2, "employee_id": 2, "facility_id": 1, "department_id": 1}', 'db-trigger', '290eda0b2f6cf1bbc6e57b61818de01cb7d57bf277f08a2cfd26f8ffb42a6fdb', '239a6e3079bbaa8e37a528c98bce02e77699087ac0093d5cbffcd9818b4bfb94', 1),
 	(387, 744, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'leave_request', 2, '{"reason": "demo", "status": "pending", "days_off": 1, "end_date": "2025-01-01", "leave_id": 2, "created_at": "2026-07-18T18:59:19.164673+00:00", "leave_type": "annual", "start_date": "2025-01-01", "updated_at": "2026-07-18T18:59:19.164673+00:00", "approved_at": "2026-07-18T18:59:19.163673+00:00", "approved_by": 99, "employee_id": 2, "facility_id": 1}', 'db-trigger', '239a6e3079bbaa8e37a528c98bce02e77699087ac0093d5cbffcd9818b4bfb94', '2151c4cdc960a56f449ce98a444117ac7d7e1fe81e377e707c48ff15c6b8958d', 1),
@@ -781,7 +794,48 @@ INSERT INTO mcms_core.event_log VALUES
 	(405, 777, '2026-07-18 21:59:17.914572+03', 'payment_received', 'info', 99, NULL, 'mcms_billing', 'payment', 2, '{"amount": 1.00, "method": "cash", "invoice_id": 2}', 'mcms', 'f37397e3a8c70a21428ee0930cade029cd0ec2b68a92b3f9e50b78fc1be2ed65', '861b69c5ccd42f6e3c4a6444e23d9b47bc0c8e23dd99b70ec1ec150754795993', 1),
 	(406, 779, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'inventory_item', 2, '{"code": "demo", "name": "demo", "type": "consumable", "unit": "demo", "item_id": 2, "is_active": true, "created_at": "2026-07-18T18:59:20.213871+00:00", "updated_at": "2026-07-18T18:59:20.213871+00:00", "facility_id": 1, "reorder_qty": 1, "cost_per_unit": 1.00, "reorder_level": 1}', 'db-trigger', '861b69c5ccd42f6e3c4a6444e23d9b47bc0c8e23dd99b70ec1ec150754795993', 'e073934f8e49ec81f6a2045e57dea11e73c612f1657645d61e6cf7ce6f4a0027', 1),
 	(407, 781, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'inventory_stock', 2, '{"item_id": 2, "stock_id": 2, "updated_at": "2026-07-18T18:59:20.247547+00:00", "facility_id": 1, "qty_on_hand": 1, "qty_reserved": 1, "department_id": 1, "last_count_at": "2026-07-18T18:59:20.246545+00:00"}', 'db-trigger', 'e073934f8e49ec81f6a2045e57dea11e73c612f1657645d61e6cf7ce6f4a0027', '4cb3692929005ad75bf27c3f7fe9fdb356c9e7b09c145b64fdf68c6f3e35a147', 1),
-	(408, 783, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'stock_movement', 2, '{"reason": "demo", "item_id": 2, "qty_delta": 1, "facility_id": 1, "movement_id": 2, "performed_at": "2026-07-18T18:59:20.297076+00:00", "performed_by": 99, "reference_id": 1, "movement_type": "issue", "reference_table": "demo", "to_department_id": 1, "from_department_id": 1}', 'db-trigger', '4cb3692929005ad75bf27c3f7fe9fdb356c9e7b09c145b64fdf68c6f3e35a147', '219c902bde87bfabe9fa3967e59d65b72a9c62c716ae8b5b4620a3bfdd81922e', 1);
+	(408, 783, '2026-07-18 21:59:17.914572+03', 'create', 'info', NULL, NULL, 'mcms_erp', 'stock_movement', 2, '{"reason": "demo", "item_id": 2, "qty_delta": 1, "facility_id": 1, "movement_id": 2, "performed_at": "2026-07-18T18:59:20.297076+00:00", "performed_by": 99, "reference_id": 1, "movement_type": "issue", "reference_table": "demo", "to_department_id": 1, "from_department_id": 1}', 'db-trigger', '4cb3692929005ad75bf27c3f7fe9fdb356c9e7b09c145b64fdf68c6f3e35a147', '219c902bde87bfabe9fa3967e59d65b72a9c62c716ae8b5b4620a3bfdd81922e', 1),
+	(409, 785, '2026-07-18 22:38:05.773813+03', 'update', 'info', NULL, NULL, 'mcms_core', 'party', 99005, '{"code": "MRN-DEMO-001", "gender": "male", "tax_id": null, "party_id": 99005, "is_active": true, "blood_type": null, "created_at": "2026-07-18T18:59:17.929136+00:00", "legal_name": "Ahmad Mansour", "party_type": "person", "updated_at": "2026-07-18T19:38:05.784643+00:00", "facility_id": 1, "national_id": "MRN-DEMO-001", "display_name": "Ahmad Mansour", "date_of_birth": "1985-01-01", "preferred_language": "en"}', 'db-trigger', '219c902bde87bfabe9fa3967e59d65b72a9c62c716ae8b5b4620a3bfdd81922e', 'd82e69988929146540c664207ada97ad977f572d72fc3b6945973a56dbd889ca', 1),
+	(410, 787, '2026-07-18 22:38:05.773813+03', 'update', 'info', NULL, NULL, 'mcms_core', 'party', 99006, '{"code": "MRN-DEMO-002", "gender": "female", "tax_id": null, "party_id": 99006, "is_active": true, "blood_type": null, "created_at": "2026-07-18T18:59:17.966972+00:00", "legal_name": "Layla Haddad", "party_type": "person", "updated_at": "2026-07-18T19:38:05.822007+00:00", "facility_id": 1, "national_id": "MRN-DEMO-002", "display_name": "Layla Haddad", "date_of_birth": "1985-01-01", "preferred_language": "en"}', 'db-trigger', 'd82e69988929146540c664207ada97ad977f572d72fc3b6945973a56dbd889ca', '00ccd3e210572e65140948a2a7e198a68236938961ad1cbdd4cee7a18e7632f4', 1),
+	(411, 789, '2026-07-18 22:38:05.773813+03', 'update', 'info', NULL, NULL, 'mcms_core', 'party', 99007, '{"code": "MRN-DEMO-003", "gender": "male", "tax_id": null, "party_id": 99007, "is_active": true, "blood_type": null, "created_at": "2026-07-18T18:59:17.979058+00:00", "legal_name": "Karim Nasser", "party_type": "person", "updated_at": "2026-07-18T19:38:05.825079+00:00", "facility_id": 1, "national_id": "MRN-DEMO-003", "display_name": "Karim Nasser", "date_of_birth": "1985-01-01", "preferred_language": "en"}', 'db-trigger', '00ccd3e210572e65140948a2a7e198a68236938961ad1cbdd4cee7a18e7632f4', '31933859b4a9f89cb69ff2296be398426b18e35e053219baa2f4c5b065a8650a', 1),
+	(412, 791, '2026-07-18 22:38:05.773813+03', 'update', 'info', NULL, NULL, 'mcms_core', 'party', 99008, '{"code": "MRN-DEMO-004", "gender": "female", "tax_id": null, "party_id": 99008, "is_active": true, "blood_type": null, "created_at": "2026-07-18T18:59:17.991907+00:00", "legal_name": "Sara Khoury", "party_type": "person", "updated_at": "2026-07-18T19:38:05.828077+00:00", "facility_id": 1, "national_id": "MRN-DEMO-004", "display_name": "Sara Khoury", "date_of_birth": "1985-01-01", "preferred_language": "en"}', 'db-trigger', '31933859b4a9f89cb69ff2296be398426b18e35e053219baa2f4c5b065a8650a', '53693485401eded72efe4bf73495738750c481d58af5ac5e98a9106802a53c23', 1),
+	(413, 793, '2026-07-18 22:38:05.773813+03', 'update', 'info', NULL, NULL, 'mcms_core', 'party', 99009, '{"code": "MRN-DEMO-005", "gender": "male", "tax_id": null, "party_id": 99009, "is_active": true, "blood_type": null, "created_at": "2026-07-18T18:59:17.998016+00:00", "legal_name": "Omar Saleh", "party_type": "person", "updated_at": "2026-07-18T19:38:05.836448+00:00", "facility_id": 1, "national_id": "MRN-DEMO-005", "display_name": "Omar Saleh", "date_of_birth": "1985-01-01", "preferred_language": "en"}', 'db-trigger', '53693485401eded72efe4bf73495738750c481d58af5ac5e98a9106802a53c23', '1bab80756c2d773f281c3c013a0de43031c4e66f4195aa9306b1bb070305d23a', 1),
+	(414, 795, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'notification', 10, '{"body": "Appointment on 2026-07-19 04:38 (booked).", "status": "pending", "channel": "in_app", "read_at": null, "sent_at": null, "subject": "Appointment booked", "category": "appointment_reminder", "source_id": 6, "created_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "source_table": "appointment", "source_schema": "mcms_clinic", "notification_id": 10, "recipient_user_id": 1, "recipient_party_id": 99005}', 'db-trigger', '1bab80756c2d773f281c3c013a0de43031c4e66f4195aa9306b1bb070305d23a', '519c267660a945e033f1054963c441e32243589513c8d569e94558d343f865e1', 1),
+	(415, 796, '2026-07-18 22:38:05.773813+03', 'appointment_booked', 'info', 1, 99005, 'mcms_clinic', 'appointment', 6, '{"status": "booked", "starts_at": "2026-07-19T04:38:05.773315+00:00", "department_id": 1}', 'mcms', '519c267660a945e033f1054963c441e32243589513c8d569e94558d343f865e1', '1c2a9633f3ed362f6c8095736de9c155177f04c23c5f1953b19810c42dd742b8', 1),
+	(416, 798, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'notification', 11, '{"body": "Appointment on 2026-07-20 04:38 (booked).", "status": "pending", "channel": "in_app", "read_at": null, "sent_at": null, "subject": "Appointment booked", "category": "appointment_reminder", "source_id": 7, "created_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "source_table": "appointment", "source_schema": "mcms_clinic", "notification_id": 11, "recipient_user_id": 1, "recipient_party_id": 99006}', 'db-trigger', '1c2a9633f3ed362f6c8095736de9c155177f04c23c5f1953b19810c42dd742b8', 'd829a02de448fd2bce07b48093e9b6fd52cb485051df5cc8fcdd35a51dccebce', 1),
+	(417, 799, '2026-07-18 22:38:05.773813+03', 'appointment_booked', 'info', 1, 99006, 'mcms_clinic', 'appointment', 7, '{"status": "booked", "starts_at": "2026-07-20T04:38:05.773315+00:00", "department_id": 1}', 'mcms', 'd829a02de448fd2bce07b48093e9b6fd52cb485051df5cc8fcdd35a51dccebce', '19c17aa14172e1ce29585376828cb62b80185f611e88d205d4933a72cc04f72d', 1),
+	(418, 801, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'notification', 12, '{"body": "Appointment on 2026-07-21 04:38 (booked).", "status": "pending", "channel": "in_app", "read_at": null, "sent_at": null, "subject": "Appointment booked", "category": "appointment_reminder", "source_id": 8, "created_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "source_table": "appointment", "source_schema": "mcms_clinic", "notification_id": 12, "recipient_user_id": 1, "recipient_party_id": 99007}', 'db-trigger', '19c17aa14172e1ce29585376828cb62b80185f611e88d205d4933a72cc04f72d', 'dd2bde1d1fa85a064ae900a9ec51959bc3a0fb2817398b5cfce30decfd8c0926', 1),
+	(419, 802, '2026-07-18 22:38:05.773813+03', 'appointment_booked', 'info', 1, 99007, 'mcms_clinic', 'appointment', 8, '{"status": "booked", "starts_at": "2026-07-21T04:38:05.773315+00:00", "department_id": 1}', 'mcms', 'dd2bde1d1fa85a064ae900a9ec51959bc3a0fb2817398b5cfce30decfd8c0926', '7d19305a300c0dde7d0fe0efeae9384f505978cdf364c4e3d40392e4b2533b45', 1),
+	(420, 804, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'notification', 13, '{"body": "Appointment on 2026-07-22 04:38 (booked).", "status": "pending", "channel": "in_app", "read_at": null, "sent_at": null, "subject": "Appointment booked", "category": "appointment_reminder", "source_id": 9, "created_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "source_table": "appointment", "source_schema": "mcms_clinic", "notification_id": 13, "recipient_user_id": 1, "recipient_party_id": 99008}', 'db-trigger', '7d19305a300c0dde7d0fe0efeae9384f505978cdf364c4e3d40392e4b2533b45', '6dd01222a79522e4aec596331a7c2be5c373b3bc812164111d1d94b12f6b4e30', 1),
+	(421, 805, '2026-07-18 22:38:05.773813+03', 'appointment_booked', 'info', 1, 99008, 'mcms_clinic', 'appointment', 9, '{"status": "booked", "starts_at": "2026-07-22T04:38:05.773315+00:00", "department_id": 1}', 'mcms', '6dd01222a79522e4aec596331a7c2be5c373b3bc812164111d1d94b12f6b4e30', '49a6949cda8441a83d9681b496f778b31761bf57000e9cb1c30bb18a2cea2f60', 1),
+	(422, 806, '2026-07-18 22:38:05.773813+03', 'encounter_opened', 'info', 1, 99005, 'mcms_emr', 'encounter', 7, '{"mrn": "MRN-DEMO-001", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', '49a6949cda8441a83d9681b496f778b31761bf57000e9cb1c30bb18a2cea2f60', '32941da479534be0a19deeddd288b2b44423365ed14b0ab1bff828c20f6cc07c', 1),
+	(423, 808, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 10, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 10, "note_type": "progress", "signed_at": "2026-07-18T19:38:05.773315+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T19:38:05.907766+00:00", "patient_id": 99002, "updated_at": "2026-07-18T19:38:05.907766+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 7, "author_user_id": 1}', 'db-trigger', '32941da479534be0a19deeddd288b2b44423365ed14b0ab1bff828c20f6cc07c', 'ae5289c1729cc6ac294a26a849baab68dab41575d76d3a8f5a5d6dc4b31225a7', 1),
+	(424, 810, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 7, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-18T19:38:05.773315+00:00", "taken_by": 1, "vital_id": 7, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99002, "facility_id": 1, "encounter_id": 7, "glucose_mgdl": null}', 'db-trigger', 'ae5289c1729cc6ac294a26a849baab68dab41575d76d3a8f5a5d6dc4b31225a7', 'f18f5a0f945e6d3cbb6fc3c423938def68818f40b9bca4b3365cfad6967a9d7c', 1),
+	(425, 811, '2026-07-18 22:38:05.773813+03', 'encounter_opened', 'info', 1, 99006, 'mcms_emr', 'encounter', 8, '{"mrn": "MRN-DEMO-002", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', 'f18f5a0f945e6d3cbb6fc3c423938def68818f40b9bca4b3365cfad6967a9d7c', '5df3145a4df3a164c455a92e63acc26f3fc64546d5bdbcc0705402640446c503', 1),
+	(426, 813, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 11, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 11, "note_type": "progress", "signed_at": "2026-07-18T19:38:05.773315+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T19:38:05.927075+00:00", "patient_id": 99003, "updated_at": "2026-07-18T19:38:05.927075+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 8, "author_user_id": 1}', 'db-trigger', '5df3145a4df3a164c455a92e63acc26f3fc64546d5bdbcc0705402640446c503', 'faef9746d4e68dc9be804412acb100a6f91466fc5f6696505f95fbe1eb2b4eab', 1),
+	(427, 815, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 8, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-17T19:38:05.773315+00:00", "taken_by": 1, "vital_id": 8, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99003, "facility_id": 1, "encounter_id": 8, "glucose_mgdl": null}', 'db-trigger', 'faef9746d4e68dc9be804412acb100a6f91466fc5f6696505f95fbe1eb2b4eab', '1cd5f673c0567137d1ba39cd681d3e4887633d77db970257d365d71576c725be', 1),
+	(428, 816, '2026-07-18 22:38:05.773813+03', 'encounter_opened', 'info', 1, 99007, 'mcms_emr', 'encounter', 9, '{"mrn": "MRN-DEMO-003", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', '1cd5f673c0567137d1ba39cd681d3e4887633d77db970257d365d71576c725be', '1100ffcab857fb9b52aef6a31a87ab93515f4c77130ba0e0ee78fccf4e40ebec', 1),
+	(429, 818, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 12, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 12, "note_type": "progress", "signed_at": "2026-07-18T19:38:05.773315+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T19:38:05.939593+00:00", "patient_id": 99004, "updated_at": "2026-07-18T19:38:05.939593+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 9, "author_user_id": 1}', 'db-trigger', '1100ffcab857fb9b52aef6a31a87ab93515f4c77130ba0e0ee78fccf4e40ebec', 'c42e34cef941fffa71a05a0e4f74974b569a72213d0ca4f7df868b8f5eb483cb', 1),
+	(430, 820, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 9, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-16T19:38:05.773315+00:00", "taken_by": 1, "vital_id": 9, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99004, "facility_id": 1, "encounter_id": 9, "glucose_mgdl": null}', 'db-trigger', 'c42e34cef941fffa71a05a0e4f74974b569a72213d0ca4f7df868b8f5eb483cb', '340a64803b00b015737a9e0d8ba0216cdc1144ae6eacaf72f2859162cf5073d1', 1),
+	(431, 821, '2026-07-18 22:38:05.773813+03', 'encounter_opened', 'info', 1, 99008, 'mcms_emr', 'encounter', 10, '{"mrn": "MRN-DEMO-004", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', '340a64803b00b015737a9e0d8ba0216cdc1144ae6eacaf72f2859162cf5073d1', 'aa0cb3fba62ef60adcfc01807e0643eeb893de2ef96b198a84cde7a4b1bdd573', 1),
+	(432, 823, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 13, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 13, "note_type": "progress", "signed_at": "2026-07-18T19:38:05.773315+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T19:38:05.948756+00:00", "patient_id": 99005, "updated_at": "2026-07-18T19:38:05.948756+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 10, "author_user_id": 1}', 'db-trigger', 'aa0cb3fba62ef60adcfc01807e0643eeb893de2ef96b198a84cde7a4b1bdd573', '8b894d1319f9cf6bb1b8089c882680c63cb2a2084ddb2daff9e6b367bd3d58c3', 1),
+	(433, 825, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 10, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-15T19:38:05.773315+00:00", "taken_by": 1, "vital_id": 10, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99005, "facility_id": 1, "encounter_id": 10, "glucose_mgdl": null}', 'db-trigger', '8b894d1319f9cf6bb1b8089c882680c63cb2a2084ddb2daff9e6b367bd3d58c3', '7103603987cfb6786a5ef041f4220dc88174ac3c1b0694b3436ee0a4982f0b32', 1),
+	(434, 826, '2026-07-18 22:38:05.773813+03', 'encounter_opened', 'info', 1, 99009, 'mcms_emr', 'encounter', 11, '{"mrn": "MRN-DEMO-005", "class": "ambulatory", "reason": "Demo visit"}', 'mcms', '7103603987cfb6786a5ef041f4220dc88174ac3c1b0694b3436ee0a4982f0b32', 'ad4011e5ecbae1291432539e93bd819c266fbf6cafcb8c672d8542ee820fe950', 1),
+	(435, 828, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'clinical_note', 14, '{"body": "Demonstration clinical note.", "title": "Demo Note", "signed": true, "note_id": 14, "note_type": "progress", "signed_at": "2026-07-18T19:38:05.773315+00:00", "signed_by": 1, "amended_at": null, "created_at": "2026-07-18T19:38:05.959701+00:00", "patient_id": 99006, "updated_at": "2026-07-18T19:38:05.959701+00:00", "facility_id": 1, "coauthor_ids": null, "encounter_id": 11, "author_user_id": 1}', 'db-trigger', 'ad4011e5ecbae1291432539e93bd819c266fbf6cafcb8c672d8542ee820fe950', 'ad77eccc7f76f1e51b0f9dc9a23dfcb30f6f60779fa1eb8d744f4e97dcc12afc', 1),
+	(436, 830, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_emr', 'vitals', 11, '{"bmi": 24.2, "rr_pm": 16, "hr_bpm": 80, "temp_c": 37.0, "dbp_mmhg": 80, "sbp_mmhg": 120, "spo2_pct": 98.0, "taken_at": "2026-07-14T19:38:05.773315+00:00", "taken_by": 1, "vital_id": 11, "height_cm": 170.0, "weight_kg": 70.00, "pain_score": 0, "patient_id": 99006, "facility_id": 1, "encounter_id": 11, "glucose_mgdl": null}', 'db-trigger', 'ad77eccc7f76f1e51b0f9dc9a23dfcb30f6f60779fa1eb8d744f4e97dcc12afc', '7a0a6c2dff3eaffa4ded0a02e2f931b11ef351ba580aa3b43cf4f58cdabefa1c', 1),
+	(437, 831, '2026-07-18 22:38:05.773813+03', 'prescription_issued', 'info', 1, 99005, 'mcms_emr', 'medication_order', 5, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '7a0a6c2dff3eaffa4ded0a02e2f931b11ef351ba580aa3b43cf4f58cdabefa1c', 'a8d5455cefabdc30da5908cda88790ae4818ddca3eddeb9ea9fd9452f3ec8323', 1),
+	(438, 832, '2026-07-18 22:38:05.773813+03', 'prescription_issued', 'info', 1, 99006, 'mcms_emr', 'medication_order', 6, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', 'a8d5455cefabdc30da5908cda88790ae4818ddca3eddeb9ea9fd9452f3ec8323', '59bb0c76db1515a76bed8e1575b61fe0c3d27f8eeccd2798ff4fce1b53cc1f3a', 1),
+	(439, 833, '2026-07-18 22:38:05.773813+03', 'prescription_issued', 'info', 1, 99007, 'mcms_emr', 'medication_order', 7, '{"dose": "500 mg", "route": "po", "drug_name": "Paracetamol", "frequency": "tid"}', 'mcms', '59bb0c76db1515a76bed8e1575b61fe0c3d27f8eeccd2798ff4fce1b53cc1f3a', '0b8bac473b5f17216695d4cff07dc5071aecc6a9b8a0ae0f2c5bfc09ac6e0e25', 1),
+	(440, 835, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_waste', 'waste_collection', 1, '{"weight_kg": 2.500, "created_at": "2026-07-18T19:38:06.036113+00:00", "container_id": 1, "collection_id": 4, "storage_location": "Demo Storage", "collection_datetime": "2026-07-18T19:38:05.773315+00:00", "collected_by_user_id": 1}', 'db-trigger', '0b8bac473b5f17216695d4cff07dc5071aecc6a9b8a0ae0f2c5bfc09ac6e0e25', '979fdbac575dd92c790c2b9720a7f055d3807d36e3e8b225b876173807b8f349', 1),
+	(441, 837, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_waste', 'waste_collection', 1, '{"weight_kg": 2.500, "created_at": "2026-07-18T19:38:06.04011+00:00", "container_id": 1, "collection_id": 5, "storage_location": "Demo Storage", "collection_datetime": "2026-07-17T19:38:05.773315+00:00", "collected_by_user_id": 1}', 'db-trigger', '979fdbac575dd92c790c2b9720a7f055d3807d36e3e8b225b876173807b8f349', 'eb2fd4a3b849ddaa29f789a8535e5492ee92448e57960792dfc38d1a064aed0e', 1),
+	(442, 839, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_hr', 'payroll_item', 2, '{"is_paid": false, "item_id": 2, "paid_at": null, "period_id": 2, "created_at": "2026-07-18T19:38:05.773813+00:00", "net_amount": 5000.00, "base_amount": 5000.00, "employee_id": 2, "facility_id": 1, "bonus_amount": 0.00, "overtime_amount": 0.00, "deduction_amount": 0.00}', 'db-trigger', 'eb2fd4a3b849ddaa29f789a8535e5492ee92448e57960792dfc38d1a064aed0e', 'c5093b093bba2c305c595db70f1570fb8c3728303441449300fa355fa90fd14e', 1),
+	(443, 841, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_telemed', 'visit', 2, '{"mrn": "MRN-DEMO-001", "mode": "video", "plan": "Continue meds", "status": "completed", "ended_at": null, "visit_id": 2, "objective": "Stable", "assessment": "Follow-up", "created_at": "2026-07-18T19:38:05.773813+00:00", "patient_id": 99002, "started_at": "2026-07-18T19:38:05.773813+00:00", "subjective": "Routine tele-consult", "updated_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "encounter_id": 2, "appointment_id": null, "clinician_user_id": 1}', 'db-trigger', 'c5093b093bba2c305c595db70f1570fb8c3728303441449300fa355fa90fd14e', '2cd37cc27fbdbe627b0b9d2a41222acc5894a11cebe83ed10a93d05a27ad85e1', 1),
+	(444, 843, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'eligibility_check', 99002, '{"reason": "Demo eligibility OK", "status": "eligible", "policy_no": "POL-DEMO-001", "checked_at": "2026-07-18T19:38:05.773813+00:00", "patient_id": 99002, "payer_code": "TML", "facility_id": 1, "raw_response": null, "eligibility_id": 2}', 'db-trigger', '2cd37cc27fbdbe627b0b9d2a41222acc5894a11cebe83ed10a93d05a27ad85e1', 'db05c07df03ec28e4a7fc77f62fdf69a2dd517432621ab791b2d0af0e4f03d15', 1),
+	(445, 845, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_billing', 'claim_response', 2, '{"status": "paid", "claim_id": 2, "payer_code": "TML", "remittance": "Demo remittance advice", "facility_id": 1, "received_at": "2026-07-18T19:38:05.773813+00:00", "response_id": 2, "approved_amount": 100.00, "rejected_amount": 0.00}', 'db-trigger', 'db05c07df03ec28e4a7fc77f62fdf69a2dd517432621ab791b2d0af0e4f03d15', '62a292ef9afcd0a3f024405fba6433ec223c7ebccf64a40ee39ac3361f53099b', 1),
+	(446, 847, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_terminology', 'concept', 2, '{"code": "123456", "source": "demo-seed", "display": "Acute myocardial infarction", "synonyms": "AMI; MI", "concept_id": 2, "created_at": "2026-07-18T19:38:05.773813+00:00", "display_ar": "احتشاء عضلة القلب", "code_system": "SNOMED-CT", "facility_id": 1}', 'db-trigger', '62a292ef9afcd0a3f024405fba6433ec223c7ebccf64a40ee39ac3361f53099b', '12c2308f5cd7a99a7e89a7a6ee01537f8863414612f390cff983294a1b3f54cc', 1),
+	(447, 849, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'federated_identity', 2, '{"fed_id": 2, "user_id": 99, "linked_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "last_seen_at": "2026-07-18T19:38:05.773813+00:00", "provider_code": "moh_oidc", "external_subject": "demo-subject-001"}', 'db-trigger', '12c2308f5cd7a99a7e89a7a6ee01537f8863414612f390cff983294a1b3f54cc', '2755da07ca2261bba3d97e2832310176e1122ee1920d75e2f94dd17b30e12af4', 1),
+	(448, 851, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'hl7_message', 2, '{"raw": "MSH|^~\\&|MCMS|DEMO|FAC|DEMO|20240101000000||ADT^A01|MCM-DEMO-001|P|2.5", "actions": {}, "ack_code": "AA", "facility_id": 1, "received_at": "2026-07-18T19:38:05.773813+00:00", "received_by": null, "sending_app": "MCMS", "error_detail": null, "message_type": "ADT^A01", "hl7_message_id": 2, "sending_facility": "DEMO-FAC", "message_control_id": "MCM-DEMO-001"}', 'db-trigger', '2755da07ca2261bba3d97e2832310176e1122ee1920d75e2f94dd17b30e12af4', '64f828dab9eb91d21d71fa42f098720eb502b63ba186648c4ab53128b4d8ed94', 1),
+	(449, 853, '2026-07-18 22:38:05.773813+03', 'create', 'info', NULL, NULL, 'mcms_core', 'backup_log', 2, '{"detail": "Demo backup", "status": "success", "filename": "mcms_demo_backup.dump", "backup_id": 2, "size_bytes": 1048576, "started_at": "2026-07-18T19:38:05.773813+00:00", "facility_id": 1, "finished_at": "2026-07-18T19:38:05.773813+00:00", "triggered_by": "seed_demo_clinical"}', 'db-trigger', '64f828dab9eb91d21d71fa42f098720eb502b63ba186648c4ab53128b4d8ed94', '662125d5485d9ba3dfe12941e0b4608c1d751cf9db5afe83a34bf23c22de6772', 1);
 
 
 ALTER TABLE mcms_core.event_log ENABLE TRIGGER ALL;
@@ -804,6 +858,8 @@ ALTER TABLE mcms_core.audit_trail ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_core.backup_log DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_core.backup_log VALUES
+	(2, '2026-07-18 22:38:05.773813+03', '2026-07-18 22:38:05.773813+03', 'mcms_demo_backup.dump', 1048576, 'success', 'Demo backup', 'seed_demo_clinical', 1);
 
 
 ALTER TABLE mcms_core.backup_log ENABLE TRIGGER ALL;
@@ -851,6 +907,8 @@ ALTER TABLE mcms_core.identity_provider ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_core.federated_identity DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_core.federated_identity OVERRIDING SYSTEM VALUE VALUES
+	(2, 'moh_oidc', 'demo-subject-001', 99, '2026-07-18 22:38:05.773813+03', '2026-07-18 22:38:05.773813+03', 1);
 
 
 ALTER TABLE mcms_core.federated_identity ENABLE TRIGGER ALL;
@@ -861,6 +919,8 @@ ALTER TABLE mcms_core.federated_identity ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_core.hl7_message DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_core.hl7_message VALUES
+	(2, 'MCM-DEMO-001', 'ADT^A01', 'MCMS', 'DEMO-FAC', 'MSH|^~\&|MCMS|DEMO|FAC|DEMO|20240101000000||ADT^A01|MCM-DEMO-001|P|2.5', 'AA', NULL, '{}', 1, NULL, '2026-07-18 22:38:05.773813+03');
 
 
 ALTER TABLE mcms_core.hl7_message ENABLE TRIGGER ALL;
@@ -929,7 +989,11 @@ INSERT INTO mcms_core.notification VALUES
 	(6, NULL, 99005, 'abnormal_result', 'in_app', 'abnormal_result: WBC Count', 'Result for WBC Count flagged normal.', 'pending', 'mcms_lab', 'result', 2, NULL, NULL, '2026-07-18 21:59:17.914572+03', 1),
 	(7, NULL, 99006, 'abnormal_result', 'in_app', 'abnormal_result: WBC Count', 'Result for WBC Count flagged normal.', 'pending', 'mcms_lab', 'result', 3, NULL, NULL, '2026-07-18 21:59:17.914572+03', 1),
 	(8, NULL, 99007, 'abnormal_result', 'in_app', 'abnormal_result: WBC Count', 'Result for WBC Count flagged normal.', 'pending', 'mcms_lab', 'result', 4, NULL, NULL, '2026-07-18 21:59:17.914572+03', 1),
-	(9, NULL, 99003, 'claim_update', 'in_app', 'Insurance claim draft', 'Claim #2 for invoice #2 is now draft.', 'pending', 'mcms_billing', 'insurance_claim', 2, NULL, NULL, '2026-07-18 21:59:17.914572+03', 1);
+	(9, NULL, 99003, 'claim_update', 'in_app', 'Insurance claim draft', 'Claim #2 for invoice #2 is now draft.', 'pending', 'mcms_billing', 'insurance_claim', 2, NULL, NULL, '2026-07-18 21:59:17.914572+03', 1),
+	(10, 1, 99005, 'appointment_reminder', 'in_app', 'Appointment booked', 'Appointment on 2026-07-19 04:38 (booked).', 'pending', 'mcms_clinic', 'appointment', 6, NULL, NULL, '2026-07-18 22:38:05.773813+03', 1),
+	(11, 1, 99006, 'appointment_reminder', 'in_app', 'Appointment booked', 'Appointment on 2026-07-20 04:38 (booked).', 'pending', 'mcms_clinic', 'appointment', 7, NULL, NULL, '2026-07-18 22:38:05.773813+03', 1),
+	(12, 1, 99007, 'appointment_reminder', 'in_app', 'Appointment booked', 'Appointment on 2026-07-21 04:38 (booked).', 'pending', 'mcms_clinic', 'appointment', 8, NULL, NULL, '2026-07-18 22:38:05.773813+03', 1),
+	(13, 1, 99008, 'appointment_reminder', 'in_app', 'Appointment booked', 'Appointment on 2026-07-22 04:38 (booked).', 'pending', 'mcms_clinic', 'appointment', 9, NULL, NULL, '2026-07-18 22:38:05.773813+03', 1);
 
 
 ALTER TABLE mcms_core.notification ENABLE TRIGGER ALL;
@@ -1137,7 +1201,12 @@ INSERT INTO mcms_emr.clinical_note VALUES
 	(6, 6, 99006, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 21:59:17.913956+03', NULL, '2026-07-18 21:59:18.18689+03', '2026-07-18 21:59:18.18689+03', 1, 1),
 	(7, 2, 99002, 'lab_result', 'Lab result: WBC Count', 'Auto-routed from mcms_lab.result #2 | flag=normal | value=Normal', 1, NULL, false, NULL, NULL, '2026-07-18 21:59:17.914572+03', '2026-07-18 21:59:17.914572+03', NULL, 1),
 	(8, 2, 99003, 'lab_result', 'Lab result: WBC Count', 'Auto-routed from mcms_lab.result #3 | flag=normal | value=Normal', 1, NULL, false, NULL, NULL, '2026-07-18 21:59:17.914572+03', '2026-07-18 21:59:17.914572+03', NULL, 1),
-	(9, 2, 99004, 'lab_result', 'Lab result: WBC Count', 'Auto-routed from mcms_lab.result #4 | flag=normal | value=Normal', 1, NULL, false, NULL, NULL, '2026-07-18 21:59:17.914572+03', '2026-07-18 21:59:17.914572+03', NULL, 1);
+	(9, 2, 99004, 'lab_result', 'Lab result: WBC Count', 'Auto-routed from mcms_lab.result #4 | flag=normal | value=Normal', 1, NULL, false, NULL, NULL, '2026-07-18 21:59:17.914572+03', '2026-07-18 21:59:17.914572+03', NULL, 1),
+	(10, 7, 99002, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 22:38:05.773315+03', NULL, '2026-07-18 22:38:05.907766+03', '2026-07-18 22:38:05.907766+03', 1, 1),
+	(11, 8, 99003, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 22:38:05.773315+03', NULL, '2026-07-18 22:38:05.927075+03', '2026-07-18 22:38:05.927075+03', 1, 1),
+	(12, 9, 99004, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 22:38:05.773315+03', NULL, '2026-07-18 22:38:05.939593+03', '2026-07-18 22:38:05.939593+03', 1, 1),
+	(13, 10, 99005, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 22:38:05.773315+03', NULL, '2026-07-18 22:38:05.948756+03', '2026-07-18 22:38:05.948756+03', 1, 1),
+	(14, 11, 99006, 'progress', 'Demo Note', 'Demonstration clinical note.', 1, NULL, true, '2026-07-18 22:38:05.773315+03', NULL, '2026-07-18 22:38:05.959701+03', '2026-07-18 22:38:05.959701+03', 1, 1);
 
 
 ALTER TABLE mcms_emr.clinical_note ENABLE TRIGGER ALL;
@@ -1195,7 +1264,10 @@ ALTER TABLE mcms_emr.medication_order DISABLE TRIGGER ALL;
 INSERT INTO mcms_emr.medication_order VALUES
 	(2, NULL, 99002, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-18 21:59:17.913956+03', '2026-07-18 21:59:18.212629+03', '2026-07-18 21:59:18.212629+03', true, '2026-07-18 21:59:17.913956+03', 1, 1),
 	(3, NULL, 99003, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-17 21:59:17.913956+03', '2026-07-18 21:59:18.217215+03', '2026-07-18 21:59:18.217215+03', true, '2026-07-18 21:59:17.913956+03', 1, 1),
-	(4, NULL, 99004, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-16 21:59:17.913956+03', '2026-07-18 21:59:18.22549+03', '2026-07-18 21:59:18.22549+03', true, '2026-07-18 21:59:17.913956+03', 1, 1);
+	(4, NULL, 99004, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-16 21:59:17.913956+03', '2026-07-18 21:59:18.22549+03', '2026-07-18 21:59:18.22549+03', true, '2026-07-18 21:59:17.913956+03', 1, 1),
+	(5, NULL, 99002, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-18 22:38:05.773315+03', '2026-07-18 22:38:05.975897+03', '2026-07-18 22:38:05.975897+03', true, '2026-07-18 22:38:05.773315+03', 1, 1),
+	(6, NULL, 99003, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-17 22:38:05.773315+03', '2026-07-18 22:38:05.980903+03', '2026-07-18 22:38:05.980903+03', true, '2026-07-18 22:38:05.773315+03', 1, 1),
+	(7, NULL, 99004, 1, 2, 'Paracetamol', '500 mg', 'po', 'tid', 5, false, 0, 'After meals', 'active', '2026-07-16 22:38:05.773315+03', '2026-07-18 22:38:05.986494+03', '2026-07-18 22:38:05.986494+03', true, '2026-07-18 22:38:05.773315+03', 1, 1);
 
 
 ALTER TABLE mcms_emr.medication_order ENABLE TRIGGER ALL;
@@ -1263,7 +1335,12 @@ INSERT INTO mcms_emr.vitals VALUES
 	(3, 3, 99003, '2026-07-17 21:59:17.913956+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
 	(4, 4, 99004, '2026-07-16 21:59:17.913956+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
 	(5, 5, 99005, '2026-07-15 21:59:17.913956+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
-	(6, 6, 99006, '2026-07-14 21:59:17.913956+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1);
+	(6, 6, 99006, '2026-07-14 21:59:17.913956+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
+	(7, 7, 99002, '2026-07-18 22:38:05.773315+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
+	(8, 8, 99003, '2026-07-17 22:38:05.773315+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
+	(9, 9, 99004, '2026-07-16 22:38:05.773315+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
+	(10, 10, 99005, '2026-07-15 22:38:05.773315+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1),
+	(11, 11, 99006, '2026-07-14 22:38:05.773315+03', 1, 37.0, 80, 16, 120, 80, 98.0, 70.00, 170.0, DEFAULT, 0, NULL, 1);
 
 
 ALTER TABLE mcms_emr.vitals ENABLE TRIGGER ALL;
@@ -1499,6 +1576,8 @@ ALTER TABLE mcms_hr.payroll_period ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_hr.payroll_item DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_hr.payroll_item VALUES
+	(2, 2, 2, 5000.00, 0.00, 0.00, 0.00, DEFAULT, false, NULL, '2026-07-18 22:38:05.773813+03', 1);
 
 
 ALTER TABLE mcms_hr.payroll_item ENABLE TRIGGER ALL;
@@ -2005,6 +2084,8 @@ ALTER TABLE mcms_surgical.surgical_team ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_telemed.visit DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_telemed.visit OVERRIDING SYSTEM VALUE VALUES
+	(2, 99002, 'MRN-DEMO-001', 1, 2, NULL, 'video', 'completed', 'Routine tele-consult', 'Stable', 'Follow-up', 'Continue meds', '2026-07-18 22:38:05.773813+03', NULL, 1, '2026-07-18 22:38:05.773813+03', '2026-07-18 22:38:05.773813+03');
 
 
 ALTER TABLE mcms_telemed.visit ENABLE TRIGGER ALL;
@@ -2015,6 +2096,8 @@ ALTER TABLE mcms_telemed.visit ENABLE TRIGGER ALL;
 
 ALTER TABLE mcms_terminology.concept DISABLE TRIGGER ALL;
 
+INSERT INTO mcms_terminology.concept VALUES
+	(2, 'SNOMED-CT', '123456', 'Acute myocardial infarction', 'احتشاء عضلة القلب', 'AMI; MI', 'demo-seed', 1, '2026-07-18 22:38:05.773813+03');
 
 
 ALTER TABLE mcms_terminology.concept ENABLE TRIGGER ALL;
@@ -2080,7 +2163,9 @@ ALTER TABLE mcms_waste.waste_collection DISABLE TRIGGER ALL;
 INSERT INTO mcms_waste.waste_collection OVERRIDING SYSTEM VALUE VALUES
 	(1, 1, 7.500, NULL, '2026-07-18 21:59:08.361814+03', 'Central Waste Store', '2026-07-18 21:59:08.361814+03'),
 	(2, 1, 2.500, 1, '2026-07-18 21:59:17.913956+03', 'Demo Storage', '2026-07-18 21:59:18.361006+03'),
-	(3, 1, 2.500, 1, '2026-07-17 21:59:17.913956+03', 'Demo Storage', '2026-07-18 21:59:18.365017+03');
+	(3, 1, 2.500, 1, '2026-07-17 21:59:17.913956+03', 'Demo Storage', '2026-07-18 21:59:18.365017+03'),
+	(4, 1, 2.500, 1, '2026-07-18 22:38:05.773315+03', 'Demo Storage', '2026-07-18 22:38:06.036113+03'),
+	(5, 1, 2.500, 1, '2026-07-17 22:38:05.773315+03', 'Demo Storage', '2026-07-18 22:38:06.04011+03');
 
 
 ALTER TABLE mcms_waste.waste_collection ENABLE TRIGGER ALL;
@@ -2113,14 +2198,14 @@ ALTER TABLE mcms_waste.waste_cost_allocation ENABLE TRIGGER ALL;
 -- Name: claim_response_response_id_seq; Type: SEQUENCE SET; Schema: mcms_billing; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_billing.claim_response_response_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_billing.claim_response_response_id_seq', 2, true);
 
 
 --
 -- Name: eligibility_check_eligibility_id_seq; Type: SEQUENCE SET; Schema: mcms_billing; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_billing.eligibility_check_eligibility_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_billing.eligibility_check_eligibility_id_seq', 2, true);
 
 
 --
@@ -2169,7 +2254,7 @@ SELECT pg_catalog.setval('mcms_billing.service_price_service_id_seq', 16, true);
 -- Name: appointment_appointment_id_seq; Type: SEQUENCE SET; Schema: mcms_clinic; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_clinic.appointment_appointment_id_seq', 5, true);
+SELECT pg_catalog.setval('mcms_clinic.appointment_appointment_id_seq', 9, true);
 
 
 --
@@ -2225,7 +2310,7 @@ SELECT pg_catalog.setval('mcms_core.audit_trail_audit_id_seq', 2, true);
 -- Name: backup_log_backup_id_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.backup_log_backup_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_core.backup_log_backup_id_seq', 2, true);
 
 
 --
@@ -2246,14 +2331,14 @@ SELECT pg_catalog.setval('mcms_core.contact_contact_id_seq', 2, true);
 -- Name: event_log_event_id_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.event_log_event_id_seq', 408, true);
+SELECT pg_catalog.setval('mcms_core.event_log_event_id_seq', 449, true);
 
 
 --
 -- Name: event_log_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.event_log_seq', 783, true);
+SELECT pg_catalog.setval('mcms_core.event_log_seq', 853, true);
 
 
 --
@@ -2267,14 +2352,14 @@ SELECT pg_catalog.setval('mcms_core.facility_facility_id_seq', 4, true);
 -- Name: federated_identity_fed_id_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.federated_identity_fed_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_core.federated_identity_fed_id_seq', 2, true);
 
 
 --
 -- Name: hl7_message_hl7_message_id_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.hl7_message_hl7_message_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_core.hl7_message_hl7_message_id_seq', 2, true);
 
 
 --
@@ -2288,7 +2373,7 @@ SELECT pg_catalog.setval('mcms_core.lookup_lookup_id_seq', 40, true);
 -- Name: notification_notification_id_seq; Type: SEQUENCE SET; Schema: mcms_core; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_core.notification_notification_id_seq', 9, true);
+SELECT pg_catalog.setval('mcms_core.notification_notification_id_seq', 13, true);
 
 
 --
@@ -2365,7 +2450,7 @@ SELECT pg_catalog.setval('mcms_emr.allergy_allergy_id_seq', 6, true);
 -- Name: clinical_note_note_id_seq; Type: SEQUENCE SET; Schema: mcms_emr; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_emr.clinical_note_note_id_seq', 9, true);
+SELECT pg_catalog.setval('mcms_emr.clinical_note_note_id_seq', 14, true);
 
 
 --
@@ -2379,7 +2464,7 @@ SELECT pg_catalog.setval('mcms_emr.diagnosis_diagnosis_id_seq', 2, true);
 -- Name: encounter_encounter_id_seq; Type: SEQUENCE SET; Schema: mcms_emr; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_emr.encounter_encounter_id_seq', 6, true);
+SELECT pg_catalog.setval('mcms_emr.encounter_encounter_id_seq', 11, true);
 
 
 --
@@ -2400,7 +2485,7 @@ SELECT pg_catalog.setval('mcms_emr.immunization_immunization_id_seq', 6, true);
 -- Name: medication_order_order_id_seq; Type: SEQUENCE SET; Schema: mcms_emr; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_emr.medication_order_order_id_seq', 4, true);
+SELECT pg_catalog.setval('mcms_emr.medication_order_order_id_seq', 7, true);
 
 
 --
@@ -2435,7 +2520,7 @@ SELECT pg_catalog.setval('mcms_emr.social_history_sh_id_seq', 6, true);
 -- Name: vitals_vital_id_seq; Type: SEQUENCE SET; Schema: mcms_emr; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_emr.vitals_vital_id_seq', 6, true);
+SELECT pg_catalog.setval('mcms_emr.vitals_vital_id_seq', 11, true);
 
 
 --
@@ -2540,7 +2625,7 @@ SELECT pg_catalog.setval('mcms_hr.leave_request_leave_id_seq', 2, true);
 -- Name: payroll_item_item_id_seq; Type: SEQUENCE SET; Schema: mcms_hr; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_hr.payroll_item_item_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_hr.payroll_item_item_id_seq', 2, true);
 
 
 --
@@ -2820,14 +2905,14 @@ SELECT pg_catalog.setval('mcms_surgical.surgical_team_surg_team_id_seq', 2, true
 -- Name: visit_visit_id_seq; Type: SEQUENCE SET; Schema: mcms_telemed; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_telemed.visit_visit_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_telemed.visit_visit_id_seq', 2, true);
 
 
 --
 -- Name: concept_concept_id_seq; Type: SEQUENCE SET; Schema: mcms_terminology; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_terminology.concept_concept_id_seq', 1, true);
+SELECT pg_catalog.setval('mcms_terminology.concept_concept_id_seq', 2, true);
 
 
 --
@@ -2869,7 +2954,7 @@ SELECT pg_catalog.setval('mcms_waste.manifest_no_seq', 1, true);
 -- Name: waste_collection_collection_id_seq; Type: SEQUENCE SET; Schema: mcms_waste; Owner: -
 --
 
-SELECT pg_catalog.setval('mcms_waste.waste_collection_collection_id_seq', 3, true);
+SELECT pg_catalog.setval('mcms_waste.waste_collection_collection_id_seq', 5, true);
 
 
 --
@@ -2904,5 +2989,5 @@ SELECT pg_catalog.setval('mcms_waste.waste_stream_stream_id_seq', 5, true);
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lPfARl8gMsTvkLtDtB6cWBqFXIHtKKD46AJsP4PO7YwuOCz4cBwb4S5prtUkbda
+\unrestrict Ac9xh5qkoA1bbRW7ILHVeSfYLUaes23ZeXE4p3UsemjeCBY6IfSqQ1o2BMYaOLd
 
