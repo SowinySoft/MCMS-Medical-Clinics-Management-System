@@ -27,8 +27,13 @@ def _perms_for_username(username: str) -> set[str]:
         WHERE u.username = %s AND u.is_active
     """
     with connection.cursor() as cur:
-        cur.execute(sql, [username])
-        codes = {r[0] for r in cur.fetchall()}
+        try:
+            cur.execute(sql, [username])
+            codes = {r[0] for r in cur.fetchall()}
+        except Exception:
+            # Bridge/RBAC tables may not exist yet (e.g. schema not loaded in
+            # this environment). Don't fail login over it.
+            codes = set()
     # admin.all is a superset wildcard
     return codes
 
