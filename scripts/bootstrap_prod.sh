@@ -34,11 +34,31 @@ PSQL="psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -v ON_ERROR_STOP=0"
 
 echo ">> Bootstrapping MCMS schema into $DB_NAME@$DB_HOST:$DB_PORT"
 
-# 0) Django core + axes tables (idempotent). Domain tables are managed=False
-#    (built from the SQL dump below), so migrate only creates Django's own
-#    tables (auth_user, axes_*, contenttypes, sessions, ...). django-axes is
-#    enabled in prod and REQUIRES its tables or every login 500s.
-python manage.py migrate --noinput >/dev/null 2>&1 || true
+# 0) Django core tables (auth_user, django_session, contenttypes, admin, ...).
+#    Domain tables are managed=False and come from the SQL dump below, so
+#    migrate only builds Django's own tables. Login REQUIRES auth_user, so this
+#    must succeed. We run it visibly (no error suppression) and verify after.
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings}"
+# Post-Deploy may not expose SECRET_KEY; migrate doesn't need a strong one.
+export SECRET_KEY="${SECRET_KEY:-miget-bootstrap-placeholder-key-change-me}"
+
+echo ">> Running Django migrate (core tables)..."
+python manage.py migrate --noinput
+echo ">> migrate exit: $?"
+
+# Verify auth_user exists; if not, the DB/login will fail and we must know.
+python - <<'PY'
+import django, os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+django.setup()
+from django.db import connection
+with connection.cursor() as cur:
+    cur.execute("SELECT to_regclass('public.auth_user')")
+    exists = cur.fetchone()[0]
+print(">> auth_user exists:", bool(exists))
+if not exists:
+    raise SystemExit("FATAL: auth_user was not created by migrate.")
+PY
 
 # 1) base schema dump (pg_dump output; tolerant re-run)
 $PSQL -f "$REPO_ROOT/sql/mcms_schema.sql" >/dev/null 2>&1 || true
