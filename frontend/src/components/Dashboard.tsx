@@ -79,11 +79,11 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
           ))}
         </div>
         <h3 style={styles.h3}>Quick access</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        <div style={styles.quickGrid}>
           {chips.map(([k, v]) => {
             const [s, m] = k.split("/");
             return (
-              <button key={k} style={styles.chip} onClick={() => onOpen(s, m)}>{v.en}</button>
+              <button key={k} style={styles.quickBtn} onClick={() => onOpen(s, m)}>{v.en}</button>
             );
           })}
         </div>
@@ -104,7 +104,21 @@ const styles: any = {
   tiles: { display: "flex", gap: 16 },
   tile: { flex: 1, background: "#161b22", border: "1px solid #30363d", borderRadius: 10, padding: 20, cursor: "pointer", textAlign: "start" },
   tileVal: { fontSize: 32, fontWeight: 800, color: "#58a6ff" },
-  tileLabel: { color: "#9aa4ad", fontSize: 13, marginTop: 4 },
-  chip: { background: "#21262d", color: "#e6edf3", border: "1px solid #30363d", borderRadius: 999, padding: "6px 12px", cursor: "pointer", fontSize: 13 },
+  quickGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+    gap: 8,
+  },
+  quickBtn: {
+    background: "#21262d",
+    color: "#e6edf3",
+    border: "1px solid #30363d",
+    borderRadius: 8,
+    padding: "10px 12px",
+    cursor: "pointer",
+    fontSize: 13,
+    textAlign: "start",
+    minHeight: 40,
+  },
   feed: {},
 };

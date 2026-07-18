@@ -13,7 +13,6 @@ import { PatientPortal } from "./components/PatientPortal";
 import { Monitors } from "./components/Monitors";
 import { VitalRecords } from "./components/VitalRecords";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
-import { toggleLanguage } from "./i18n";
 import { useTranslation } from "react-i18next";
 
 function Shell() {
@@ -34,9 +33,7 @@ function Shell() {
       <Sidebar onNavigate={open} />
       <main style={{ flex: 1, minHeight: "100vh", overflow: "auto" }}>
         <div className="mcms-no-print" style={topbar}>
-          <button style={btn} onClick={toggleLanguage}>{t("language")}: EN / ع</button>
           <ThemeSwitcher />
-          <button style={btnAccent} onClick={() => navigate("/reports")}>{t("Reports")}</button>
           {hasPerm("admin.all") && (
             <button style={btnAccent} onClick={() => navigate("/sysadmin")}>System</button>
           )}
@@ -66,7 +63,6 @@ function Shell() {
 }
 
 const topbar: any = { height: 44, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "0 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elev)" };
-const btn: any = { background: "var(--panel-2)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 };
 const btnAccent: any = { background: "var(--accent)", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 12 };
 
 function Root() {
