@@ -9,6 +9,12 @@ MCMS URL configuration.
 """
 from django.contrib import admin
 from django.urls import include, path, re_path
+from django.views.static import serve as static_serve
+import os
+
+from django.conf import settings as _djsettings
+BASE_DIR = _djsettings.BASE_DIR
+
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -56,6 +62,16 @@ urlpatterns = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     # SPA catch-all: any non-/api GET path serves the built SPA (client-side
-    # routing). Must stay LAST so it doesn't shadow the API routes above.
-    re_path(r"^(?!api/).*$", landing, name="spa"),
+    # routing). Must stay LAST and must NOT match static asset paths, which
+    # are served explicitly below via static.serve (correct MIME under ASGI).
+    re_path(r"^(?!api/|assets/|static/|favicon\.svg|manifest\.webmanifest|sw\.js|icons/).*$", landing, name="spa"),
+]
+
+# --- SPA static assets (served by Django; correct Content-Type under Daphne/ASGI)
+# WhiteNoise was unreliable here, so we serve frontend/dist explicitly.
+_SPA_DIST = os.path.join(BASE_DIR, "frontend", "dist")
+urlpatterns += [
+    re_path(r"^assets/(?P<path>.*)$", static_serve, {"document_root": os.path.join(_SPA_DIST, "assets")}),
+    re_path(r"^(?P<path>favicon\.svg|manifest\.webmanifest|sw\.js|icons/.*)$",
+            static_serve, {"document_root": _SPA_DIST}),
 ]
