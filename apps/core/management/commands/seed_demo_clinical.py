@@ -509,8 +509,12 @@ class Command(BaseCommand):
                     [dept.department_id if dept else 1, "R-DEMO-01",
                      "Demo Room", 2, ["bed", "monitor"], True],
                 )
-                rid = cur.fetchone()[0]
-            room = Room.objects.get(room_id=rid)
+                _row = cur.fetchone()
+                rid = _row[0] if _row else None
+            if rid is None:
+                room = Room.objects.first()
+            else:
+                room = Room.objects.get(room_id=rid)
             spec_created += 1
 
         # clinic patient-queue (FK room + patient)
@@ -606,7 +610,8 @@ class Command(BaseCommand):
             cur.execute("SELECT triage_id FROM mcms_emergency.triage LIMIT 1")
             _trow = cur.fetchone()
             cur.execute("SELECT COUNT(*) FROM mcms_emergency.resuscitation")
-            _rcount = cur.fetchone()[0]
+            _rrow = cur.fetchone()
+            _rcount = _rrow[0] if _rrow else 0
             if _rcount == 0 and _trow:
                 cur.execute(
                     """INSERT INTO mcms_emergency.resuscitation
@@ -616,53 +621,246 @@ class Command(BaseCommand):
                 )
                 spec_created += 1
 
-        # --- final specialty tables needing raw SQL (GENERATED cols / CHECK
-        # constraints / self-FKs the ORM + generic filler can't satisfy) ---
-        with _rc.cursor() as cur:
-            def _c(q):
-                cur.execute("SELECT COUNT(*) FROM " + q); return cur.fetchone()[0]
+        # --- raw-SQL block for tables the ORM + generic filler can't satisfy
+        # (GENERATED cols / CHECK constraints / self-FKs). Every parent lookup
+        # is guarded AND missing parents are seeded explicitly, because on a
+        # FRESH prod DB (proven by the live deploy log) these parent tables are
+        # EMPTY — an unguarded fetchone()[0] previously crashed and rolled back
+        # the entire atomic seed. Each insert is wrapped in its own savepoint. ---
+        def _scalar(sql, params=None):
+            with _rc.cursor() as c:
+                c.execute(sql, params or [])
+                row = c.fetchone()
+            return row[0] if row else None
 
-            # rx.drug_alternative: CHECK(drug_item_id <> alt_drug_item_id)
-            if _c("mcms_rx.drug_alternative") == 0:
-                cur.execute("SELECT drug_item_id FROM mcms_rx.drug_item ORDER BY drug_item_id LIMIT 2")
-                d = [r[0] for r in cur.fetchall()]
-                if len(d) >= 2:
-                    cur.execute("INSERT INTO mcms_rx.drug_alternative (drug_item_id, alt_drug_item_id) VALUES (%s,%s)", [d[0], d[1]])
-                    spec_created += 1
+        def _count(tbl):
+            v = _scalar("SELECT COUNT(*) FROM " + tbl)
+            return v or 0
 
-            # rx.stock_movement: enum move_type + FK drug_item
-            if _c("mcms_rx.stock_movement") == 0:
-                cur.execute("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
-                di = cur.fetchone()[0]
-                mt = (self._enum_values("mcms_rx", "stock_movement", "movement_type") or ["issue"])[0]
-                cur.execute("INSERT INTO mcms_rx.stock_movement (drug_item_id, movement_type, qty_delta, balance_after) VALUES (%s,%s,10,10)", [di, mt])
-                spec_created += 1
+        def _ins(sql, params):
+            with _rc.cursor() as c:
+                c.execute(sql, params)
 
-            # icu.vitals_stream: CHECK(gcs 3..15) + FK admission/patient
-            if _c("mcms_icu.vitals_stream") == 0:
-                cur.execute("SELECT admission_id FROM mcms_icu.admission LIMIT 1")
-                aid = cur.fetchone()[0]
-                cur.execute("INSERT INTO mcms_icu.vitals_stream (admission_id, patient_id) VALUES (%s,%s)", [aid, patients[0].patient_id])
-                spec_created += 1
+        def _try(fn, label):
+            nonlocal spec_created
+            try:
+                with transaction.atomic():  # savepoint isolates failures
+                    if fn():
+                        spec_created += 1
+            except Exception as e:
+                self.stdout.write(f"  raw-seed skip {label}: {type(e).__name__}: {str(e)[:80]}")
 
-            # erp.purchase_order_line: line_total is GENERATED (omit it)
-            if _c("mcms_erp.purchase_order_line") == 0:
-                cur.execute("SELECT po_id FROM mcms_erp.purchase_order LIMIT 1")
-                poid = cur.fetchone()[0]
-                cur.execute("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
-                di = cur.fetchone()[0]
-                cur.execute("INSERT INTO mcms_erp.purchase_order_line (po_id, drug_item_id, item_description, qty, unit_price) VALUES (%s,%s,%s,%s,%s)", [poid, di, "Demo PO line", 5, 10.0])
-                spec_created += 1
+        # Seed empty parents (FRESH prod DB has none of these).
+        def _ensure_admission():
+            if _count("mcms_icu.admission"):
+                return
+            _ins("INSERT INTO mcms_icu.admission (encounter_id, patient_id, mrn) VALUES (%s,%s,'ADM-DEMO-001')",
+                 [first_enc_id, patients[0].patient_id])
+        _try(_ensure_admission, "icu.admission")
 
-            # erp.goods_receipt_line: FK grn + po_line
-            if _c("mcms_erp.goods_receipt_line") == 0:
-                cur.execute("SELECT grn_id FROM mcms_erp.goods_receipt LIMIT 1")
-                grn = cur.fetchone()
-                cur.execute("SELECT line_id FROM mcms_erp.purchase_order_line LIMIT 1")
-                pol = cur.fetchone()
-                if grn and pol:
-                    cur.execute("INSERT INTO mcms_erp.goods_receipt_line (grn_id, po_line_id, qty_received) VALUES (%s,%s,%s)", [grn[0], pol[0], 5])
-                    spec_created += 1
+        def _party_id():
+            return _scalar("SELECT MIN(party_id) FROM mcms_core.party")
+        # erp.supplier: reference data is NOT shipped in the SQL dump, so create
+        # a demo supplier (from an existing party) if the table is empty. PO and
+        # GRN handlers below depend on at least one supplier existing.
+        def _ensure_supplier():
+            if _count("mcms_erp.supplier"):
+                return
+            pid = _scalar("SELECT MIN(party_id) FROM mcms_core.party")
+            if pid is None:
+                return
+            _ins("INSERT INTO mcms_erp.supplier (party_id, supplier_code, facility_id) VALUES (%s,'SUP-DEMO-001',1)",
+                 [pid])
+        _try(_ensure_supplier, "erp.supplier")
+
+        # erp.purchase_order: supplier_id -> supplier(supplier_id) (NOT party)
+        def _ensure_po():
+            if _count("mcms_erp.purchase_order"):
+                return
+            sid = _scalar("SELECT supplier_id FROM mcms_erp.supplier LIMIT 1")
+            if sid is None:
+                return
+            st = (self._enum_values("mcms_erp", "purchase_order", "status") or ["draft"])[0]
+            _ins("INSERT INTO mcms_erp.purchase_order (po_no, supplier_id, requested_by, facility_id, status, ordered_at) VALUES ('PO-DEMO-001',%s,%s,1,%s,now())",
+                 [sid, clinician_id, st])
+        _try(_ensure_po, "erp.purchase_order")
+
+        # erp.goods_receipt: supplier_id -> supplier(supplier_id) (NOT party)
+        def _ensure_grn():
+            if _count("mcms_erp.goods_receipt"):
+                return
+            sid = _scalar("SELECT supplier_id FROM mcms_erp.supplier LIMIT 1")
+            if sid is None:
+                return
+            st = (self._enum_values("mcms_erp", "goods_receipt", "status") or ["received"])[0]
+            _ins("INSERT INTO mcms_erp.goods_receipt (grn_no, supplier_id, received_by, facility_id, status) VALUES ('GRN-DEMO-001',%s,%s,1,%s)",
+                 [sid, clinician_id, st])
+        _try(_ensure_grn, "erp.goods_receipt")
+
+        # rx.drug_lot: depends on purchase_order + drug_item + supplier party
+        def _ensure_lot():
+            if _count("mcms_rx.drug_lot"):
+                return
+            poid = _scalar("SELECT po_id FROM mcms_erp.purchase_order LIMIT 1")
+            di = _scalar("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
+            pid = _party_id()
+            if poid is None or di is None or pid is None:
+                return
+            st = (self._enum_values("mcms_rx", "drug_lot", "status") or ["on_hand"])[0]
+            _ins("""INSERT INTO mcms_rx.drug_lot
+                   (drug_item_id, lot_number, received_qty, on_hand_qty, expires_on,
+                    unit_cost, purchase_order_id, supplier_party_id, status, received_at)
+                   VALUES (%s,'LOT-DEMO-001',100,100,now()+'1 year',10.0,%s,%s,%s,now())""",
+                 [di, poid, pid, st])
+        _try(_ensure_lot, "rx.drug_lot")
+
+        # rx.prescription: status enum + facility_id NOT NULL
+        def _ensure_rx():
+            if _count("mcms_rx.prescription"):
+                return
+            di = _scalar("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
+            enc = _scalar("SELECT encounter_id FROM mcms_emr.encounter LIMIT 1")
+            if di is None or enc is None:
+                return
+            st = (self._enum_values("mcms_rx", "prescription", "status") or ["draft"])[0]
+            _ins("""INSERT INTO mcms_rx.prescription
+                   (patient_id, mrn, prescriber_user_id, drug_item_id, facility_id, status)
+                   SELECT p.patient_id, p.mrn, %s, %s, 1, %s
+                   FROM mcms_emr.encounter e JOIN mcms_emr.patient p ON p.patient_id=e.patient_id
+                   WHERE e.encounter_id=%s LIMIT 1""",
+                 [clinician_id, di, st, enc])
+        _try(_ensure_rx, "rx.prescription")
+
+        # rx.dispensation: lot_id FK -> drug_lot (seeded above)
+        def _ensure_disp():
+            if _count("mcms_rx.dispensation"):
+                return
+            lot = _scalar("SELECT lot_id FROM mcms_rx.drug_lot LIMIT 1")
+            enc = _scalar("SELECT encounter_id FROM mcms_emr.encounter LIMIT 1")
+            di = _scalar("SELECT drug_item_id FROM mcms_rx.drug_lot LIMIT 1")
+            mo = _scalar("SELECT order_id FROM mcms_emr.medication_order LIMIT 1")
+            pt = _scalar("SELECT patient_id FROM mcms_emr.patient LIMIT 1")
+            mrn = _scalar("SELECT mrn FROM mcms_emr.patient LIMIT 1")
+            if lot is None or enc is None or di is None or pt is None or mrn is None:
+                return
+            _ins("""INSERT INTO mcms_rx.dispensation
+                   (patient_id, mrn, drug_item_id, quantity, dispensed_by, lot_id, encounter_id, med_order_id)
+                   VALUES (%s,%s,%s,5,%s,%s,%s,%s)""",
+                 [pt, mrn, di, clinician_id, lot, enc, mo])
+        _try(_ensure_disp, "rx.dispensation")
+
+        # hr.payroll_period: CHECK(end_date > start_date) + status
+        def _ensure_pp():
+            if _count("mcms_hr.payroll_period"):
+                return
+            st = (self._enum_values("mcms_hr", "payroll_period", "status") or ["closed"])[0]
+            _ins("INSERT INTO mcms_hr.payroll_period (code, start_date, end_date, status) VALUES ('PP-DEMO-2026-01','2026-01-01','2026-01-31',%s)",
+                 [st])
+        _try(_ensure_pp, "hr.payroll_period")
+
+        # hr.payroll_item: FK period -> payroll_period (seeded above)
+        def _ensure_pi():
+            if _count("mcms_hr.payroll_item"):
+                return
+            pid = _scalar("SELECT period_id FROM mcms_hr.payroll_period LIMIT 1")
+            eid = _scalar("SELECT employee_id FROM mcms_hr.employee LIMIT 1")
+            if pid is None or eid is None:
+                return
+            _ins("INSERT INTO mcms_hr.payroll_item (period_id, employee_id, base_amount) VALUES (%s,%s,5000.00)",
+                 [pid, eid])
+        _try(_ensure_pi, "hr.payrollitem")
+
+        # vital_records.birth_certificate: status enum + many FK (patient/facility/encounter)
+        def _ensure_bc():
+            if _count("mcms_vital_records.birth_certificate"):
+                return
+            nb = _scalar("SELECT patient_id FROM mcms_emr.patient LIMIT 1")
+            mom = nb
+            fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1")
+            enc = _scalar("SELECT encounter_id FROM mcms_emr.encounter LIMIT 1")
+            fpid = _party_id()
+            if nb is None or fac is None or enc is None or fpid is None:
+                return
+            st = (self._enum_values("mcms_vital_records", "birth_certificate", "status") or ["draft"])[0]
+            _ins("""INSERT INTO mcms_vital_records.birth_certificate
+                   (registration_no, newborn_patient_id, mother_patient_id, father_party_id,
+                    facility_id, delivery_encounter_id, birth_datetime, status)
+                   VALUES ('BC-DEMO-001',%s,%s,%s,%s,%s,now(),%s)""",
+                 [nb, mom, fpid, fac, enc, st])
+        _try(_ensure_bc, "vital_records.birth_certificate")
+
+        # vital_records.death_certificate: status enum + FK patient/facility + coroner_case bool
+        def _ensure_dc():
+            if _count("mcms_vital_records.death_certificate"):
+                return
+            pt = _scalar("SELECT patient_id FROM mcms_emr.patient ORDER BY patient_id DESC LIMIT 1")
+            fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1")
+            if pt is None or fac is None:
+                return
+            st = (self._enum_values("mcms_vital_records", "death_certificate", "status") or ["draft"])[0]
+            _ins("""INSERT INTO mcms_vital_records.death_certificate
+                   (registration_no, patient_id, facility_id, death_datetime, coroner_case, status)
+                   VALUES ('DC-DEMO-001',%s,%s,now(),false,%s)""",
+                 [pt, fac, st])
+        _try(_ensure_dc, "vital_records.death_certificate")
+
+
+        def _da():
+            if _count("mcms_rx.drug_alternative"):
+                return False
+            d = _scalar("SELECT array_agg(drug_item_id ORDER BY drug_item_id) FROM (SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 2) t")
+            if not d or len(d) < 2:
+                return False
+            _ins("INSERT INTO mcms_rx.drug_alternative (drug_item_id, alt_drug_item_id) VALUES (%s,%s)", [d[0], d[1]])
+            return True
+        _try(_da, "rx.drug_alternative")
+
+        # rx.stock_movement: enum move_type + FK drug_item
+        def _sm():
+            if _count("mcms_rx.stock_movement"):
+                return False
+            di = _scalar("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
+            if di is None:
+                return False
+            mt = (self._enum_values("mcms_rx", "stock_movement", "movement_type") or ["issue"])[0]
+            _ins("INSERT INTO mcms_rx.stock_movement (drug_item_id, movement_type, qty_delta, balance_after) VALUES (%s,%s,10,10)", [di, mt])
+            return True
+        _try(_sm, "rx.stock_movement")
+
+        # icu.vitals_stream: CHECK(gcs 3..15) + FK admission/patient
+        def _vs():
+            if _count("mcms_icu.vitals_stream"):
+                return False
+            aid = _scalar("SELECT admission_id FROM mcms_icu.admission LIMIT 1")
+            if aid is None:
+                return False
+            _ins("INSERT INTO mcms_icu.vitals_stream (admission_id, patient_id) VALUES (%s,%s)", [aid, patients[0].patient_id])
+            return True
+        _try(_vs, "icu.vitals_stream")
+
+        # erp.purchase_order_line: line_total is GENERATED (omit it)
+        def _pol():
+            if _count("mcms_erp.purchase_order_line"):
+                return False
+            poid = _scalar("SELECT po_id FROM mcms_erp.purchase_order LIMIT 1")
+            di = _scalar("SELECT drug_item_id FROM mcms_rx.drug_item LIMIT 1")
+            if poid is None or di is None:
+                return False
+            _ins("INSERT INTO mcms_erp.purchase_order_line (po_id, drug_item_id, item_description, qty, unit_price) VALUES (%s,%s,%s,%s,%s)", [poid, di, "Demo PO line", 5, 10.0])
+            return True
+        _try(_pol, "erp.purchase_order_line")
+
+        # erp.goods_receipt_line: FK grn + po_line
+        def _grl():
+            if _count("mcms_erp.goods_receipt_line"):
+                return False
+            grn = _scalar("SELECT grn_id FROM mcms_erp.goods_receipt LIMIT 1")
+            pol = _scalar("SELECT line_id FROM mcms_erp.purchase_order_line LIMIT 1")
+            if grn is None or pol is None:
+                return False
+            _ins("INSERT INTO mcms_erp.goods_receipt_line (grn_id, po_line_id, qty_received) VALUES (%s,%s,%s)", [grn, pol, 5])
+            return True
+        _try(_grl, "erp.goods_receipt_line")
 
         self.stdout.write(f"specialty coverage: +{spec_created}")
 
@@ -694,7 +892,11 @@ class Command(BaseCommand):
             "emergency.triage",
             "emergency.resuscitation",
             "rx.drugalternative", "rx.stockmovement",
+            "rx.druglot", "rx.prescription", "rx.dispensation",
             "icu.vitalsstream",
+            "hr.payrollperiod", "hr.payrollitem",
+            "vital_records.birthcertificate", "vital_records.deathcertificate",
+            "erp.purchaseorder", "erp.goodsreceipt",
             "erp.purchaseorderline", "erp.goodsreceiptline",
             "core.audittrail",
             "auth.user", "auth.group", "auth.permission",

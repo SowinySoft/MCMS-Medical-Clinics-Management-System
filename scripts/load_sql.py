@@ -23,10 +23,53 @@ import psycopg
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SQL_DIR = os.path.join(REPO_ROOT, "sql")
 
-# Skip the combined dump (redundant with numbered files) and the
-# environment-specific search_path mover (Django tables are created in
-# `public` by migrate; moving them would break the running app).
-SKIP = {"mcms_schema.sql", "94_move_django_to_public.sql"}
+# Skip the combined dump by default — it is applied FIRST (below) as the
+# authoritative schema source so the deployed DB matches the Django models
+# exactly (the numbered files have drifted from the models over time). The
+# environment-specific search_path mover is still skipped (Django tables live
+# in `public` after migrate; moving them would break the running app).
+SKIP = {"94_move_django_to_public.sql"}
+
+
+def _apply_schema_dump(conn, repo_root):
+    """Apply sql/mcms_schema.sql (faithful pg_dump) as the schema source of
+    truth. This guarantees every Django model column (e.g. appointment.no_show_at,
+    app_user.facility_id) exists on the deployed DB, matching what the test DB
+    (rebuild_test_db.sh from-sql mode) builds. Returns True on FATAL."""
+    path = os.path.join(repo_root, "sql", "mcms_schema.sql")
+    if not os.path.exists(path):
+        return False
+    with open(path, "r", encoding="utf-8") as fh:
+        text = fh.read()
+    # pg_dump 18 emits `\restrict <token>` / `\unrestrict <token>` security
+    # lines (and possibly other backslash metacommands) that PostgreSQL cannot
+    # parse via the raw exec_ path; strip any line beginning with a backslash.
+    text = re.sub(r"^[ \t]*\\.*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r'\bAUTHORIZATION\s+"?postgres"?\b', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bOWNER\s+TO\s+"?postgres"?\b', '', text, flags=re.IGNORECASE)
+    try:
+        conn.rollback()
+    except Exception:
+        pass
+    res = conn.pgconn.exec_(text.encode("utf-8"))
+    cur = res
+    fatal = False
+    while cur is not None:
+        em = cur.error_message.decode("utf-8", "replace")
+        if em.strip():
+            benign = any(s in em for s in (
+                "already exists", "does not exist", "duplicate",
+                "unique constraint", "cannot", "No schema has been",
+                "permission denied",
+            ))
+            if not benign:
+                fatal = True
+                print(f"   !! mcms_schema.sql: {em[:200]}")
+        try:
+            cur = cur.next()
+        except Exception:
+            cur = None
+    return fatal
 
 _DOLLAR = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)?\$")
 
@@ -134,6 +177,12 @@ def main():
 
     print(f">> load_sql: {len(files)} SQL files to apply")
     conn = psycopg.connect(url, autocommit=True)
+
+    # 0) Authoritative schema from the faithful pg_dump (matches Django models).
+    #    Applied first so the numbered seed files below find their tables.
+    dump_fatal = _apply_schema_dump(conn, REPO_ROOT)
+    print(f">> applied mcms_schema.sql{'' if not dump_fatal else ' (FATAL)'}")
+
 
     def _run_file(path):
         name = os.path.basename(path)

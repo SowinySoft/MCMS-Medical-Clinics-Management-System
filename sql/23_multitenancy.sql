@@ -42,63 +42,28 @@ ON CONFLICT (facility_id) DO NOTHING;
 ALTER TABLE mcms_core.app_user
     ADD COLUMN IF NOT EXISTS facility_id BIGINT REFERENCES mcms_core.facility(facility_id);
 
--- 4) Stamp facility_id on clinical/financial tables (backfilled to facility 1).
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema='mcms_emr' AND table_name='patient' AND column_name='facility_id'
-  ) THEN
-    ALTER TABLE mcms_emr.patient       ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.encounter      ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.diagnosis      ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.vitals         ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.clinical_note  ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.referral       ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emr.medication_order ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_clinic.appointment ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_clinic.patient_queue ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_billing.invoice    ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_billing.invoice_line ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_billing.insurance_claim ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_lab.lab_order      ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_lab.sample         ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_lab.result         ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_icu.admission      ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_icu.bed_stay       ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_icu.bed            ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_icu.vitals_stream  ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_emergency.ed_bed   ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_surgical.intra_op_vitals ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_surgical.post_op_note ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_erp.purchase_order ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    ALTER TABLE mcms_erp.purchase_order_line ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1;
-    -- keep a DEFAULT of the seeded default facility (id 1) so both API and
-    -- direct ORM inserts are scoped automatically; column stays NOT NULL.
-    ALTER TABLE mcms_emr.patient       ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.encounter      ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.diagnosis      ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.vitals         ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.clinical_note  ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.referral       ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emr.medication_order ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_clinic.appointment ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_clinic.patient_queue ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_billing.invoice    ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_billing.invoice_line ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_billing.insurance_claim ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_lab.lab_order      ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_lab.sample         ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_lab.result         ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_icu.admission      ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_icu.bed_stay       ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_icu.bed            ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_icu.vitals_stream  ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_emergency.ed_bed   ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_surgical.intra_op_vitals ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_surgical.post_op_note ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_erp.purchase_order ALTER COLUMN facility_id SET DEFAULT 1;
-    ALTER TABLE mcms_erp.purchase_order_line ALTER COLUMN facility_id SET DEFAULT 1;
-  END IF;
+-- 4) Stamp facility_id on every clinical/financial table (backfilled to
+--    facility 1) so the app's facility-scoped querysets work uniformly and
+--    ORM inserts (which always set facility_id) never fail. Done dynamically
+--    over all mcms_* tables so the list can never drift from the models.
+DO $$ DECLARE
+  t TEXT;
+BEGIN
+  FOR t IN
+    SELECT format('%s.%s', n.nspname, c.relname)
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname LIKE 'mcms_%'
+      AND c.relkind = 'r'
+      AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns col
+        WHERE col.table_schema = n.nspname
+          AND col.table_name   = c.relname
+          AND col.column_name  = 'facility_id'
+      )
+  LOOP
+    EXECUTE format('ALTER TABLE %s ADD COLUMN facility_id BIGINT NOT NULL DEFAULT 1', t);
+  END LOOP;
 END $$;
 
 -- 5) Helpful indexes for the facility scoping clause.
