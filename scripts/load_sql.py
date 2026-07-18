@@ -139,6 +139,14 @@ def main():
         name = os.path.basename(path)
         with open(path, "r", encoding="utf-8") as fh:
             text = fh.read()
+        # pg_dump emits `AUTHORIZATION postgres` / `OWNER TO postgres` on
+        # schemas/tables. On miget the DB role is NOT `postgres`, so those
+        # clauses fail ("must be able to SET ROLE postgres") and abort the
+        # whole file. Strip them so objects are owned by the current role.
+        text = re.sub(r'\bAUTHORIZATION\s+"?postgres"?\b', '', text,
+                      flags=re.IGNORECASE)
+        text = re.sub(r'\bOWNER\s+TO\s+"?postgres"?\b', '', text,
+                      flags=re.IGNORECASE)
         # Raw pgconn.exec_() bypasses psycopg's autocommit, so a failing
         # multi-statement script aborts the PG transaction and poisons later
         # files. Roll back first to clear any aborted state.
