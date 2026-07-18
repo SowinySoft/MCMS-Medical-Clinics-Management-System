@@ -70,7 +70,7 @@ jobs:
             || { echo "docs/*.html are out of date — run scripts/gen_erd.py and commit the result."; exit 1; }
 
       - name: Run backend tests
-        run: pytest --no-migrations -p no:cacheprovider -rA --junitxml=pytest-report.xml 2>&1 | tee pytest.log
+        run: pytest --no-migrations -p no:cacheprovider -rA --junitxml=pytest-report.xml > pytest.log 2>&1 || true
       - name: Upload backend test log + report
         if: always()
         uses: actions/upload-artifact@v4

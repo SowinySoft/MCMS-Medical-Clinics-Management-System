@@ -1,17 +1,9 @@
 -- ============================================================
 -- Phase 5: Reach -- Patient portal role + demo patient identity
 -- Idempotent: safe to re-apply (IF NOT EXISTS / ON CONFLICT).
+-- The 'patient' user_role enum value is added by 21b_phase5_enum.sql
+-- (its own transaction, so it is committed before this file's INSERT).
 -- ============================================================
-
--- 1) patient user_role so a patient can log in with a scoped role
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
-    WHERE t.typname='user_role' AND e.enumlabel='patient'
-  ) THEN
-    ALTER TYPE mcms_core.user_role ADD VALUE IF NOT EXISTS 'patient';
-  END IF;
-END $$;
 
 -- 2) portal permission (distinct from clinical patient.read/write)
 INSERT INTO mcms_core.permission (code, description)

@@ -167,27 +167,17 @@ def main():
         print("ERROR: DATABASE_URL is not set.", file=sys.stderr)
         sys.exit(1)
 
-    files = sorted(
-        f for f in glob.glob(os.path.join(SQL_DIR, "[0-9]*.sql"))
-        if os.path.basename(f) not in SKIP
-    )
-    if not files:
-        print(f"ERROR: no SQL files found in {SQL_DIR}", file=sys.stderr)
-        sys.exit(1)
-
-    print(f">> load_sql: {len(files)} SQL files to apply")
     conn = psycopg.connect(url, autocommit=True)
-
-    # 0) Authoritative schema from the faithful pg_dump (matches Django models).
-    #    Applied first so the numbered seed files below find their tables.
-    dump_fatal = _apply_schema_dump(conn, REPO_ROOT)
-    print(f">> applied mcms_schema.sql{'' if not dump_fatal else ' (FATAL)'}")
-
 
     def _run_file(path):
         name = os.path.basename(path)
         with open(path, "r", encoding="utf-8") as fh:
             text = fh.read()
+        # pg_dump 18 emits `\restrict <token>` / `\unrestrict <token>` (and
+        # other backslash meta-commands) that PostgreSQL's raw exec_ path
+        # cannot parse ("syntax error at or near \"). Strip any line that
+        # begins with a backslash. Applies to the AIO pg_dump files too.
+        text = re.sub(r"^[ \t]*\\.*$", "", text, flags=re.MULTILINE)
         # pg_dump emits `AUTHORIZATION postgres` / `OWNER TO postgres` on
         # schemas/tables. On miget the DB role is NOT `postgres`, so those
         # clauses fail ("must be able to SET ROLE postgres") and abort the
@@ -196,9 +186,13 @@ def main():
                       flags=re.IGNORECASE)
         text = re.sub(r'\bOWNER\s+TO\s+"?postgres"?\b', '', text,
                       flags=re.IGNORECASE)
-        # Raw pgconn.exec_() bypasses psycopg's autocommit, so a failing
-        # multi-statement script aborts the PG transaction and poisons later
-        # files. Roll back first to clear any aborted state.
+        # Raw pgconn.exec_() sends the whole file as one transaction. The
+        # SQL files are designed for psql (which auto-commits per statement),
+        # so a DDL-then-DML pattern in a single file (e.g. 22_phase5.sql's
+        # ALTER TYPE ADD VALUE + INSERT) runs in one transaction. That is
+        # fine when the enum value already exists (mcms_schema.sql seeds it);
+        # the ADD VALUE IF NOT EXISTS is then a no-op and the INSERT commits.
+        # Roll back first to clear any aborted state.
         try:
             conn.rollback()
         except Exception:
@@ -224,7 +218,55 @@ def main():
             cur_res = nxt
         return fatal
 
+    aio_ddl = os.path.join(SQL_DIR, "mcms_aio_schema_dll.sql")
+    aio_seed = os.path.join(SQL_DIR, "mcms_aio_schema_seed.sql")
+
     try:
+        # PREFERRED PATHWAY: two All-In-One files (stable + safe).
+        #   mcms_aio_schema_dll.sql  = complete schema definition (DDL)
+        #   mcms_aio_schema_seed.sql = all reference/base seed data
+        # These are faithful pg_dump output of a DB built cleanly from the
+        # numbered files, so they carry no load-order or same-transaction
+        # DDL/DML fragility (e.g. the enum ADD-VALUE-then-INSERT hazard). The
+        # DDL already defines every enum value, so there is no ALTER TYPE ADD
+        # VALUE at load time. Fall back to the numbered files if AIO is absent.
+        if os.path.exists(aio_ddl) and os.path.exists(aio_seed):
+            print(">> load_sql: using AIO files (mcms_aio_schema_dll.sql + "
+                  "mcms_aio_schema_seed.sql)")
+            d_fatal = _run_file(aio_ddl)
+            print(f">> applied mcms_aio_schema_dll.sql"
+                  f"{' (FATAL)' if d_fatal else ''}")
+            # Seed is a --data-only --disable-triggers dump; run inside
+            # replica session_replication_role so FK/audit triggers do not
+            # fire and circular-FK data loads cleanly.
+            try:
+                conn.execute("SET session_replication_role = replica")
+            except Exception:
+                pass
+            s_fatal = _run_file(aio_seed)
+            print(f">> applied mcms_aio_schema_seed.sql"
+                  f"{' (FATAL)' if s_fatal else ''}")
+            try:
+                conn.execute("SET session_replication_role = origin")
+            except Exception:
+                pass
+            print(">> load_sql complete.")
+            return
+
+        # FALLBACK PATHWAY: authoritative pg_dump + numbered seed files.
+        files = sorted(
+            f for f in glob.glob(os.path.join(SQL_DIR, "[0-9]*.sql"))
+            if os.path.basename(f) not in SKIP
+        )
+        if not files:
+            print(f"ERROR: no SQL files found in {SQL_DIR}", file=sys.stderr)
+            sys.exit(1)
+
+        print(f">> load_sql: {len(files)} SQL files to apply")
+        # 0) Authoritative schema from the faithful pg_dump (matches models).
+        dump_fatal = _apply_schema_dump(conn, REPO_ROOT)
+        print(f">> applied mcms_schema.sql{'' if not dump_fatal else ' (FATAL)'}")
+
         failed = []
         for path in files:
             name = os.path.basename(path)
