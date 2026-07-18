@@ -32,7 +32,10 @@ conn = psycopg.connect(url, autocommit=True)
 with conn.cursor() as c:
     c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [role])
     if not c.fetchone():
-        c.execute(f"CREATE ROLE {role} LOGIN PASSWORD %s", [pw])
+        # DDL cannot use bound params; quote the literal safely.
+        from psycopg import sql as _sql
+        c.execute(_sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}").format(
+            _sql.Identifier(role), _sql.Literal(pw)))
     c.execute("SELECT 1 FROM pg_database WHERE datname=%s", [db])
     if c.fetchone():
         c.execute(f"DROP DATABASE {db}")

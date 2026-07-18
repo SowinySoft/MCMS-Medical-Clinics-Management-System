@@ -3,11 +3,11 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * Frontend e2e smoke test config.
  *
- * The SPA is built to dist/ and served by `vite preview` on :5173. The SPA's
- * apiBase is the absolute http://127.0.0.1:8010/api (see src/config.json), so
- * API calls go straight to the Django server on :8010 — Playwright only owns
- * the preview (static) server. The Django API must already be running (the CI
- * job starts it before `playwright test`).
+ * Django serves BOTH the built SPA (from frontend/dist, at /) and the API
+ * (at /api) on :8010 — this mirrors the single-service miget deploy. The
+ * Django server is started externally before `playwright test` (the CI
+ * `frontend-e2e` job and the local dev flow both do this), so Playwright does
+ * not own a webServer; it just drives the browser against :8010.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -17,7 +17,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:8010",
     headless: true,
     trace: "on-first-retry",
   },
@@ -27,10 +27,4 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "npx vite preview --port 5173 --strictPort",
-    url: "http://localhost:8010",
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
 });
