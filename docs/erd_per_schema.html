@@ -25,6 +25,7 @@ erDiagram
     bigint row_id
     timestamp read_at
     text reason
+    bigint facility_id
   }
   core__address {
     bigint address_id PK
@@ -40,6 +41,7 @@ erDiagram
     float longitude
     bool is_primary
     timestamp created_at
+    bigint facility_id
   }
   core__app_user {
     bigint user_id PK
@@ -67,6 +69,7 @@ erDiagram
     json before
     json after
     bigint event_id
+    bigint facility_id
   }
   core__backup_log {
     bigint backup_id PK
@@ -77,6 +80,7 @@ erDiagram
     text status
     text detail
     text triggered_by
+    bigint facility_id
   }
   core__consent {
     bigint consent_id PK
@@ -87,6 +91,7 @@ erDiagram
     timestamp revoked_at
     bigint granted_by
     text note
+    bigint facility_id
   }
   core__contact {
     bigint contact_id PK
@@ -96,6 +101,7 @@ erDiagram
     bool is_primary
     timestamp verified_at
     timestamp created_at
+    bigint facility_id
   }
   core__event_log {
     bigint event_id PK
@@ -112,6 +118,7 @@ erDiagram
     text channel
     text prev_hash
     text hash
+    bigint facility_id
   }
   core__facility {
     bigint facility_id PK
@@ -130,6 +137,7 @@ erDiagram
     bigint user_id
     timestamp linked_at
     timestamp last_seen_at
+    bigint facility_id
   }
   core__hl7_message {
     bigint hl7_message_id PK
@@ -154,6 +162,7 @@ erDiagram
     bool enabled
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   core__lookup {
     bigint lookup_id PK
@@ -165,6 +174,7 @@ erDiagram
     bool is_active
     text label_en
     text label_ar
+    bigint facility_id
   }
   core__notification {
     bigint notification_id PK
@@ -181,6 +191,7 @@ erDiagram
     timestamp sent_at
     timestamp read_at
     timestamp created_at
+    bigint facility_id
   }
   core__organization {
     bigint organization_id PK
@@ -190,6 +201,7 @@ erDiagram
     bigint parent_org_id
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   core__party {
     bigint party_id PK
@@ -206,11 +218,13 @@ erDiagram
     timestamp created_at
     timestamp updated_at
     text preferred_language
+    bigint facility_id
   }
   core__permission {
     bigint permission_id PK
     text code
     text description
+    bigint facility_id
   }
   core__role {
     bigint role_id PK
@@ -220,20 +234,24 @@ erDiagram
     text description
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   core__role_permission {
     bigint role_id PK
     bigint permission_id PK
+    bigint facility_id
   }
   core__system_flag {
     text flag PK
     text value
     timestamp updated_at
+    bigint facility_id
   }
   core__user_role_map {
     bigint user_id PK
     bigint role_id PK
     bigint department_id
+    bigint facility_id
   }
   core__v_event_feed {
     bigint seq
@@ -286,6 +304,7 @@ erDiagram
     timestamp noted_on
     bigint noted_by
     bool is_active
+    bigint facility_id
   }
   emr__clinical_note {
     bigint note_id PK
@@ -352,6 +371,7 @@ erDiagram
     int age_at_onset
     bool is_deceased
     timestamp recorded_at
+    bigint facility_id
   }
   emr__immunization {
     bigint immunization_id PK
@@ -364,6 +384,7 @@ erDiagram
     text lot_number
     text site
     text reaction
+    bigint facility_id
   }
   emr__medication_order {
     bigint order_id PK
@@ -438,6 +459,7 @@ erDiagram
     bool is_active
     timestamp created_at
     bigint to_facility_id
+    bigint facility_id
   }
   emr__social_history {
     bigint sh_id PK
@@ -451,6 +473,7 @@ erDiagram
     text occupation
     text relationship_status
     timestamp recorded_at
+    bigint facility_id
   }
   emr__v_daily_census {
     bigint department_id
@@ -572,6 +595,7 @@ erDiagram
     timestamp completed_at
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   clinic__patient_queue {
     bigint queue_id PK
@@ -599,6 +623,7 @@ erDiagram
     bool is_active
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   clinic__appointment ||--o{ clinic__room : "room_id"
   clinic__consultation ||--o{ clinic__appointment : "appointment_id"
@@ -616,6 +641,7 @@ erDiagram
     text status
     text note
     timestamp created_at
+    bigint facility_id
   }
   hr__department {
     bigint department_id PK
@@ -629,6 +655,7 @@ erDiagram
     bool is_active
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   hr__employee {
     bigint employee_id PK
@@ -649,6 +676,7 @@ erDiagram
     text tax_number
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   hr__employee_department {
     bigint emp_dept_id PK
@@ -658,6 +686,7 @@ erDiagram
     date start_date
     date end_date
     bool is_primary
+    bigint facility_id
   }
   hr__leave_request {
     bigint leave_id PK
@@ -672,6 +701,7 @@ erDiagram
     timestamp approved_at
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   hr__payroll_item {
     bigint item_id PK
@@ -685,6 +715,7 @@ erDiagram
     bool is_paid
     timestamp paid_at
     timestamp created_at
+    bigint facility_id
   }
   hr__payroll_period {
     bigint period_id PK
@@ -694,6 +725,7 @@ erDiagram
     text status
     timestamp closed_at
     timestamp created_at
+    bigint facility_id
   }
   hr__shift {
     bigint shift_id PK
@@ -703,6 +735,7 @@ erDiagram
     timestamp start_at
     timestamp end_at
     timestamp created_at
+    bigint facility_id
   }
   hr__v_payroll_summary {
     text period
@@ -757,6 +790,7 @@ erDiagram
     bool is_active
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   surgical__post_op_note {
     bigint pon_id PK
@@ -786,6 +820,7 @@ erDiagram
     bigint checklist_by
     timestamp completed_at
     timestamp created_at
+    bigint facility_id
   }
   surgical__procedure_catalog {
     bigint proc_cat_id PK
@@ -795,6 +830,7 @@ erDiagram
     int default_duration_min
     text notes
     timestamp created_at
+    bigint facility_id
   }
   surgical__surgery {
     bigint surgery_id PK
@@ -820,6 +856,7 @@ erDiagram
     text notes
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   surgical__surgical_team {
     bigint surg_team_id PK
@@ -828,6 +865,7 @@ erDiagram
     text role
     timestamp joined_at
     timestamp left_at
+    bigint facility_id
   }
   surgical__v_surgery_board {
     bigint surgery_id
@@ -883,6 +921,7 @@ erDiagram
     text outcome
     text notes
     timestamp created_at
+    bigint facility_id
   }
   emergency__triage {
     bigint triage_id PK
@@ -913,6 +952,7 @@ erDiagram
     timestamp disposition_at
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   emergency__v_ed_board {
     bigint triage_id
@@ -947,6 +987,7 @@ erDiagram
     bigint witnessed_by
     text site
     text notes
+    bigint facility_id
   }
   rx__dispensation {
     bigint dispensation_id PK
@@ -961,6 +1002,7 @@ erDiagram
     bigint dispensed_by
     text instructions
     text notes
+    bigint facility_id
   }
   rx__drug_alternative {
     bigint alternative_id PK
@@ -969,6 +1011,7 @@ erDiagram
     text reason
     bool is_generic_equiv
     timestamp created_at
+    bigint facility_id
   }
   rx__drug_interaction {
     bigint interaction_id PK
@@ -980,6 +1023,7 @@ erDiagram
     text management
     text source_ref
     timestamp created_at
+    bigint facility_id
   }
   rx__drug_item {
     bigint drug_item_id PK
@@ -1001,6 +1045,7 @@ erDiagram
     timestamp created_at
     timestamp updated_at
     text rxnorm_code
+    bigint facility_id
   }
   rx__drug_lot {
     bigint lot_id PK
@@ -1015,6 +1060,7 @@ erDiagram
     bigint purchase_order_id
     decimal unit_cost
     text status
+    bigint facility_id
   }
   rx__prescription {
     bigint prescription_id PK
@@ -1050,6 +1096,7 @@ erDiagram
     text reason
     bigint performed_by
     timestamp performed_at
+    bigint facility_id
   }
   rx__v_low_stock {
     bigint drug_item_id
@@ -1134,18 +1181,21 @@ erDiagram
     int turnaround_minutes
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   lab__test_panel {
     bigint panel_id PK
     text code
     text name
     timestamp created_at
+    bigint facility_id
   }
   lab__test_panel_item {
     bigint ppi_id PK
     bigint panel_id
     bigint test_id
     int sort_order
+    bigint facility_id
   }
   lab__v_tat {
     bigint test_id
@@ -1173,6 +1223,7 @@ erDiagram
     bool contrast_used
     int duration_minutes
     timestamp created_at
+    bigint facility_id
   }
   rad__image_instance {
     bigint image_id PK
@@ -1186,6 +1237,7 @@ erDiagram
     int columns
     int bits_allocated
     timestamp created_at
+    bigint facility_id
   }
   rad__modality_suite {
     bigint suite_id PK
@@ -1196,6 +1248,7 @@ erDiagram
     bool is_active
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   rad__study_request {
     bigint study_id PK
@@ -1224,6 +1277,7 @@ erDiagram
     text cancelled_reason
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   rad__v_study_pipeline {
     bigint study_id
@@ -1294,6 +1348,7 @@ erDiagram
     text interpretation
     timestamp assessed_at
     bigint assessed_by
+    bigint facility_id
   }
   icu__support_session {
     bigint session_id PK
@@ -1303,6 +1358,7 @@ erDiagram
     timestamp stopped_at
     json parameters
     text stopped_reason
+    bigint facility_id
   }
   icu__v_bed_board {
     bigint bed_id
@@ -1369,6 +1425,7 @@ erDiagram
     text notes
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   physio__therapy_catalog {
     bigint therapy_id PK
@@ -1380,6 +1437,7 @@ erDiagram
     text equipment
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   physio__treatment_plan {
     bigint plan_id PK
@@ -1397,6 +1455,7 @@ erDiagram
     text notes
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   physio__v_session_throughput {
     bigint plan_id
@@ -1441,6 +1500,7 @@ erDiagram
     text notes
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   dialysis__station {
     bigint station_id PK
@@ -1451,6 +1511,7 @@ erDiagram
     text status
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   dialysis__session ||--o{ dialysis__station : "station_id"
 </pre></div><div class="sec" id="sec_mcms_nursery" style="display:none"><h2>👶 mcms_nursery — Nursery / Neonatal <span class="cnt">(3 tables)</span></h2><pre class="mermaid">
@@ -1465,6 +1526,7 @@ erDiagram
     text status
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   nursery__growth_entry {
     bigint entry_id PK
@@ -1478,6 +1540,7 @@ erDiagram
     int feed_volume_ml
     bigint nurse_user_id
     text notes
+    bigint facility_id
   }
   nursery__neonate_record {
     bigint neonate_id PK
@@ -1493,6 +1556,7 @@ erDiagram
     text notes
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   nursery__growth_entry ||--o{ nursery__neonate_record : "neonate_id"
   nursery__neonate_record ||--o{ nursery__cot : "cot_id"
@@ -1585,6 +1649,7 @@ erDiagram
     bool mock_mode
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   billing__payment {
     bigint payment_id PK
@@ -1596,6 +1661,7 @@ erDiagram
     bigint received_by
     text txn_ref
     text notes
+    bigint facility_id
   }
   billing__service_price {
     bigint service_id PK
@@ -1611,6 +1677,7 @@ erDiagram
     date effective_to
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   billing__v_invoice_aging {
     bigint invoice_id
@@ -1663,6 +1730,7 @@ erDiagram
     bigint parent_account_id
     bool is_postable
     bool is_active
+    bigint facility_id
   }
   erp__goods_receipt {
     bigint grn_id PK
@@ -1673,6 +1741,7 @@ erDiagram
     timestamp received_at
     text status
     text notes
+    bigint facility_id
   }
   erp__goods_receipt_line {
     bigint line_id PK
@@ -1684,6 +1753,7 @@ erDiagram
     text lot_number
     date expiration_date
     decimal unit_cost
+    bigint facility_id
   }
   erp__inventory_item {
     bigint item_id PK
@@ -1697,6 +1767,7 @@ erDiagram
     bool is_active
     timestamp created_at
     timestamp updated_at
+    bigint facility_id
   }
   erp__inventory_stock {
     bigint stock_id PK
@@ -1706,6 +1777,7 @@ erDiagram
     int qty_reserved
     timestamp last_count_at
     timestamp updated_at
+    bigint facility_id
   }
   erp__purchase_order {
     bigint po_id PK
@@ -1747,6 +1819,7 @@ erDiagram
     bigint performed_by
     timestamp performed_at
     text reason
+    bigint facility_id
   }
   erp__supplier {
     bigint supplier_id PK
@@ -1756,6 +1829,7 @@ erDiagram
     int payment_terms_days
     bool is_active
     timestamp created_at
+    bigint facility_id
   }
   erp__v_department_stock {
     bigint item_id
