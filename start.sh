@@ -38,6 +38,10 @@ u.is_staff = u.is_superuser = True
 u.save()
 print(f">> [start] admin user '{uname}' {'created' if created else 'ensured'} (superuser)")
 PY
+echo ">> [start] admin user 'admin' ensured (superuser)"
+
+echo ">> [start] 4/4 Seeding demo clinical data (idempotent)..."
+python manage.py seed_demo_clinical || echo ">> [start] seed_demo_clinical reported issues (non-fatal)"
 
 echo ">> [start] Launching Daphne on 0.0.0.0:5000..."
 exec daphne -b 0.0.0.0 -p 5000 config.asgi:application

@@ -29,8 +29,8 @@ export default defineConfig({
   ],
   webServer: {
     command: "npx vite preview --port 5173 --strictPort",
-    url: "http://localhost:5173",
-    reuseExistingServer: false,
+    url: "http://localhost:8010",
+    reuseExistingServer: true,
     timeout: 120_000,
   },
 });
