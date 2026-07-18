@@ -72,6 +72,51 @@ jobs:
       - name: Run backend tests
         run: pytest --no-migrations -p no:cacheprovider
 
+  # Bootstrap gate: reproduce the miget deploy environment (non-superuser role,
+  # production entrypoint start.sh) and assert admin login returns 200. This
+  # catches deploy-only bugs (missing psql, AUTHORIZATION postgres, missing
+  # auth_user/app_user) that the superuser-built test DB never surfaces.
+  bootstrap:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BOOT_HOST: 127.0.0.1
+      BOOT_PORT: "5432"
+      BOOT_DB: mcms_boot
+      BOOT_ROLE: appuser
+      BOOT_PW: apppw
+      BOOT_SUPERUSER_URL: "postgres://postgres:postgres@127.0.0.1:5432/postgres"
+      MCMS_ADMIN_PASSWORD: admin123
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Bootstrap-from-scratch deploy simulation (non-superuser + start.sh)
+        run: bash scripts/test_bootstrap.sh
+
   frontend:
     runs-on: ubuntu-latest
     steps:
