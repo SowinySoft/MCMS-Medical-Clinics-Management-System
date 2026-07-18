@@ -27,9 +27,14 @@ def _roles_for_username(username):
         JOIN mcms_core.role r ON r.role_id = ur.role_id
         WHERE u.username = %s AND u.is_active
     """
-    with connection.cursor() as cur:
-        cur.execute(sql, [username])
-        return [r[0] for r in cur.fetchall()]
+    try:
+        with connection.cursor() as cur:
+            cur.execute(sql, [username])
+            return [r[0] for r in cur.fetchall()]
+    except Exception:
+        # Bridge/RBAC rows may not exist yet (e.g. user provisioned in Django
+        # but not yet linked to mcms_core.app_user). Don't fail login over it.
+        return []
 
 
 class MCMSTokenObtainPairSerializer(TokenObtainPairSerializer):

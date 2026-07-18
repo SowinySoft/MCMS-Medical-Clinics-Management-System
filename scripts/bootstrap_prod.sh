@@ -34,6 +34,12 @@ PSQL="psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -v ON_ERROR_STOP=0"
 
 echo ">> Bootstrapping MCMS schema into $DB_NAME@$DB_HOST:$DB_PORT"
 
+# 0) Django core + axes tables (idempotent). Domain tables are managed=False
+#    (built from the SQL dump below), so migrate only creates Django's own
+#    tables (auth_user, axes_*, contenttypes, sessions, ...). django-axes is
+#    enabled in prod and REQUIRES its tables or every login 500s.
+python manage.py migrate --noinput >/dev/null 2>&1 || true
+
 # 1) base schema dump (pg_dump output; tolerant re-run)
 $PSQL -f "$REPO_ROOT/sql/mcms_schema.sql" >/dev/null 2>&1 || true
 
