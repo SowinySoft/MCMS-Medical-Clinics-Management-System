@@ -7,10 +7,10 @@ Authorization uses the mcms_core RBAC matrix, bridged by username. The access
 token carries the effective permission set + roles so the frontend can render
 menus without an extra round-trip (the server still re-checks on every call).
 
-Brute-force protection: the token endpoint is wrapped with django-axes so
-failed logins are rate-limited/locked (see config/settings.py AXES_*).
+Note: django-axes brute-force protection is currently disabled in this deploy
+(see config/settings.py) because the production schema is built from a SQL dump
+without Django migrate, so the axes_* tables don't exist.
 """
-from axes.decorators import axes_dispatch
 from django.db import connection
 from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -55,12 +55,13 @@ class MCMSTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
-@method_decorator(axes_dispatch, name="post")
 class MCMSTokenObtainPairView(TokenObtainPairView):
-    """JWT token endpoint, axes-protected against brute force.
+    """JWT token endpoint.
 
-    django-axes resolves the attempted username via AXES_USERNAME_CALLABLE
-    (configured in settings) which reads the already-parsed JSON body — no
-    raw request.body access, so it composes cleanly with DRF.
+    Brute-force protection (django-axes) is intentionally NOT applied here:
+    this deploy does not run Django migrate in production, so the axes_* tables
+    are absent and axes_dispatch would 500 every login. Re-add the
+    `@method_decorator(axes_dispatch, name="post")` decorator only after a
+    migrate-based deploy creates the axes tables.
     """
     serializer_class = MCMSTokenObtainPairSerializer

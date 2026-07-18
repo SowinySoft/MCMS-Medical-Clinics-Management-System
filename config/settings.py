@@ -47,7 +47,11 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "drf_spectacular",
     "corsheaders",
-    "axes",
+    # NOTE: django-axes removed from INSTALLED_APPS. This deploy builds its
+    # schema from a SQL dump without Django migrate, so the axes_* tables
+    # don't exist; keeping axes installed made its signal handlers query the
+    # missing table and 500 every login. Brute-force lockout is disabled until
+    # a migrate-based deploy is adopted.
 ]
 # domain apps — one per DB schema
 DOMAIN_APPS = [
@@ -89,7 +93,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "axes.middleware.AxesMiddleware",
+    # NOTE: django-axes is intentionally NOT wired into the request path here.
+    # This deploy builds its schema from a SQL dump and does not run Django
+    # migrate in production, so the axes_* tables don't exist; enabling the
+    # middleware/decorator would 500 every login. Brute-force lockout is
+    # disabled until a migrate-based deploy is adopted. See apps/core/auth.py.
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -162,8 +170,11 @@ if _os.environ.get("MCMS_DB_REPLICA_HOST"):
     DATABASE_ROUTERS = ["config.db_routers.ReplicaRouter"]  # type: ignore[assignment]
 
 # ---------------------------------------------------------------- auth
+# NOTE: AxesStandaloneBackend is intentionally removed. This deploy does not run
+# Django migrate in production, so the axes_* tables don't exist; the standalone
+# backend queries them on every authenticate() call and would 500 every login.
+# Brute-force lockout is disabled until a migrate-based deploy is adopted.
 AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesStandaloneBackend",  # brute-force aware; records + resets on success
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -237,11 +248,18 @@ STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
 
 # ---------------------------------------------------------------- Brute-force protection (django-axes)
 # Locks an IP+username after N failed logins within COOLOFF. Tunable via env.
-# Honor AXES_ENABLED (used by CI) first, then MCMS_AXES_ENABLED (legacy),
-# defaulting to enabled. CI's e2e job sets AXES_ENABLED=false so parallel
-# login-heavy Playwright runs are not rate-limited/locked out.
-_AXES_ENV = _os.environ.get("AXES_ENABLED", _os.environ.get("MCMS_AXES_ENABLED", "true")).lower()
+# DISABLED by default: this deploy builds the schema from a SQL dump + does NOT
+# run Django migrate in production, so the axes_* tables usually don't exist and
+# enabling axes would 500 every login. Opt in with AXES_ENABLED=true ONLY after
+# running `manage.py migrate axes` (or set AXES_ENABLED=true in bootstrap).
+# CI's e2e job also sets AXES_ENABLED=false.
+_AXES_ENV = _os.environ.get("AXES_ENABLED", _os.environ.get("MCMS_AXES_ENABLED", "false")).lower()
 AXES_ENABLED = _AXES_ENV in ("1", "true", "yes")
+# Store login attempts in the cache, NOT the database. This deploy builds its
+# schema from a SQL dump and does not run Django migrate in production, so the
+# axes_* tables don't exist — using the DB backend would 500 every login.
+# The cache backend (Django's default locmem/per-instance) needs no tables.
+AXES_USE_CACHE = True
 AXES_FAILURE_LIMIT = int(_os.environ.get("MCMS_AXES_FAILURE_LIMIT", "5"))
 AXES_COOLOFF_TIME = int(_os.environ.get("MCMS_AXES_COOLOFF_TIME", "10"))  # minutes
 AXES_LOCKOUT_TIME = int(_os.environ.get("MCMS_AXES_LOCKOUT_TIME", "30"))   # minutes
