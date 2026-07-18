@@ -72,7 +72,7 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
         {hasPerm("admin.all") && <SystemHealth />}
         <div style={styles.tiles}>
           {tiles.map((x) => (
-            <button key={x.label} style={styles.tile} onClick={() => onOpen(x.target[0], x.target[1])}>
+            <button key={x.label} className="mcms-tile" style={styles.tile} onClick={() => onOpen(x.target[0], x.target[1])}>
               <div style={styles.tileVal}>{x.value}</div>
               <div style={styles.tileLabel}>{x.label}</div>
             </button>
@@ -83,7 +83,7 @@ export function Dashboard({ onOpen }: { onOpen: (schema: string, model: string) 
           {chips.map(([k, v]) => {
             const [s, m] = k.split("/");
             return (
-              <button key={k} style={styles.quickBtn} onClick={() => onOpen(s, m)}>{v.en}</button>
+              <button key={k} className="quickBtn" style={styles.quickBtn} onClick={() => onOpen(s, m)}>{v.en}</button>
             );
           })}
         </div>
@@ -102,8 +102,8 @@ const styles: any = {
   h3: { margin: "24px 0 8px", color: "#e6edf3" },
   roles: { color: "#8b949e", fontSize: 13, marginBottom: 16 },
   tiles: { display: "flex", gap: 16 },
-  tile: { flex: 1, background: "#161b22", border: "1px solid #30363d", borderRadius: 10, padding: 20, cursor: "pointer", textAlign: "start" },
-  tileVal: { fontSize: 32, fontWeight: 800, color: "#58a6ff" },
+  tile: { flex: 1, background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: 20, cursor: "pointer", textAlign: "start", transition: "border-color .15s ease, box-shadow .15s ease, transform .15s ease" },
+  tileVal: { fontSize: 32, fontWeight: 800, color: "var(--accent)" },
   quickGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",

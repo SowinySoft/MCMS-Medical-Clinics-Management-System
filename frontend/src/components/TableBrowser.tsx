@@ -196,17 +196,17 @@ export function TableBrowser() {
 
       {!loading && !error && rows.length > 0 && !editing && (
         <>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, overflow: "hidden", borderRadius: 8 }}>
             <thead>
-              <tr>{cols.map((c) => <th key={c} style={th}>{c}</th>)}<th style={th}></th></tr>
+              <tr style={{ background: "var(--panel-2)" }}>{cols.map((c) => <th key={c} style={th}>{c}</th>)}<th style={th}></th></tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
-                  {cols.map((c) => <td key={c} style={{ padding: 8, color: "var(--text)" }}>{String(r[c]).slice(0, 60)}</td>)}
-                  <td style={{ padding: 8 }}>
-                    <button className="mcms-btn" style={{ background: "transparent", color: "var(--accent)", padding: "2px 8px" }} onClick={() => openEdit(r)}>{t("edit")}</button>
-                    <button className="mcms-btn" style={{ background: "transparent", color: "var(--danger)", padding: "2px 8px", marginInlineStart: 6 }} onClick={() => setConfirmDel(r)}>{t("delete")}</button>
+                <tr key={i} className="mcms-row" style={{ borderBottom: "1px solid var(--border)" }}>
+                  {cols.map((c) => <td key={c} style={{ padding: "10px 8px", color: "var(--text)" }}>{String(r[c]).slice(0, 60)}</td>)}
+                  <td style={{ padding: "10px 8px" }}>
+                    <button className="mcms-btn mcms-rowbtn" style={{ background: "transparent", color: "var(--accent)", padding: "3px 10px", border: "1px solid var(--border)" }} onClick={() => openEdit(r)}>{t("edit")}</button>
+                    <button className="mcms-btn mcms-rowbtn" style={{ background: "transparent", color: "var(--danger)", padding: "3px 10px", marginInlineStart: 6, border: "1px solid var(--border)" }} onClick={() => setConfirmDel(r)}>{t("delete")}</button>
                   </td>
                 </tr>
               ))}
@@ -224,5 +224,5 @@ export function TableBrowser() {
 }
 
 const formGrid: any = { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10, padding: 16, marginBottom: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 };
-const th: any = { textAlign: "start", background: "var(--panel)", color: "var(--text-dim)", padding: 8, borderBottom: "1px solid var(--border)" };
-const overlay: any = { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 500 };
+const th: any = { textAlign: "start", background: "transparent", color: "var(--text-dim)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", fontSize: 11, padding: "10px 8px", borderBottom: "2px solid var(--border)" };
+const overlay: any = { position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 500 };

@@ -29,6 +29,7 @@ export function Sidebar({ onNavigate }: { onNavigate: (schema: string, model: st
           <div key={g.key} style={styles.group}>
             <div
               style={styles.groupHeader}
+              className="mcms-navitem"
               onClick={() => setOpen((s) => ({ ...s, [g.key]: !s[g.key] }))}
             >
               <span style={styles.chevron}>{open[g.key] ? "▾" : "▸"}</span>
@@ -37,7 +38,7 @@ export function Sidebar({ onNavigate }: { onNavigate: (schema: string, model: st
             </div>
             {open[g.key] &&
               g.schemas.map((s) => (
-                <button key={s} style={styles.schemaBtn} onClick={() => onNavigate(s, "")}>
+                <button key={s} className="mcms-navitem schemaBtn" style={styles.schemaBtn} onClick={() => onNavigate(s, "")}>
                   {s.replace("mcms_", "")}
                 </button>
               ))}
@@ -47,21 +48,21 @@ export function Sidebar({ onNavigate }: { onNavigate: (schema: string, model: st
         {/* Tools section — Reporting & Localization, part of the same sidebar */}
         <div style={styles.divider} />
         <div style={styles.groupTitle}>{t("tools")}</div>
-        <button style={styles.toolBtn} onClick={() => navigate("/reports")}>
+        <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={() => navigate("/reports")}>
           📊 {t("Reports")}
         </button>
-        <button style={styles.toolBtn} onClick={toggleLanguage}>
+        <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={toggleLanguage}>
           🌐 {t("language")}: EN / ع
         </button>
         {hasPerm("admin.all") && (
           <>
-            <button style={styles.toolBtn} onClick={() => navigate("/sysadmin")}>⚙️ System</button>
-            <button style={styles.toolBtn} onClick={() => navigate("/monitors")}>📡 Monitors</button>
-            <button style={styles.toolBtn} onClick={() => navigate("/vital")}>📜 Vital Records</button>
+            <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={() => navigate("/sysadmin")}>⚙️ System</button>
+            <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={() => navigate("/monitors")}>📡 Monitors</button>
+            <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={() => navigate("/vital")}>📜 Vital Records</button>
           </>
         )}
         {hasPerm("patient.portal") && (
-          <button style={styles.toolBtn} onClick={() => navigate("/portal")}>🧑 {t("patientPortal")}</button>
+          <button className="mcms-navitem toolBtn" style={styles.toolBtn} onClick={() => navigate("/portal")}>🧑 {t("patientPortal")}</button>
         )}
       </nav>
 
@@ -95,12 +96,13 @@ const styles: any = {
     display: "flex",
     gap: 6,
     alignItems: "center",
-    padding: "6px 8px",
+    padding: "7px 8px",
     background: "var(--panel)",
     borderRadius: 6,
     fontWeight: 600,
     cursor: "pointer",
     userSelect: "none",
+    borderInlineStart: "3px solid transparent",
   },
   chevron: { width: 12, fontSize: 10, color: "var(--text-dim)" },
   schemaBtn: {
@@ -109,8 +111,9 @@ const styles: any = {
     textAlign: "start",
     background: "transparent",
     border: "none",
+    borderInlineStart: "3px solid transparent",
     color: "var(--text-dim)",
-    padding: "4px 8px 4px 28px",
+    padding: "5px 8px 5px 28px",
     cursor: "pointer",
     fontSize: 13,
   },
@@ -121,6 +124,7 @@ const styles: any = {
     textAlign: "start",
     background: "var(--panel-2)",
     border: "1px solid var(--border)",
+    borderInlineStart: "3px solid transparent",
     color: "var(--text)",
     borderRadius: 6,
     padding: "8px 10px",
