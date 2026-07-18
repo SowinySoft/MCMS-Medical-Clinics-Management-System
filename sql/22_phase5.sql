@@ -38,8 +38,8 @@ DO $$ BEGIN
     INSERT INTO mcms_core.party (party_id, party_type, display_name, is_active, preferred_language, gender)
     VALUES (99003, 'person', 'Demo Portal Patient', true, 'en', 'female')
     ON CONFLICT (party_id) DO NOTHING;
-    INSERT INTO mcms_emr.patient (patient_id, party_id, mrn, is_active)
-    VALUES (99001, 99003, 'MRN-DEMO-PORTAL', true)
+    INSERT INTO mcms_emr.patient (patient_id, party_id, mrn)
+    VALUES (99001, 99003, 'MRN-DEMO-PORTAL')
     ON CONFLICT (patient_id) DO NOTHING;
 
     INSERT INTO mcms_core.app_user (user_id, party_id, username, password_hash, role, is_active)
