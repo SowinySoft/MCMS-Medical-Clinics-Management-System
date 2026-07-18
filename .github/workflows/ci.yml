@@ -70,7 +70,16 @@ jobs:
             || { echo "docs/*.html are out of date — run scripts/gen_erd.py and commit the result."; exit 1; }
 
       - name: Run backend tests
-        run: pytest --no-migrations -p no:cacheprovider
+        run: pytest --no-migrations -p no:cacheprovider -rA --junitxml=pytest-report.xml 2>&1 | tee pytest.log
+      - name: Upload backend test log + report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-pytest-log
+          path: |
+            pytest.log
+            pytest-report.xml
+          retention-days: 7
 
   # Bootstrap gate: reproduce the miget deploy environment (non-superuser role,
   # production entrypoint start.sh) and assert admin login returns 200. This

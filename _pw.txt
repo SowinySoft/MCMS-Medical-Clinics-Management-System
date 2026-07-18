@@ -1,0 +1,220 @@
+
+Running 16 tests using 2 workers
+
+  ok  2 [chromium] › e2e\auth.spec.ts:35:1 › login form renders with prefilled admin credentials (1.3s)
+  x   1 [chromium] › e2e\crud.spec.ts:34:1 › can create, edit and delete a record in the table browser (2.4s)
+  x   4 [chromium] › e2e\navigation.spec.ts:34:1 › theme switcher changes the applied palette (data-theme) (1.8s)
+  x   5 [chromium] › e2e\navigation.spec.ts:46:1 › language toggle switches to RTL (document.dir) (1.6s)
+  x   6 [chromium] › e2e\navigation.spec.ts:56:1 › sidebar lists schema groups and a schema button navigates to the browser (1.6s)
+  x   7 [chromium] › e2e\navigation.spec.ts:71:1 › clicking a model card opens the table browser and loads rows (1.7s)
+  x   3 [chromium] › e2e\auth.spec.ts:44:1 › valid login stores JWT and routes to dashboard (14.9s)
+  x   8 [chromium] › e2e\navigation.spec.ts:85:1 › RBAC: admin sees System/Monitors/Vital Records; accountant does not (1.8s)
+  ok  9 [chromium] › e2e\auth.spec.ts:53:1 › invalid credentials show an error and stay on /login (1.1s)
+  x  11 [chromium] › e2e\auth.spec.ts:63:1 › logout clears the session and returns to /login (1.8s)
+  x  10 [chromium] › e2e\navigation.spec.ts:116:1 › medical waste schema group is navigable and reaches the backend (2.0s)
+  x  13 [chromium] › e2e\workflow.spec.ts:74:3 › medical workflow — full page data sweep › admin: every model page renders data or empty (never error) (1.7s)
+  x  14 [chromium] › e2e\workflow.spec.ts:159:3 › medical workflow — full page data sweep › admin: top-level workflow pages render without error (1.3s)
+  x  15 [chromium] › e2e\workflow.spec.ts:180:3 › medical workflow — full page data sweep › accountant (acc1): RBAC-gated pages render, admin-only hidden (1.3s)
+  x  12 [chromium] › e2e\smoke.spec.ts:20:1 › login renders and submits (15.3s)
+  x  16 [chromium] › e2e\smoke.spec.ts:31:1 › authenticated user can reach Reports and a schema browser (1.6s)
+
+
+  1) [chromium] › e2e\auth.spec.ts:44:1 › valid login stores JWT and routes to dashboard ───────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+
+      46 |   await expect
+      47 |     .poll(async () => page.evaluate(() => !!localStorage.getItem("access")), { timeout: 15_000 })
+    > 48 |     .toBeTruthy();
+         |      ^
+      49 |   await expect(page).toHaveURL(/\/(dashboard)?$/);
+      50 |   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+      51 | });
+        at D:\MCMS\frontend\e2e\auth.spec.ts:48:6
+
+    Error Context: test-results\auth-valid-login-stores-JWT-and-routes-to-dashboard-chromium\error-context.md
+
+  2) [chromium] › e2e\auth.spec.ts:63:1 › logout clears the session and returns to /login ──────────
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at apiLogin (D:\MCMS\frontend\e2e\auth.spec.ts:13:15)
+        at D:\MCMS\frontend\e2e\auth.spec.ts:64:9
+
+    Error Context: test-results\auth-logout-clears-the-session-and-returns-to-login-chromium\error-context.md
+
+  3) [chromium] › e2e\crud.spec.ts:34:1 › can create, edit and delete a record in the table browser 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at loginAdmin (D:\MCMS\frontend\e2e\crud.spec.ts:16:14)
+        at D:\MCMS\frontend\e2e\crud.spec.ts:35:3
+
+    Error Context: test-results\crud-can-create-edit-and-d-1034b-record-in-the-table-browser-chromium\error-context.md
+
+  4) [chromium] › e2e\navigation.spec.ts:34:1 › theme switcher changes the applied palette (data-theme) 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:35:3
+
+    Error Context: test-results\navigation-theme-switcher--37aef-applied-palette-data-theme--chromium\error-context.md
+
+  5) [chromium] › e2e\navigation.spec.ts:46:1 › language toggle switches to RTL (document.dir) ─────
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:47:3
+
+    Error Context: test-results\navigation-language-toggle-switches-to-RTL-document-dir--chromium\error-context.md
+
+  6) [chromium] › e2e\navigation.spec.ts:56:1 › sidebar lists schema groups and a schema button navigates to the browser 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:57:3
+
+    Error Context: test-results\navigation-sidebar-lists-s-98032-on-navigates-to-the-browser-chromium\error-context.md
+
+  7) [chromium] › e2e\navigation.spec.ts:71:1 › clicking a model card opens the table browser and loads rows 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:72:3
+
+    Error Context: test-results\navigation-clicking-a-mode-34c7e-able-browser-and-loads-rows-chromium\error-context.md
+
+  8) [chromium] › e2e\navigation.spec.ts:85:1 › RBAC: admin sees System/Monitors/Vital Records; accountant does not 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:87:3
+
+    Error Context: test-results\navigation-RBAC-admin-sees-22a0f-Records-accountant-does-not-chromium\error-context.md
+
+  9) [chromium] › e2e\navigation.spec.ts:116:1 › medical waste schema group is navigable and reaches the backend 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\navigation.spec.ts:15:14)
+        at D:\MCMS\frontend\e2e\navigation.spec.ts:117:3
+
+    Error Context: test-results\navigation-medical-waste-s-7a79c-ble-and-reaches-the-backend-chromium\error-context.md
+
+  10) [chromium] › e2e\smoke.spec.ts:20:1 › login renders and submits ──────────────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+
+      25 |   await expect
+      26 |     .poll(async () => page.evaluate(() => !!localStorage.getItem("access")), { timeout: 15_000 })
+    > 27 |     .toBeTruthy();
+         |      ^
+      28 |   await expect(page).toHaveURL(/\/(dashboard)?$/);
+      29 | });
+      30 |
+        at D:\MCMS\frontend\e2e\smoke.spec.ts:27:6
+
+    Error Context: test-results\smoke-login-renders-and-submits-chromium\error-context.md
+
+  11) [chromium] › e2e\smoke.spec.ts:31:1 › authenticated user can reach Reports and a schema browser 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:12:22)
+        at async <anonymous>:329:30
+        at D:\MCMS\frontend\e2e\smoke.spec.ts:34:28
+
+    Error Context: test-results\smoke-authenticated-user-c-0dd45-eports-and-a-schema-browser-chromium\error-context.md
+
+  12) [chromium] › e2e\workflow.spec.ts:74:3 › medical workflow — full page data sweep › admin: every model page renders data or empty (never error) 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\workflow.spec.ts:38:14)
+        at D:\MCMS\frontend\e2e\workflow.spec.ts:75:5
+
+    Error Context: test-results\workflow-medical-workflow--23303--data-or-empty-never-error--chromium\error-context.md
+
+  13) [chromium] › e2e\workflow.spec.ts:159:3 › medical workflow — full page data sweep › admin: top-level workflow pages render without error 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\workflow.spec.ts:38:14)
+        at D:\MCMS\frontend\e2e\workflow.spec.ts:160:5
+
+    Error Context: test-results\workflow-medical-workflow--f2cf0--pages-render-without-error-chromium\error-context.md
+
+  14) [chromium] › e2e\workflow.spec.ts:180:3 › medical workflow — full page data sweep › accountant (acc1): RBAC-gated pages render, admin-only hidden 
+
+    Error: page.evaluate: Error: login failed: 401
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at eval (eval at evaluate (:303:30), <anonymous>:16:22)
+        at async <anonymous>:329:30
+        at login (D:\MCMS\frontend\e2e\workflow.spec.ts:38:14)
+        at D:\MCMS\frontend\e2e\workflow.spec.ts:181:5
+
+    Error Context: test-results\workflow-medical-workflow--bee81-es-render-admin-only-hidden-chromium\error-context.md
+
+  14 failed
+    [chromium] › e2e\auth.spec.ts:44:1 › valid login stores JWT and routes to dashboard ────────────
+    [chromium] › e2e\auth.spec.ts:63:1 › logout clears the session and returns to /login ───────────
+    [chromium] › e2e\crud.spec.ts:34:1 › can create, edit and delete a record in the table browser ─
+    [chromium] › e2e\navigation.spec.ts:34:1 › theme switcher changes the applied palette (data-theme) 
+    [chromium] › e2e\navigation.spec.ts:46:1 › language toggle switches to RTL (document.dir) ──────
+    [chromium] › e2e\navigation.spec.ts:56:1 › sidebar lists schema groups and a schema button navigates to the browser 
+    [chromium] › e2e\navigation.spec.ts:71:1 › clicking a model card opens the table browser and loads rows 
+    [chromium] › e2e\navigation.spec.ts:85:1 › RBAC: admin sees System/Monitors/Vital Records; accountant does not 
+    [chromium] › e2e\navigation.spec.ts:116:1 › medical waste schema group is navigable and reaches the backend 
+    [chromium] › e2e\smoke.spec.ts:20:1 › login renders and submits ────────────────────────────────
+    [chromium] › e2e\smoke.spec.ts:31:1 › authenticated user can reach Reports and a schema browser 
+    [chromium] › e2e\workflow.spec.ts:74:3 › medical workflow — full page data sweep › admin: every model page renders data or empty (never error) 
+    [chromium] › e2e\workflow.spec.ts:159:3 › medical workflow — full page data sweep › admin: top-level workflow pages render without error 
+    [chromium] › e2e\workflow.spec.ts:180:3 › medical workflow — full page data sweep › accountant (acc1): RBAC-gated pages render, admin-only hidden 
+  2 passed (41.6s)

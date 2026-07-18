@@ -1,0 +1,157 @@
+>> TEST_DB=mcms  MODE=from-sql
+>> Building from committed schema dump + seed (deterministic)
+   applying 95_generic_audit_triggers.sql
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_billing_eligibility_check_audit" for relation "mcms_billing.eligibility_check" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_billing_payer_audit" for relation "mcms_billing.payer" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_billing_claim_response_audit" for relation "mcms_billing.claim_response" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_backup_log_audit" for relation "mcms_core.backup_log" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_access_log_audit" for relation "mcms_core.access_log" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_consent_audit" for relation "mcms_core.consent" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_hl7_message_audit" for relation "mcms_core.hl7_message" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_identity_provider_audit" for relation "mcms_core.identity_provider" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_system_flag_audit" for relation "mcms_core.system_flag" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_facility_audit" for relation "mcms_core.facility" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_organization_audit" for relation "mcms_core.organization" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_emr_referral_audit" for relation "mcms_emr.referral" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_emr_referral_linkage_rule_audit" for relation "mcms_emr.referral_linkage_rule" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_rx_prescription_audit" for relation "mcms_rx.prescription" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_vital_records_birth_certificate_audit" for relation "mcms_vital_records.birth_certificate" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_telemed_visit_audit" for relation "mcms_telemed.visit" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_terminology_concept_audit" for relation "mcms_terminology.concept" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_vital_records_death_certificate_audit" for relation "mcms_vital_records.death_certificate" does not exist, skipping
+psql:D:/MCMS/sql/95_generic_audit_triggers.sql:114: NOTICE:  trigger "trg_mcms_core_federated_identity_audit" for relation "mcms_core.federated_identity" does not exist, skipping
+   applying 90_seed.sql
+   applying 91_merge_seed.sql
+   applying 97_test_users.sql
+   applying 98_trust.sql
+psql:D:/MCMS/sql/98_trust.sql:11: NOTICE:  column "prev_hash" of relation "event_log" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:12: NOTICE:  column "hash" of relation "event_log" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:14: NOTICE:  drop cascades to trigger trg_event_log_insert on table mcms_core.event_log
+psql:D:/MCMS/sql/98_trust.sql:126: NOTICE:  relation "consent" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:127: NOTICE:  relation "ix_consent_party" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:139: NOTICE:  relation "access_log" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:140: NOTICE:  relation "ix_access_log_party" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:141: NOTICE:  relation "ix_access_log_table" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:147: NOTICE:  column "signed" of relation "diagnosis" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:147: NOTICE:  column "signed_at" of relation "diagnosis" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:147: NOTICE:  column "signed_by" of relation "diagnosis" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:152: NOTICE:  column "signed" of relation "medication_order" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:152: NOTICE:  column "signed_at" of relation "medication_order" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:152: NOTICE:  column "signed_by" of relation "medication_order" already exists, skipping
+psql:D:/MCMS/sql/98_trust.sql:155: NOTICE:  column "signed_by" of relation "clinical_note" already exists, skipping
+   applying 99_cds_seed.sql
+   applying 21_phase2.sql
+psql:D:/MCMS/sql/21_phase2.sql:39: NOTICE:  relation "referral" already exists, skipping
+psql:D:/MCMS/sql/21_phase2.sql:40: NOTICE:  relation "ix_referral_from" already exists, skipping
+psql:D:/MCMS/sql/21_phase2.sql:41: NOTICE:  relation "ix_referral_to_user" already exists, skipping
+psql:D:/MCMS/sql/21_phase2.sql:42: NOTICE:  relation "ix_referral_status" already exists, skipping
+psql:D:/MCMS/sql/21_phase2.sql:239: NOTICE:  column "no_show_at" of relation "appointment" already exists, skipping
+psql:D:/MCMS/sql/21_phase2.sql:241: NOTICE:  column "reminder_sent_at" of relation "appointment" already exists, skipping
+   applying 22_phase5.sql
+   applying 23_multitenancy.sql
+psql:D:/MCMS/sql/23_multitenancy.sql:20: NOTICE:  relation "organization" already exists, skipping
+psql:D:/MCMS/sql/23_multitenancy.sql:35: NOTICE:  relation "facility" already exists, skipping
+psql:D:/MCMS/sql/23_multitenancy.sql:43: NOTICE:  column "facility_id" of relation "app_user" already exists, skipping
+   applying 24_phase7_hl7.sql
+psql:D:/MCMS/sql/24_phase7_hl7.sql:22: NOTICE:  relation "hl7_message" already exists, skipping
+psql:D:/MCMS/sql/24_phase7_hl7.sql:24: NOTICE:  relation "ix_hl7_message_type" already exists, skipping
+psql:D:/MCMS/sql/24_phase7_hl7.sql:25: NOTICE:  relation "ix_hl7_message_facility" already exists, skipping
+psql:D:/MCMS/sql/24_phase7_hl7.sql:26: NOTICE:  relation "ix_hl7_message_received" already exists, skipping
+   applying 25_phase7_hash_fix.sql
+   applying 26_phase8_terminology.sql
+psql:D:/MCMS/sql/26_phase8_terminology.sql:10: NOTICE:  schema "mcms_terminology" already exists, skipping
+psql:D:/MCMS/sql/26_phase8_terminology.sql:24: NOTICE:  relation "concept" already exists, skipping
+psql:D:/MCMS/sql/26_phase8_terminology.sql:25: NOTICE:  relation "ix_concept_display" already exists, skipping
+   applying 27_phase9_payer.sql
+psql:D:/MCMS/sql/27_phase9_payer.sql:10: NOTICE:  schema "mcms_billing" already exists, skipping
+psql:D:/MCMS/sql/27_phase9_payer.sql:22: NOTICE:  relation "payer" already exists, skipping
+psql:D:/MCMS/sql/27_phase9_payer.sql:36: NOTICE:  relation "eligibility_check" already exists, skipping
+psql:D:/MCMS/sql/27_phase9_payer.sql:37: NOTICE:  relation "ix_elig_patient" already exists, skipping
+psql:D:/MCMS/sql/27_phase9_payer.sql:51: NOTICE:  relation "claim_response" already exists, skipping
+psql:D:/MCMS/sql/27_phase9_payer.sql:52: NOTICE:  relation "ix_claim_resp_claim" already exists, skipping
+   applying 28_phase11_telemed.sql
+psql:D:/MCMS/sql/28_phase11_telemed.sql:9: NOTICE:  schema "mcms_telemed" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:34: NOTICE:  relation "visit" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:35: NOTICE:  relation "ix_telemed_visit_patient" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:36: NOTICE:  relation "ix_telemed_visit_encounter" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:66: NOTICE:  relation "prescription" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:67: NOTICE:  relation "ix_rx_prescription_patient" already exists, skipping
+psql:D:/MCMS/sql/28_phase11_telemed.sql:68: NOTICE:  relation "ix_rx_prescription_drug" already exists, skipping
+   applying 29_phase13_identity.sql
+psql:D:/MCMS/sql/29_phase13_identity.sql:39: NOTICE:  relation "identity_provider" already exists, skipping
+psql:D:/MCMS/sql/29_phase13_identity.sql:50: NOTICE:  relation "federated_identity" already exists, skipping
+psql:D:/MCMS/sql/29_phase13_identity.sql:51: NOTICE:  relation "ix_fed_identity_user" already exists, skipping
+   applying 30_phase14_departments.sql
+   applying 31_phase15_linkage.sql
+psql:D:/MCMS/sql/31_phase15_linkage.sql:21: NOTICE:  relation "referral_linkage_rule" already exists, skipping
+   applying 32_phase16_facility_linkage.sql
+psql:D:/MCMS/sql/32_phase16_facility_linkage.sql:28: NOTICE:  column "to_facility_id" of relation "referral_linkage_rule" already exists, skipping
+   applying 33_fix_event_subject_party.sql
+   applying 34_integrity_cleanup.sql
+psql:D:/MCMS/sql/34_integrity_cleanup.sql:11: NOTICE:  index "patient_mrn_idx" does not exist, skipping
+psql:D:/MCMS/sql/34_integrity_cleanup.sql:12: NOTICE:  index "supplier_party_id_idx" does not exist, skipping
+psql:D:/MCMS/sql/34_integrity_cleanup.sql:13: NOTICE:  index "ix_concept_sys_code" does not exist, skipping
+   applying 35_fix_sequences.sql
+   applying 36_perf_indexes.sql
+psql:D:/MCMS/sql/36_perf_indexes.sql:11: NOTICE:  relation "ix_claim_response_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:12: NOTICE:  relation "ix_eligibility_check_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:13: NOTICE:  relation "ix_insurance_claim_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:14: NOTICE:  relation "ix_invoice_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:15: NOTICE:  relation "ix_invoice_line_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:16: NOTICE:  relation "ix_patient_queue_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:17: NOTICE:  relation "ix_app_user_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:18: NOTICE:  relation "ix_ed_bed_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:19: NOTICE:  relation "ix_clinical_note_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:20: NOTICE:  relation "ix_diagnosis_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:21: NOTICE:  relation "ix_medication_order_drug_item" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:22: NOTICE:  relation "ix_medication_order_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:23: NOTICE:  relation "ix_referral_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:24: NOTICE:  relation "ix_vitals_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:25: NOTICE:  relation "ix_purchase_order_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:26: NOTICE:  relation "ix_purchase_order_line_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:27: NOTICE:  relation "ix_admission_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:28: NOTICE:  relation "ix_admission_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:29: NOTICE:  relation "ix_bed_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:30: NOTICE:  relation "ix_bed_stay_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:31: NOTICE:  relation "ix_vitals_stream_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:32: NOTICE:  relation "ix_lab_order_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:33: NOTICE:  relation "ix_lab_order_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:34: NOTICE:  relation "ix_sample_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:35: NOTICE:  relation "ix_study_request_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:36: NOTICE:  relation "ix_prescription_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:37: NOTICE:  relation "ix_prescription_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:38: NOTICE:  relation "ix_prescription_prescriber" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:39: NOTICE:  relation "ix_intra_op_vitals_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:40: NOTICE:  relation "ix_post_op_note_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:41: NOTICE:  relation "ix_visit_facility" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:42: NOTICE:  relation "ix_visit_mrn" already exists, skipping
+psql:D:/MCMS/sql/36_perf_indexes.sql:43: NOTICE:  relation "ix_concept_facility" already exists, skipping
+   applying 37_patient_deceased.sql
+psql:D:/MCMS/sql/37_patient_deceased.sql:11: NOTICE:  column "is_deceased" of relation "patient" already exists, skipping
+   applying 38_vital_records.sql
+psql:D:/MCMS/sql/38_vital_records.sql:13: NOTICE:  schema "mcms_vital_records" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:17: NOTICE:  enum label "patient_deceased" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:21: NOTICE:  relation "birth_reg_no_seq" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:23: NOTICE:  relation "death_reg_no_seq" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:48: NOTICE:  relation "birth_certificate" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:72: NOTICE:  relation "death_certificate" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:75: NOTICE:  relation "ix_birth_newborn" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:76: NOTICE:  relation "ix_birth_mother" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:77: NOTICE:  relation "ix_birth_facility" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:78: NOTICE:  relation "ix_birth_status" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:79: NOTICE:  relation "ix_death_patient" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:80: NOTICE:  relation "ix_death_facility" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:81: NOTICE:  relation "ix_death_status" already exists, skipping
+psql:D:/MCMS/sql/38_vital_records.sql:82: NOTICE:  relation "ix_death_cause" already exists, skipping
+   applying 40_fix_prescription_event.sql
+   applying 41_fix_event_subject_party_p2.sql
+   applying 42_fix_diag_event_subject.sql
+   applying 43_medical_waste.sql
+   seeding reports demo data (ORM: seed_reports_demo)
+Role 'admin' not found — skipping role map
+Role 'hr_clerk' not found — skipping role map
+Role 'billing_clerk' not found — skipping role map
+No invoice present — skipping insurance_claim seed
+   mcms_* tables: 129
+   auth users (admin,acc1): admin,acc1
+>> OK: mcms is ready for pytest (run: pytest --no-migrations)
