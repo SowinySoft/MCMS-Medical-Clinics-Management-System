@@ -305,7 +305,8 @@ class SystemViewSet(viewsets.ViewSet):
 # Serve the built Vite SPA (frontend/dist/index.html) at /. Client-side routes
 # (e.g. /reports, /schema/waste) fall back to index.html so the SPA router
 # handles them. The API lives under /api/. Static assets under /assets/ are
-# served by WhiteNoise from STATIC_ROOT.
+# served by static.serve (urls.py) — this view must NOT match those, or the
+# CDN would cache index.html as text/html for .js/.css (blank page).
 from django.http import HttpResponse  # noqa: E402
 from django.conf import settings as _settings  # noqa: E402
 import os as _os_mod  # noqa: E402
@@ -315,16 +316,22 @@ _SPA_INDEX = _os_mod.path.join(_settings.BASE_DIR, "frontend", "dist", "index.ht
 
 def landing(request):
     # SPA history fallback: unknown non-API GET paths return index.html.
+    # no-store so a CDN (Cloudflare) never caches this HTML for asset-like
+    # paths (which would re-poison the .js/.css MIME cache -> blank page).
     if not request.path.startswith("/api") and request.method == "GET":
         try:
             with open(_SPA_INDEX, "rb") as fh:
-                return HttpResponse(fh.read(), content_type="text/html; charset=utf-8")
+                resp = HttpResponse(fh.read(), content_type="text/html; charset=utf-8")
+                resp["Cache-Control"] = "no-store"
+                return resp
         except FileNotFoundError:
             pass
-    return HttpResponse(
+    resp = HttpResponse(
         "<!doctype html><title>MCMS</title><h1>MCMS backend is running</h1>"
         "<p>The web UI build (frontend/dist) was not found. Run "
         "<code>npm run build</code> in frontend/.</p>",
         content_type="text/html; charset=utf-8",
         status=200,
     )
+    resp["Cache-Control"] = "no-store"
+    return resp
