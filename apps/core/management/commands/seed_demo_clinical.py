@@ -772,8 +772,6 @@ class Command(BaseCommand):
 
         # vital_records.birth_certificate: status enum + many FK (patient/facility/encounter)
         def _ensure_bc():
-            if _count("mcms_vital_records.birth_certificate"):
-                return
             nb = _scalar("SELECT patient_id FROM mcms_emr.patient LIMIT 1")
             mom = nb
             fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1")
@@ -781,9 +779,18 @@ class Command(BaseCommand):
             fpid = _party_id()
             if nb is None or fac is None or enc is None or fpid is None:
                 return
-            st = (self._enum_values("mcms_vital_records", "birth_certificate", "status") or ["issued"])[0]
-            if st not in ("issued", "amended"):
-                st = "issued"
+            st = "issued"
+            exists = _scalar("SELECT 1 FROM mcms_vital_records.birth_certificate WHERE registration_no='BC-DEMO-001'")
+            if exists:
+                # Upgrade-in-place: correct stale 'draft' rows left by an
+                # older AIO seed so the birth-certificates report
+                # (filters status IN ('issued','amended')) is never empty.
+                _ins(
+                    "UPDATE mcms_vital_records.birth_certificate SET status=%s "
+                    "WHERE registration_no='BC-DEMO-001' AND status<>%s",
+                    ["issued", "issued"],
+                )
+                return
             _ins("""INSERT INTO mcms_vital_records.birth_certificate
                    (registration_no, newborn_patient_id, mother_patient_id, father_party_id,
                     facility_id, delivery_encounter_id, birth_datetime, status)
@@ -793,15 +800,21 @@ class Command(BaseCommand):
 
         # vital_records.death_certificate: status enum + FK patient/facility + coroner_case bool
         def _ensure_dc():
-            if _count("mcms_vital_records.death_certificate"):
-                return
             pt = _scalar("SELECT patient_id FROM mcms_emr.patient ORDER BY patient_id DESC LIMIT 1")
             fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1")
             if pt is None or fac is None:
                 return
-            st = (self._enum_values("mcms_vital_records", "death_certificate", "status") or ["issued"])[0]
-            if st not in ("issued", "amended"):
-                st = "issued"
+            st = "issued"
+            exists = _scalar("SELECT 1 FROM mcms_vital_records.death_certificate WHERE registration_no='DC-DEMO-001'")
+            if exists:
+                # Upgrade-in-place: correct stale 'draft' rows so the
+                # death-certificates report is never empty on a warm DB.
+                _ins(
+                    "UPDATE mcms_vital_records.death_certificate SET status=%s "
+                    "WHERE registration_no='DC-DEMO-001' AND status<>%s",
+                    ["issued", "issued"],
+                )
+                return
             _ins("""INSERT INTO mcms_vital_records.death_certificate
                    (registration_no, patient_id, facility_id, death_datetime, coroner_case, status)
                    VALUES ('DC-DEMO-001',%s,%s,now(),false,%s)""",
