@@ -96,9 +96,35 @@ aside .toolBtn:hover, aside .toolBtn:focus-visible { border-inline-start-color: 
 .quickBtn:hover { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 12%, var(--panel)) !important; color: var(--text) !important; }
 .quickBtn:active { transform: translateY(1px); }
 
-/* Print: only the report surface */
+/* Reports — professional printable format.
+   Always prints in a light "paper" theme regardless of the on-screen
+   dark/light/contrast theme, with a clean report header and
+   page-break-safe cards. Scoped to .reports-page so it never
+   touches the rest of the app. */
+.reports-print-header { display: none; }
 @media print {
-  .mcms-no-print { display: none !important; }
-  body { background: #fff; color: #000; }
-  .mcms-card { border-color: #ccc; break-inside: avoid; }
+  .reports-page { padding: 0 !important; background: #fff !important; color: #000 !important; }
+  .reports-page * { color: #000 !important; background: #fff !important; box-shadow: none !important; }
+  /* Show the print-only header, hide on-screen chrome */
+  .reports-print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px; }
+  /* Force the card grid to a single readable column */
+  .reports-page > div:last-child {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+  /* Each report is its own clean block; never split mid-card */
+  .reports-page .mcms-card {
+    border: 1px solid #bbb !important;
+    border-radius: 0 !important;
+    padding: 12px 14px !important;
+    margin-bottom: 12px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .reports-page .mcms-card > div:first-child { font-size: 14px !important; border-bottom: 1px solid #000 !important; padding-bottom: 4px !important; margin-bottom: 8px !important; }
+  /* Tables render as plain ruled tables */
+  .reports-page table { font-size: 11px !important; }
+  .reports-page th, .reports-page td { border-bottom: 1px solid #ccc !important; padding: 3px 6px !important; }
+  /* Charts: keep but neutralise colours for B/W printing */
+  .reports-page svg { max-width: 100% !important; height: auto !important; }
 }

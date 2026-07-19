@@ -596,8 +596,8 @@ class Command(BaseCommand):
                 cur.execute(
                     """INSERT INTO mcms_emergency.triage
                        (ed_visit_no, patient_id, mrn, encounter_id,
-                        chief_complaint, esi_level)
-                       VALUES (%s,%s,%s,%s,%s,%s)""",
+                        chief_complaint, esi_level, triaged_at, status)
+                       VALUES (%s,%s,%s,%s,%s,%s,now(),'in_treatment')""",
                     ["EV-DEMO-001", patients[0].patient_id, patients[0].mrn,
                      first_enc_id, "Chest pain", 2],
                 )
@@ -781,7 +781,9 @@ class Command(BaseCommand):
             fpid = _party_id()
             if nb is None or fac is None or enc is None or fpid is None:
                 return
-            st = (self._enum_values("mcms_vital_records", "birth_certificate", "status") or ["draft"])[0]
+            st = (self._enum_values("mcms_vital_records", "birth_certificate", "status") or ["issued"])[0]
+            if st not in ("issued", "amended"):
+                st = "issued"
             _ins("""INSERT INTO mcms_vital_records.birth_certificate
                    (registration_no, newborn_patient_id, mother_patient_id, father_party_id,
                     facility_id, delivery_encounter_id, birth_datetime, status)
@@ -797,7 +799,9 @@ class Command(BaseCommand):
             fac = _scalar("SELECT facility_id FROM mcms_core.facility LIMIT 1")
             if pt is None or fac is None:
                 return
-            st = (self._enum_values("mcms_vital_records", "death_certificate", "status") or ["draft"])[0]
+            st = (self._enum_values("mcms_vital_records", "death_certificate", "status") or ["issued"])[0]
+            if st not in ("issued", "amended"):
+                st = "issued"
             _ins("""INSERT INTO mcms_vital_records.death_certificate
                    (registration_no, patient_id, facility_id, death_datetime, coroner_case, status)
                    VALUES ('DC-DEMO-001',%s,%s,now(),false,%s)""",

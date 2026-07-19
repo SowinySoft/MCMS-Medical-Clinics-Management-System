@@ -65,13 +65,22 @@ export function Reports() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="reports-page" style={{ padding: 24 }}>
       <div className="mcms-no-print" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <h2 style={{ color: "var(--text)", margin: 0, marginInlineEnd: "auto" }}>{t("Reports")}</h2>
         <label style={{ color: "var(--text-dim)", fontSize: 12 }}>{t("from")}<input className="mcms-input" type="date" value={since} onChange={(e) => setSince(e.target.value)} style={{ width: "auto", marginInlineStart: 6 }} /></label>
         <label style={{ color: "var(--text-dim)", fontSize: 12 }}>{t("to")}<input className="mcms-input" type="date" value={until} onChange={(e) => setUntil(e.target.value)} style={{ width: "auto", marginInlineStart: 6 }} /></label>
         <button className="mcms-btn" onClick={fetchAll}>{t("Search") || "Apply"}</button>
         <button className="mcms-btn" style={{ background: "var(--panel-2)", color: "var(--text)" }} onClick={() => window.print()}>{t("print")}</button>
+      </div>
+
+      {/* Print-only header */}
+      <div className="reports-print-header">
+        <div style={{ fontSize: 18, fontWeight: 800 }}>{t("Reports")}</div>
+        <div style={{ fontSize: 12, color: "#444" }}>
+          {since || until ? `${t("from")} ${since || "…"} — ${t("to")} ${until || "…"}` : "All periods"}
+          {" · "}{new Date().toLocaleString()}
+        </div>
       </div>
 
       {loading && <div className="mcms-spinner" />}
